@@ -1,0 +1,43 @@
+name: 下載全台電桿資料
+
+# 從政府資料開放平台下載台電各縣市電桿坐標,存到 raw-data 分支(不影響網站)。
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "meta(查清單)或 download(下載)"
+        required: true
+        default: meta
+      urls:
+        description: "download 用:網址,空白分隔"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: 取出 raw-data 分支
+        run: |
+          git fetch origin raw-data || true
+          if git rev-parse --verify origin/raw-data >/dev/null 2>&1; then
+            git worktree add raw origin/raw-data && cd raw && git checkout -B raw-data
+          else
+            git worktree add --detach raw && cd raw && git checkout --orphan raw-data && git rm -rfq . && echo "原始資料(不在網站上)" > README.md
+          fi
+      - name: 下載
+        env:
+          MODE: ${{ inputs.mode }}
+          URLS: ${{ inputs.urls }}
+        run: |
+          OUT="raw/$MODE-$(TZ=Asia/Taipei date +%Y%m%d-%H%M%S)"
+          python3 tools/fetch_poles.py "$MODE" "$OUT" $URLS
+      - name: 存回 raw-data 分支
+        run: |
+          cd raw
+          git config user.name "line-map-bot"; git config user.email "line-map-bot@users.noreply.github.com"
+          git add -A && git commit -qm "原始資料 $(TZ=Asia/Taipei date '+%F %T')" && git push origin raw-data
