@@ -1,0 +1,1789 @@
+{
+ "33305": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 33305,
+  "identifier": "313310000K-000098",
+  "title": "台灣電力公司電桿坐標及桿號",
+  "description": "提供台電各區處電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "楊先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u504340@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "",
+  "coverageEndedDate": "",
+  "publishedDate": "2016-07-26",
+  "modifiedDate": "2026-06-18 11:29:41",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "本資料集包含全台各縣市電桿坐標及桿號資料，如需單獨下載各縣市資料可至以下連結，或於本平台搜尋後下載：\n臺北市(https://data.gov.tw/dataset/122523) 新北市(https://data.gov.tw/dataset/122524)\n桃園市(https://data.gov.tw/dataset/122737) 臺中市(https://data.gov.tw/dataset/122738) \n臺南市(https://data.gov.tw/dataset/122739) 高雄市(https://data.gov.tw/dataset/122740)\n基隆市(https://data.gov.tw/dataset/139305) 新竹市(https://data.gov.tw/dataset/139306)\n嘉義市(https://data.gov.tw/dataset/139315) 新竹縣(https://data.gov.tw/dataset/139307)\n苗栗縣(https://data.gov.tw/dataset/139310) 彰化縣(https://data.gov.tw/dataset/139313)\n南投縣(https://data.gov.tw/dataset/139312) 雲林縣(https://data.gov.tw/dataset/139314)\n嘉義縣(https://data.gov.tw/dataset/139317) 屏東縣(https://data.gov.tw/dataset/139318)\n宜蘭縣(https://data.gov.tw/dataset/139319) 花蓮縣(https://data.gov.tw/dataset/139320)\n臺東縣(https://data.gov.tw/dataset/139324)。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-18 11:30:05",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077006/all.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "電桿",
+   "桿號"
+  ],
+  "en": {
+   "title": "Taiwan Power Company_Electric Pole Coordinates and Pole Numbers",
+   "description": "Coordinates of utility poles, pole numbers, and their respective administrative district information for each area.",
+   "publisherContactName": "楊先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u504340@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "This dataset includes the coordinates and pole number data of electrical poles in all counties and cities in Taiwan. If you need to download the data of each county and city separately, you can go to the following links or search and download on this platform:Taipei City: https://data.gov.tw/dataset/122523New Taipei City: https://data.gov.tw/dataset/122524Taoyuan City: https://data.gov.tw/dataset/122737Taichung City: https://data.gov.tw/dataset/122738Tainan City: https://data.gov.tw/dataset/122739Kaohsiung City: https://data.gov.tw/dataset/122740Keelung City: https://data.gov.tw/dataset/139305Hsinchu City: https://data.gov.tw/dataset/139306Chiayi City: https://data.gov.tw/dataset/139315Hsinchu County: https://data.gov.tw/dataset/139307Miaoli County: https://data.gov.tw/dataset/139310Changhua County: https://data.gov.tw/dataset/139313Nantou County: https://data.gov.tw/dataset/139312Yunlin County: https://data.gov.tw/dataset/139314Chiayi County: https://data.gov.tw/dataset/139317Pingtung County: https://data.gov.tw/dataset/139318Yilan County: https://data.gov.tw/dataset/139319Hualien County: https://data.gov.tw/dataset/139320Taitung County: https://data.gov.tw/dataset/139324",
+   "keyword": [
+    "Pole",
+    "Rod number"
+   ]
+  }
+ },
+ "122737": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 122737,
+  "identifier": "",
+  "title": "台灣電力公司桃園市電桿坐標及桿號",
+  "description": "提供桃園市電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2020-05-18",
+  "coverageEndedDate": "2020-05-18",
+  "publishedDate": "2020-05-20",
+  "modifiedDate": "2024-07-26 11:20:48",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-09-01 09:09:53",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Taoyuan_City.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "桃園市電桿"
+  ],
+  "en": {
+   "title": "Taipower_Taoyuan City_Electric Pole Coordinates and Pole Number",
+   "description": "Coordinates, pole number, and administrative area information for Taoyuan City poles",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "If you need the coordinates and pole number data of electric poles in all counties and cities in Taiwan, you can go to the following link:https://data.gov.tw/dataset/33305"
+  }
+ },
+ "122738": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 122738,
+  "identifier": "",
+  "title": "台灣電力公司臺中市電桿坐標及桿號",
+  "description": "提供臺中市電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2020-05-18",
+  "coverageEndedDate": "2020-05-18",
+  "publishedDate": "2020-05-20",
+  "modifiedDate": "2024-07-26 11:22:41",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-09-01 09:10:00",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Taichung_City.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "臺中市電桿"
+  ],
+  "en": {
+   "title": "Taiwan Power Company_Taichung City_Pole Coordinates and Pole Number",
+   "description": "Coordinates, pole number, and relevant administrative district information in Taichung City",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "If you need the coordinates and pole number information of the electric poles in all counties and cities in Taiwan, you can go to the following link:https://data.gov.tw/dataset/33305"
+  }
+ },
+ "122739": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 122739,
+  "identifier": "",
+  "title": "台灣電力公司臺南市電桿坐標及桿號",
+  "description": "提供臺南市電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2020-05-18",
+  "coverageEndedDate": "2020-05-18",
+  "publishedDate": "2020-05-20",
+  "modifiedDate": "2024-07-26 11:24:34",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-09-01 09:10:19",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Tainan_City.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "臺南市電桿"
+  ],
+  "en": {
+   "title": "Taiwan Power Company_Tainan City_Electric Pole Coordinates and Pole Number",
+   "description": "Tainan City pole coordinates, pole numbers and associated administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "If you need the coordinates and pole number data of electric poles in all counties and cities in Taiwan, please go to the following link:https://data.gov.tw/dataset/33305"
+  }
+ },
+ "122740": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 122740,
+  "identifier": "",
+  "title": "台灣電力公司高雄市電桿坐標及桿號",
+  "description": "提供高雄市電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2020-05-18",
+  "coverageEndedDate": "2020-05-18",
+  "publishedDate": "2020-05-20",
+  "modifiedDate": "2024-07-26 11:13:18",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-09-01 09:10:21",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Kaohsiung_City.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "高雄市電桿",
+   "AI-Ready Data 詮釋資料框架指標"
+  ],
+  "en": {
+   "title": "Taiwan Power Company_Kaohsiung City_Pole Coordinates and Pole Numbers",
+   "description": "Coordinates, pole number, and associated administrative district information in Kaohsiung City.",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "If you need the coordinates and pole number data of electrical poles in all counties and cities in Taiwan, please go to the following link:https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139305": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139305,
+  "identifier": "",
+  "title": "台灣電力公司基隆市電桿坐標及桿號",
+  "description": "提供基隆市電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:27:15",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:44:07",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Keelung_City.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "基隆市電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Keelung City_Pole coordinates and pole numbers",
+   "description": "Keelung City power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139306": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139306,
+  "identifier": "",
+  "title": "台灣電力公司新竹市電桿坐標及桿號",
+  "description": "提供新竹市電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:29:39",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:44:18",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Hsinchu_City.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "新竹市電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Hsinchu City_Pole coordinates and pole numbers",
+   "description": "Hsinchu City power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139307": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139307,
+  "identifier": "",
+  "title": "台灣電力公司新竹縣電桿坐標及桿號",
+  "description": "提供新竹縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:31:40",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:44:23",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Hsinchu_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "新竹縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Hsinchu County_Pole coordinates and pole numbers",
+   "description": "Hsinchu County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139310": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139310,
+  "identifier": "",
+  "title": "台灣電力公司苗栗縣電桿坐標及桿號",
+  "description": "提供苗栗縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:33:30",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:44:32",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Miaoli_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "苗栗縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Miaoli County_Pole coordinates and pole numbers",
+   "description": "Miaoli County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139312": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139312,
+  "identifier": "",
+  "title": "台灣電力公司南投縣電桿坐標及桿號",
+  "description": "提供南投縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:35:14",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:44:33",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Nantou_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "南投縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Nantou County_Pole coordinates and pole numbers",
+   "description": "Nantou County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139313": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139313,
+  "identifier": "",
+  "title": "台灣電力公司彰化縣電桿坐標及桿號",
+  "description": "提供彰化縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:38:36",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:44:44",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Changhua_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "彰化縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Changhua County_Pole coordinates and pole numbers",
+   "description": "Changhua County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139314": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139314,
+  "identifier": "",
+  "title": "台灣電力公司雲林縣電桿坐標及桿號",
+  "description": "提供雲林縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:40:20",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:44:53",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Yunlin_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "雲林縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Yunlin County_Pole coordinates and pole numbers",
+   "description": "Yunlin County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139315": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139315,
+  "identifier": "",
+  "title": "台灣電力公司嘉義市電桿坐標及桿號",
+  "description": "提供嘉義市電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:41:56",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:45:07",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Chiayi_City.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "嘉義市電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Chiayi City_Pole coordinates and pole numbers",
+   "description": "Chiayi City power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139317": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139317,
+  "identifier": "",
+  "title": "台灣電力公司嘉義縣電桿坐標及桿號",
+  "description": "提供嘉義縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:43:29",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:45:16",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Chiayi_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "嘉義縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Chiayi County_Pole coordinates and pole numbers",
+   "description": "Chiayi County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139318": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139318,
+  "identifier": "",
+  "title": "台灣電力公司屏東縣電桿坐標及桿號",
+  "description": "提供屏東縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:45:10",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:45:18",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Pingtung_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "屏東縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Pingtung County_Pole coordinates and pole numbers",
+   "description": "Pingtung County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139319": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139319,
+  "identifier": "",
+  "title": "台灣電力公司宜蘭縣電桿坐標及桿號",
+  "description": "提供宜蘭縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:46:37",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:45:19",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Yilan_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "宜蘭縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Yilan County_Pole coordinates and pole numbers",
+   "description": "Yilan County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139320": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139320,
+  "identifier": "",
+  "title": "台灣電力公司花蓮縣電桿坐標及桿號",
+  "description": "提供花蓮縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:48:05",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:45:27",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Hualien_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "花蓮縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Hualien County_Pole coordinates and pole numbers",
+   "description": "Hualien County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ },
+ "139324": {
+  "categoryService": "I00",
+  "categoryDataset": "A",
+  "datasetId": 139324,
+  "identifier": "",
+  "title": "台灣電力公司臺東縣電桿坐標及桿號",
+  "description": "提供臺東縣電桿坐標、桿號及所屬行政區資訊。",
+  "type": "rawData",
+  "license": "1",
+  "cost": "free",
+  "dataProvider": "marsduck",
+  "publisherOID": "2.16.886.101.20003.20007.20127",
+  "publisherContactName": "戴先生",
+  "publisherContactPhone": "02-23668581",
+  "publisherContactEmail": "u436586@taipower.com.tw",
+  "updateFrequency": {
+   "regularupdate": "1",
+   "Frequency": "1",
+   "unittime": "月"
+  },
+  "dataQuality": "G",
+  "coverageStartedDate": "2021-04-26",
+  "coverageEndedDate": "2021-04-26",
+  "publishedDate": "2021-04-28",
+  "modifiedDate": "2024-07-26 11:49:30",
+  "spatialCoverage": "",
+  "language": "zh",
+  "relatedUrl": "",
+  "notes": "如需全台各縣市電桿坐標及桿號資料可至以下連結：https://data.gov.tw/dataset/33305。",
+  "apiDocUrl": "",
+  "distribution": [
+   {
+    "resourceDescription": "",
+    "resourceField": [
+     {
+      "name": "縣市",
+      "description": ""
+     },
+     {
+      "name": "行政區",
+      "description": ""
+     },
+     {
+      "name": "鄉里",
+      "description": ""
+     },
+     {
+      "name": "圖號座標",
+      "description": ""
+     },
+     {
+      "name": "形式",
+      "description": ""
+     },
+     {
+      "name": "桿號",
+      "description": ""
+     },
+     {
+      "name": "TWD_97_X",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/X3826"
+     },
+     {
+      "name": "TWD_97_Y",
+      "description": "",
+      "uri": "api/Resource/WaterResources/LandSubsidenceBasicInformation/Y3826"
+     }
+    ],
+    "qcLevel": "",
+    "resourceFormat": "CSV",
+    "resourceCharacterEncoding": "UTF-8",
+    "resourceQualityCheckTime": "2026-06-03 15:45:45",
+    "resourceDownloadUrl": "https://service.taipower.com.tw/data/opendata/apply/file/d077010/Taitung_County.csv",
+    "resourceAmount": 1000,
+    "resourceNotes": "",
+    "resourceRequestMethod": "",
+    "resourceOasUrl": "",
+    "resourceRequestParameters": [],
+    "resourcePathParameters": []
+   }
+  ],
+  "keyword": [
+   "AI-Ready Data 詮釋資料框架指標",
+   "臺東縣電桿"
+  ],
+  "en": {
+   "title": "Taiwan Electric Power Company_Taitung County_Pole coordinates and pole numbers",
+   "description": "Taitung County power pole coordinates, pole numbers and administrative district information",
+   "publisherContactName": "戴先生",
+   "publisherContactPhone": "02-23668581",
+   "publisherContactEmail": [
+    "u436586@taipower.com.tw"
+   ],
+   "updateFrequency": "Every 1 month",
+   "cost": "free",
+   "notes": "For information on pole coordinates and pole numbers in all counties and cities in Taiwan, please go to the following link: https://data.gov.tw/dataset/33305"
+  }
+ }
+}
