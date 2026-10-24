@@ -134,6 +134,9 @@ textarea{min-height:64px; resize:vertical;}
 .map.picking{cursor:crosshair;}
 .map .g-minor{stroke:var(--map-grid); stroke-width:1;}
 .map .g-major{stroke:var(--map-grid-strong); stroke-width:1;}
+.map.has-base .g-minor{opacity:.25;} .map.has-base .g-major{opacity:.45;} .map.has-base .g-zone{opacity:.3;}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .map .base.emap image{filter:invert(.92) hue-rotate(180deg) brightness(.95) contrast(.9);} }
+:root[data-theme="dark"] .map .base.emap image{filter:invert(.92) hue-rotate(180deg) brightness(.95) contrast(.9);}
 .map .g-label{fill:var(--map-label); font:500 11px var(--font-mono);}
 .map .g-zone{fill:var(--map-label); font:600 22px var(--font-mono); opacity:.55;}
 .map .road-e,.map .road{fill:none; stroke-linecap:round; stroke-linejoin:round;}
@@ -142,6 +145,7 @@ textarea{min-height:64px; resize:vertical;}
 .map .road-e.road-a{stroke-width:7;} .map .road.road-a{stroke-width:5;}
 .map .road-e.road-b{stroke-width:5.5;} .map .road.road-b{stroke-width:3.8;}
 .map .road-e.road-c{stroke-width:4;} .map .road.road-c{stroke-width:2.6;}
+.map .road-e.road-d{stroke-width:3;} .map .road.road-d{stroke-width:1.8;}
 .map .road.hi{stroke:var(--violet);} .map .road-e.hi{stroke:var(--violet); stroke-opacity:.35; stroke-width:10;}
 .map-credit{position:absolute; right:6px; bottom:4px; font-size:10.5px; color:var(--muted); background:var(--map-bg); padding:0 4px; border-radius:3px; opacity:.9; pointer-events:none;}
 .map .rlbl{fill:var(--road-label); font:500 11.5px var(--font-body); paint-order:stroke; stroke:var(--map-bg); stroke-width:3px; letter-spacing:.04em;}
@@ -436,6 +440,7 @@ body{margin:0}
       <button type="button" id="followBtn" aria-pressed="true" aria-label="跟著我的位置" title="跟著我的位置">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       </button>
+      <button type="button" id="baseBtn" aria-label="切換底圖" title="切換底圖"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></button>
       <button type="button" id="zoomIn" aria-label="放大">＋</button>
       <button type="button" id="zoomOut" aria-label="縮小">－</button>
       <button type="button" id="zoomFit" aria-label="顯示全部"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
@@ -483,8 +488,8 @@ body{margin:0}
     <div id="trkList"></div>
 
     <a class="btn ghost wide" id="recordsLink" target="_blank" rel="noopener" style="margin-top:14px">到「線路巡視紀錄」寫事故、巡修、日誌</a>
-    <p class="hint" style="text-align:center" id="appVer">版本 v4(10/22):加入所有分線(共 997 條線)</p>
-    <p class="hint" style="text-align:center">電桿資料:台電開放資料「桃園市電桿坐標及桿號」;街道:© OpenStreetMap 貢獻者</p>
+    <p class="hint" style="text-align:center" id="appVer">版本 v6(10/24):街道每月自動更新、自繪街道/電子地圖/空照圖</p>
+    <p class="hint" style="text-align:center">電桿資料:台電開放資料「桃園市電桿坐標及桿號」;底圖:內政部國土測繪中心 臺灣通用電子地圖、正射影像;街道搜尋:© OpenStreetMap 貢獻者</p>
   </section>
 </div>
 <div id="overlay"></div>
@@ -1251,18 +1256,58 @@ const DISTRICTS = [['桃園區',24.990,121.305],['中壢區',24.962,121.220],['�
 // ---- streets (OpenStreetMap, shipped as roads.json next to the page) ----
 // road: { n: name, c: 'a' main | 'b' secondary | 'c' local, p: [[lng, lat], ...] }
 let ROADS = null;
-function setRoads(j){
-  const list = (j && j.roads) || [];
-  ROADS = list.map(r => {
-    const pp = r.p.map(([lng, lat]) => TPC.toPlane(lat, lng));
-    const xs = pp.map(q => q[0]), ys = pp.map(q => q[1]);
-    return { n: r.n || '', c: r.c || 'c', pp, bb: { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) } };
-  });
-  LMap.req();
+function toRoad(r){
+  const pp = r.p.map(([lng, lat]) => TPC.toPlane(lat, lng));
+  const xs = pp.map(q => q[0]), ys = pp.map(q => q[1]);
+  return { i: r.i, n: r.n || '', c: r.c || 'c', pp, bb: { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) } };
 }
+function setRoads(j){ ROADS = ((j && j.roads) || []).map(toRoad); LMap.req(); }
+// ---- road tiles (roads/index.json, built by tools/build_road_tiles.py; refreshed monthly on GitHub) ----
+const RT = { index: null, loaded: new Set(), pending: new Map(), ids: new Set(), names: null };
+function addRoads(list){
+  if(!RT.index || !ROADS){ ROADS = []; }
+  let added = 0;
+  list.forEach(r => { if(RT.ids.has(r.i)) return; RT.ids.add(r.i); ROADS.push(toRoad(r)); added++; });
+  if(added) LMap.req();
+}
+function roadFile(name){ return fetch('roads/' + name, { cache: 'no-cache' }).then(r => { if(!r.ok) throw new Error(r.status); return r.json(); }); }
+async function initRoadTiles(){
+  if(typeof HAS_ROAD_TILES !== 'undefined' && !HAS_ROAD_TILES) return false;
+  try{ RT.index = await roadFile('index.json'); }catch(e){ return false; }
+  ROADS = []; RT.ids.clear();
+  try{ addRoads((await roadFile('major.json')).roads); }catch(e){}
+  LMap.req();
+  return true;
+}
+function loadRoadTile(key){
+  if(RT.loaded.has(key) || !RT.index || !RT.index.tiles.includes(key)) return Promise.resolve();
+  if(!RT.pending.has(key)) RT.pending.set(key, roadFile('t_' + key + '.json').then(j => { RT.loaded.add(key); addRoads(j.roads); })
+    .catch(() => {}).finally(() => RT.pending.delete(key)));
+  return RT.pending.get(key);
+}
+// load the tiles under the current view once zoomed in far enough to show streets
+function loadRoadsInView(L){
+  if(!RT.index || L.mpp > 25) return;
+  const [S0, W0] = RT.index.bbox, cell = RT.index.cell;
+  const c = [[0, 0], [L.W, 0], [0, L.H], [L.W, L.H]].map(([sx, sy]) => TPC.fromPlane(...L.toPlane(sx, sy)));
+  const r0 = Math.floor((Math.min(...c.map(q => q.lat)) - S0) / cell), r1 = Math.floor((Math.max(...c.map(q => q.lat)) - S0) / cell);
+  const c0 = Math.floor((Math.min(...c.map(q => q.lng)) - W0) / cell), c1 = Math.floor((Math.max(...c.map(q => q.lng)) - W0) / cell);
+  if((r1 - r0 + 1) * (c1 - c0 + 1) > 30) return;
+  for(let a = r0; a <= r1; a++) for(let b = c0; b <= c1; b++) loadRoadTile(a + '_' + b);
+}
+// startup: road tiles if this site has them, otherwise the single roads.json
 async function loadRoads(){
-  if(!HAS_ROADS) return;   // set at build time: only ask for roads.json when it was published
+  if(await initRoadTiles()) return;
+  if(!HAS_ROADS) return;
   try{ const r = await fetch('roads.json', { cache: 'force-cache' }); if(r.ok) setRoads(await r.json()); }catch(e){}
+}
+// street search across all of 桃園: names.json says which tiles hold the name
+async function loadRoadName(q){
+  if(!RT.index) return;
+  if(!RT.names){ try{ RT.names = await roadFile('names.json'); }catch(e){ RT.names = {}; } }
+  let name = RT.names[q] ? q : Object.keys(RT.names).find(n => n.includes(q));
+  if(!name) return;
+  await Promise.all(RT.names[name].map(loadRoadTile));
 }
 const MAIN_ZONES = ['A','B','C','D','E','F','G','H','J','K','L','M','N','O','P','Q','R','T','U','V','W'];
 const planeCache = new Map();
@@ -1387,6 +1432,36 @@ const LMap = {
     if(this.found && inRegion(this.found)) f.push({ key: 'found', kind: 'found', o: this.found, ll: this.found });
     return f;
   },
+  // optional raster basemap (the locator page sets LMap.basemap = { url, maxZ, cls })
+  basemap: null,
+  basemapSvg(){
+    const bm = this.basemap; if(!bm) return '';
+    const W = this.W, H = this.H, n0 = 256 * 0;
+    const c = [[0, 0], [W, 0], [0, H], [W, H]].map(([sx, sy]) => TPC.fromPlane(...this.toPlane(sx, sy)));
+    const lat0 = c.reduce((a, q) => a + q.lat, 0) / 4;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    let z = Math.round(Math.log2(156543.034 * Math.cos(lat0 * Math.PI / 180) * dpr / this.mpp));
+    z = Math.max(7, Math.min(bm.maxZ || 18, z));
+    const tx = (lng, z) => (lng + 180) / 360 * Math.pow(2, z);
+    const ty = (lat, z) => { const r = lat * Math.PI / 180; return (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * Math.pow(2, z); };
+    const lngOf = (x, z) => x / Math.pow(2, z) * 360 - 180;
+    const latOf = (y, z) => Math.atan(Math.sinh(Math.PI * (1 - 2 * y / Math.pow(2, z)))) * 180 / Math.PI;
+    let x0, x1, y0, y1;
+    for(;;){
+      x0 = Math.floor(Math.min(...c.map(q => tx(q.lng, z)))); x1 = Math.floor(Math.max(...c.map(q => tx(q.lng, z))));
+      y0 = Math.floor(Math.min(...c.map(q => ty(q.lat, z)))); y1 = Math.floor(Math.max(...c.map(q => ty(q.lat, z))));
+      if((x1 - x0 + 1) * (y1 - y0 + 1) <= 90 || z <= 7) break;
+      z--;
+    }
+    let out = '<g class="base ' + (bm.cls || '') + '">';
+    for(let x = x0; x <= x1; x++) for(let y = y0; y <= y1; y++){
+      const [ax, ay] = this.toScreen(...TPC.toPlane(latOf(y, z), lngOf(x, z)));
+      const [bx, by] = this.toScreen(...TPC.toPlane(latOf(y + 1, z), lngOf(x + 1, z)));
+      const href = bm.url.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+      out += '<image href="' + href + '" x="' + (ax - 0.3).toFixed(1) + '" y="' + (ay - 0.3).toFixed(1) + '" width="' + (bx - ax + 0.6).toFixed(1) + '" height="' + (by - ay + 0.6).toFixed(1) + '" preserveAspectRatio="none"/>';
+    }
+    return out + '</g>';
+  },
   gridSvg(){
     const m = this.mpp, W = this.W, H = this.H;
     const [x0, y1] = this.toPlane(0, 0), [x1, y0] = this.toPlane(W, H);
@@ -1444,9 +1519,10 @@ const LMap = {
     svg.setAttribute('viewBox', '0 0 ' + this.W + ' ' + this.H);
     this.clampView();
     const W = this.W, H = this.H, inView = (x, y, pad2) => x > -pad2 && x < W + pad2 && y > -pad2 && y < H + pad2;
-    let out = this.gridSvg();
+    let out = this.basemapSvg() + this.gridSvg();
     const roadLabels = [];
-    out += this.roadsSvg(roadLabels);
+    if(!this.basemap) loadRoadsInView(this);
+    out += this.roadsSvg(this.basemap ? [] : roadLabels, !!this.basemap);   // with a basemap: only the searched street
     // tracks
     S.tracks.forEach(t => {
       let seg = [], last = null;
@@ -1535,16 +1611,18 @@ const LMap = {
     const nice = [5, 2, 1].map(k => k * p10).find(v => v <= target) || p10;
     $('mapScale').innerHTML = (nice >= 1000 ? (nice / 1000) + ' km' : nice + ' m') + '<i style="width:' + (nice / this.mpp).toFixed(0) + 'px"></i>';
     $('mapEmpty').hidden = pts.length > 0 || shownLines().some(n => (S.byLine.get(n) || []).length) || S.tracks.length > 0 || !!this.pickMark;
-    $('mapCredit').hidden = !ROADS;
+    $('mapCredit').hidden = !ROADS && !this.basemap;
+    if(this.basemap) $('mapCredit').textContent = this.basemap.credit; else if(ROADS) $('mapCredit').textContent = '© OpenStreetMap 貢獻者';
+    this.svg.classList.toggle('has-base', !!this.basemap);
   },
   // greedy label placement: important poles first, skip a label rather than overlap
-  roadsSvg(roadLabels){
-    if(!ROADS || this.mpp > 40) return '';
+  roadsSvg(roadLabels, onlyHi){
+    if(!ROADS || (this.mpp > 40 && !this.hiRoad) || (onlyHi && !this.hiRoad)) return '';
     const W = this.W, H = this.H, m = this.mpp;
     const [vx0, vy1] = this.toPlane(0, 0), [vx1, vy0] = this.toPlane(W, H);
-    const show = r => r.c === 'a' || (r.c === 'b' && m <= 25) || (r.c === 'c' && m <= 9) || (this.hiRoad && r.n === this.hiRoad);
-    const vis = ROADS.filter(r => show(r) && r.bb.x1 >= vx0 && r.bb.x0 <= vx1 && r.bb.y1 >= vy0 && r.bb.y0 <= vy1);
-    const order = { a: 2, b: 1, c: 0 };
+    const show = r => r.c === 'a' || (r.c === 'b' && m <= 25) || (r.c === 'c' && m <= 9) || (r.c === 'd' && m <= 4) || (this.hiRoad && r.n === this.hiRoad);
+    const vis = ROADS.filter(r => (onlyHi ? r.n === this.hiRoad : show(r)) && r.bb.x1 >= vx0 && r.bb.x0 <= vx1 && r.bb.y1 >= vy0 && r.bb.y0 <= vy1);
+    const order = { a: 3, b: 2, c: 1, d: 0 };
     vis.sort((a, b) => order[a.c] - order[b.c]);
     let casing = '', fill = '';
     vis.forEach(r => {
@@ -2077,6 +2155,7 @@ async function runSearch(){
     msg.textContent = '找不到 ' + q.line + q.key + '。分歧寫成 43-10,右/左可以打 R/L。';
     return;
   }
+  if(RT.index){ msg.textContent = '查詢路名…'; await loadRoadName(raw.trim().replace(/\s+/g, '')); }
   const road = findRoad(raw);
   if(road){
     setFollow(false);
@@ -2101,6 +2180,20 @@ function renderLegend(){
 
 function onLinesLoaded(){ LMap.req(); renderMe(); renderPlace(); }
 function onLayersChanged(){ renderLegend(); LMap.req(); }
+// ---------- 底圖:國土測繪中心 臺灣通用電子地圖 / 正射影像 ----------
+const BASEMAPS = [
+  { key: 'emap', name: '電子地圖', cls: 'emap', maxZ: 19, url: 'https://wmts.nlsc.gov.tw/wmts/EMAP/default/GoogleMapsCompatible/{z}/{y}/{x}', credit: '底圖 © 內政部國土測繪中心' },
+  { key: 'photo', name: '空照圖', cls: 'photo', maxZ: 19, url: 'https://wmts.nlsc.gov.tw/wmts/PHOTO2/default/GoogleMapsCompatible/{z}/{y}/{x}', credit: '空照 © 內政部國土測繪中心' },
+  { key: 'none', name: '不顯示底圖' }
+];
+function setBasemap(key, quiet){
+  const bm = BASEMAPS.find(b => b.key === key) || BASEMAPS[0];
+  LMap.basemap = bm.url ? bm : null;
+  try{ localStorage.setItem('lm:base', bm.key); }catch(e){}
+  $('baseBtn').setAttribute('aria-label', '底圖:' + bm.name + '(按一下切換)');
+  if(!quiet) toast('底圖:' + bm.name);
+  LMap.req();
+}
 // ---------- boot ----------
 function bootLocator(){
   initLineIndex(LINE_INDEX_DATA, 'lm:layers', ['民一幹', '社尾幹', '新社幹', '望間分線', '望湖分線']);
@@ -2115,9 +2208,16 @@ function bootLocator(){
   const fast = LMap.fast;
   LMap.fast = function(){ if(follow){ follow = false; $('followBtn').setAttribute('aria-pressed', 'false'); renderMe(); } return fast.apply(this, arguments); };
   setRoads(ROADS_DATA);
+  initRoadTiles();   // roads/ folder on the site (refreshed monthly); keeps the built-in streets if missing
   LMap.regionView(); LMap.draw();
   ensureLines(Array.from(LAYERS)).then(() => { if(!me) LMap.fit(); });
   $('followBtn').addEventListener('click', () => setFollow(true));
+  $('baseBtn').addEventListener('click', () => {
+    const cur = LMap.basemap ? LMap.basemap.key : 'none', i = BASEMAPS.findIndex(b => b.key === cur);
+    setBasemap(BASEMAPS[(i + 1) % BASEMAPS.length].key);
+  });
+  let savedBase = 'emap'; try{ savedBase = localStorage.getItem('lm:base') || 'emap'; }catch(e){}
+  setBasemap(savedBase, true);
   $('gpsGo').addEventListener('click', startGps);
   $('recBtn').addEventListener('click', () => { if(rec && rec.on) pauseRec(); else startRec(); });
   document.addEventListener('visibilitychange', () => {

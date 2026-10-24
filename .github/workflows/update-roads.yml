@@ -1,0 +1,186 @@
+name: 自動更新街道
+
+# 每月 2 日凌晨(台北時間)下載最新的 OpenStreetMap 台灣資料,裁出桃園所有道路,
+# 切成小區塊存到 roads/ 資料夾,GitHub Pages 會自動更新定位地圖。
+# 想馬上更新:Actions → 自動更新街道 → Run workflow
+on:
+  schedule:
+    - cron: "17 18 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: update-roads
+  cancel-in-progress: false
+
+jobs:
+  roads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安裝 osmium
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
+
+      - name: 下載台灣 OpenStreetMap 資料(Geofabrik)
+        run: curl -fsSL --retry 3 -o taiwan.osm.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
+
+      - name: 裁出桃園的道路
+        run: |
+          osmium extract -b 120.975,24.585,121.505,25.135 taiwan.osm.pbf -o taoyuan.osm.pbf --overwrite
+          osmium tags-filter taoyuan.osm.pbf w/highway -o roads.osm.pbf --overwrite
+          osmium export roads.osm.pbf -f geojsonseq --geometry-types=linestring -o roads.geojsonseq --overwrite
+
+      - name: 切成地圖區塊
+        run: |
+          cat > build_road_tiles.py <<'PY'
+          """Cut OpenStreetMap roads into small tiles the line map loads as you pan.
+
+          input : GeoJSON / GeoJSON-seq of OSM ways (e.g. `osmium export ... -f geojsonseq`)
+          output: <out>/index.json, <out>/major.json (main roads, always loaded),
+                  <out>/t_<row>_<col>.json (everything else, per tile), <out>/names.json (street search)
+
+          Only the Python standard library is used, so it runs anywhere (GitHub Actions too).
+          usage: python3 tools/build_road_tiles.py <roads.geojsonseq|.geojson> <out dir>
+          """
+          import json, math, os, sys, collections, datetime
+
+          S, W, N, E = 24.585, 120.975, 25.135, 121.505      # 桃園市
+          CELL = 0.04                                          # tile size in degrees (~4 km)
+          CLASS = {
+              'motorway': 'a', 'trunk': 'a', 'primary': 'a', 'motorway_link': 'a', 'trunk_link': 'a', 'primary_link': 'a',
+              'secondary': 'b', 'tertiary': 'b', 'secondary_link': 'b', 'tertiary_link': 'b',
+              'unclassified': 'c', 'residential': 'c', 'living_street': 'c', 'road': 'c',
+          }
+          NAMED_ONLY = {'service': 'd', 'track': 'd'}           # driveways and farm tracks only when they have a name
+
+          def features(path):
+              with open(path, encoding='utf-8') as f:
+                  head = f.read(1); f.seek(0)
+                  if head == '{' and path.endswith('.geojson'):
+                      for ft in json.load(f).get('features', []): yield ft
+                      return
+                  for line in f:
+                      line = line.strip().lstrip('\x1e')
+                      if line: yield json.loads(line)
+
+          def simplify(pts, tol):
+              if len(pts) < 3: return pts
+              lat0 = math.radians(sum(p[1] for p in pts) / len(pts))
+              xy = [(p[0] * 111320 * math.cos(lat0), p[1] * 110540) for p in pts]
+              keep = [False] * len(pts); keep[0] = keep[-1] = True
+              stack = [(0, len(pts) - 1)]
+              while stack:
+                  a, b = stack.pop()
+                  (ax, ay), (bx, by) = xy[a], xy[b]
+                  L = math.hypot(bx - ax, by - ay) or 1e-9
+                  best, bi = -1, -1
+                  for i in range(a + 1, b):
+                      px, py = xy[i]
+                      d = abs((bx - ax) * (ay - py) - (ax - px) * (by - ay)) / L
+                      if d > best: best, bi = d, i
+                  if best > tol: keep[bi] = True; stack += [(a, bi), (bi, b)]
+              return [p for p, k in zip(pts, keep) if k]
+
+          def merge(roads):
+              """join pieces of the same named road that meet end to end (fewer, longer labels)"""
+              by = collections.defaultdict(list)
+              out = []
+              for r in roads:
+                  if r['n']: by[(r['n'], r['c'])].append(r)
+                  else: out.append(r)
+              for (n, c), rs in by.items():
+                  parts = [r['p'] for r in rs]
+                  ends = collections.defaultdict(list)
+                  for i, p in enumerate(parts): ends[tuple(p[0])].append(i); ends[tuple(p[-1])].append(i)
+                  used = [False] * len(parts)
+                  for i in range(len(parts)):
+                      if used[i]: continue
+                      used[i] = True; line = list(parts[i])
+                      grown = True
+                      while grown:
+                          grown = False
+                          for end in (tuple(line[-1]), tuple(line[0])):
+                              for j in ends[end]:
+                                  if used[j]: continue
+                                  q = parts[j]
+                                  if end == tuple(line[-1]):
+                                      line = line + (q[1:] if tuple(q[0]) == end else q[::-1][1:])
+                                  else:
+                                      line = (q[:-1] if tuple(q[-1]) == end else q[::-1][:-1]) + line
+                                  used[j] = True; grown = True; break
+                              if grown: break
+                      out.append({'n': n, 'c': c, 'p': line})
+              return out
+
+          def main():
+              src, out = sys.argv[1], sys.argv[2]
+              os.makedirs(out, exist_ok=True)
+              roads, skipped = [], 0
+              for ft in features(src):
+                  g = ft.get('geometry') or {}
+                  props = ft.get('properties') or {}
+                  tags = props.get('tags', props)
+                  hw, name = tags.get('highway'), (tags.get('name') or '').strip()
+                  c = CLASS.get(hw) or (NAMED_ONLY.get(hw) if name else None)
+                  if not c: skipped += 1; continue
+                  lines = [g['coordinates']] if g.get('type') == 'LineString' else g.get('coordinates', []) if g.get('type') == 'MultiLineString' else []
+                  for ln in lines:
+                      pts = [(round(x, 6), round(y, 6)) for x, y, *_ in ln]
+                      if len(pts) < 2 or not any(S <= y <= N and W <= x <= E for x, y in pts): continue
+                      roads.append({'n': name, 'c': c, 'p': pts})
+              roads = merge(roads)
+              for r in roads: r['p'] = [[round(x, 5), round(y, 5)] for x, y in simplify(r['p'], 2.0)]
+              for i, r in enumerate(roads): r['i'] = i
+
+              def cells(r):
+                  xs = [p[0] for p in r['p']]; ys = [p[1] for p in r['p']]
+                  r0, r1 = int((min(ys) - S) // CELL), int((max(ys) - S) // CELL)
+                  c0, c1 = int((min(xs) - W) // CELL), int((max(xs) - W) // CELL)
+                  return [(a, b) for a in range(r0, r1 + 1) for b in range(c0, c1 + 1)]
+              major = [r for r in roads if r['c'] == 'a']
+              tiles = collections.defaultdict(list)
+              names = {}
+              for r in roads:
+                  keys = cells(r)
+                  if r['c'] != 'a':
+                      for k in keys: tiles[k].append(r)
+                  if r['n']:
+                      e = names.setdefault(r['n'], set()); e.update(f'{a}_{b}' for a, b in keys)
+              pack = lambda rs: json.dumps({'roads': [{'i': r['i'], 'n': r['n'], 'c': r['c'], 'p': r['p']} for r in rs]}, ensure_ascii=False, separators=(',', ':'))
+              for f in os.listdir(out):
+                  if f.startswith('t_') and f.endswith('.json'): os.remove(os.path.join(out, f))
+              sizes = {}
+              for (a, b), rs in tiles.items():
+                  body = pack(rs); open(os.path.join(out, f't_{a}_{b}.json'), 'w', encoding='utf-8').write(body); sizes[f'{a}_{b}'] = len(body.encode())
+              open(os.path.join(out, 'major.json'), 'w', encoding='utf-8').write(pack(major))
+              open(os.path.join(out, 'names.json'), 'w', encoding='utf-8').write(json.dumps({n: sorted(v) for n, v in names.items()}, ensure_ascii=False, separators=(',', ':')))
+              index = {'v': 1, 'source': 'OpenStreetMap contributors (ODbL)', 'updated': datetime.date.today().isoformat(),
+                       'bbox': [S, W, N, E], 'cell': CELL, 'tiles': sorted(sizes), 'roads': len(roads), 'named': len(names)}
+              open(os.path.join(out, 'index.json'), 'w', encoding='utf-8').write(json.dumps(index, ensure_ascii=False))
+              tot = sum(sizes.values()) / 1024 / 1024
+              print(f'{len(roads)} 條道路({len(names)} 個路名、主要道路 {len(major)} 條);{len(sizes)} 個區塊,合計 {tot:.1f} MB,最大 {max(sizes.values(), default=0)/1024:.0f} KB;略過 {skipped} 條非車道')
+
+          if __name__ == '__main__':
+              main()
+          PY
+          python3 build_road_tiles.py roads.geojsonseq roads
+
+      - name: 存回 repo
+        run: |
+          git config user.name "line-map-bot"
+          git config user.email "line-map-bot@users.noreply.github.com"
+          git add roads
+          if git diff --cached --quiet; then echo "街道沒有變更"; exit 0; fi
+          git commit -m "自動更新街道 $(TZ=Asia/Taipei date +%Y-%m-%d)"
+          git push
+
+      - name: 請 GitHub Pages 重新發布
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json"             "https://api.github.com/repos/${{ github.repository }}/pages/builds" || echo "(Pages 會自己更新,略過)"
