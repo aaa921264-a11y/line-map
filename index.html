@@ -519,7 +519,7 @@ body{margin:0}
     <div id="trkList"></div>
 
     <a class="btn ghost wide" id="recordsLink" target="_blank" rel="noopener" style="margin-top:14px">到「線路巡視紀錄」寫事故、巡修、日誌</a>
-    <p class="hint" style="text-align:center" id="appVer">版本 v10(10/25):搜尋紀錄、地圖標出最近搜尋的桿;v9:全台自繪街道、圖層依縣市→行政區分類(可整區開啟)、每月自動更新電桿與街道</p>
+    <p class="hint" style="text-align:center" id="appVer">版本 v10.1(10/25):搜尋紀錄、地圖標出最近搜尋的桿(依先後編號 1、2、3…);v9:全台自繪街道、圖層依縣市→行政區分類(可整區開啟)、每月自動更新電桿與街道</p>
     <p class="hint" style="text-align:center">電桿資料:台電開放資料「台灣電力公司電桿坐標及桿號」;底圖:內政部國土測繪中心 臺灣通用電子地圖、正射影像;街道搜尋:© OpenStreetMap 貢獻者</p>
   </section>
 </div>
@@ -2330,6 +2330,7 @@ function recentSvg(L){
   recentHits = [];
   let out = '';
   const list = recentPoles();
+  // 依搜尋先後編號:最早的是 1,第二個是 2……最新的號碼最大(深橘色)
   list.slice().reverse().forEach((h, ri) => {
     const i = list.length - 1 - ri;
     if(!inRegion(h)) return;
@@ -2338,7 +2339,7 @@ function recentSvg(L){
     recentHits.push({ h, x, y });
     const X = x.toFixed(1), Y = y.toFixed(1);
     out += '<g class="recent' + (i === 0 ? ' latest' : '') + '"><path d="M' + X + ' ' + (y - 24).toFixed(1) + 'c-7 0-11 5-11 10c0 7 11 14 11 14s11-7 11-14c0-5-4-10-11-10z"/>'
-      + '<text x="' + X + '" y="' + (y - 10.5).toFixed(1) + '" text-anchor="middle">' + (i + 1) + '</text>'
+      + '<text x="' + X + '" y="' + (y - 10.5).toFixed(1) + '" text-anchor="middle">' + (list.length - i) + '</text>'
       + (L.mpp < 30 ? '<text class="rl" x="' + (x + 13).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '">' + esc(h.label) + '</text>' : '') + '</g>';
   });
   return out;
