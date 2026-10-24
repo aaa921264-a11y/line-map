@@ -41,10 +41,16 @@ else:
     for k, u in enumerate(sys.argv[3:]):
         if not allowed(u): log.append(f'robots 不允許 {u}'); continue
         try:
-            body, ct, final = get(u)
-            name = f'{k:02d}_' + (os.path.basename(urllib.parse.urlparse(final).path) or 'file')[:60]
-            with gzip.open(f'{out}/{name}.gz', 'wb') as f: f.write(body)
-            log.append(f'ok {u} -> {name}.gz {len(body):,} bytes {ct}')
+            import subprocess
+            name = f'{k:02d}_' + (os.path.basename(urllib.parse.urlparse(u).path) or 'file')[:60]
+            tmp = f'{out}/{name}'
+            r = subprocess.run(['curl', '-fsSL', '--retry', '6', '--retry-all-errors', '--retry-delay', '20', '--connect-timeout', '60',
+                                '--max-time', '1800', '-A', UA, '-o', tmp, u], capture_output=True, text=True)
+            if r.returncode: raise RuntimeError(f'curl {r.returncode} {r.stderr.strip()[:300]}')
+            n = os.path.getsize(tmp)
+            subprocess.run(['xz', '-6', '-T0', tmp], check=True)
+            subprocess.run(['split', '-b', '90m', '-d', tmp + '.xz', tmp + '.xz.part'], check=True); os.remove(tmp + '.xz')
+            log.append(f'ok {u} -> {name}.xz.part* 原始 {n:,} bytes')
         except Exception as e: log.append(f'錯誤 {u} {e}')
         time.sleep(1)
 for h, (_, txt) in _rp.items(): log.append(f'--- {h}/robots.txt ---\n{txt[:3000]}')
