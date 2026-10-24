@@ -413,6 +413,8 @@ body{margin:0}
 .trk-item{display:flex; flex-direction:column; gap:8px;}
 .trk-item .meta{font-size:13px; color:var(--muted);}
 #trkGap{margin-top:8px;}
+.lauto{display:flex; gap:10px; border:1px solid var(--line, #8884); border-radius:8px; padding:10px; margin-bottom:10px; align-items:flex-start; cursor:pointer;}
+.lauto input{width:20px; height:20px; margin:2px 0 0; flex:none; accent-color:var(--accent, #e8a317);}
 </style>
 </head>
 <body>
@@ -488,7 +490,7 @@ body{margin:0}
     <div id="trkList"></div>
 
     <a class="btn ghost wide" id="recordsLink" target="_blank" rel="noopener" style="margin-top:14px">到「線路巡視紀錄」寫事故、巡修、日誌</a>
-    <p class="hint" style="text-align:center" id="appVer">版本 v6(10/24):街道每月自動更新、自繪街道/電子地圖/空照圖</p>
+    <p class="hint" style="text-align:center" id="appVer">版本 v7(10/24):預設開啟離你最近的 3 條幹線/分線</p>
     <p class="hint" style="text-align:center">電桿資料:台電開放資料「桃園市電桿坐標及桿號」;底圖:內政部國土測繪中心 臺灣通用電子地圖、正射影像;街道搜尋:© OpenStreetMap 貢獻者</p>
   </section>
 </div>
@@ -972,8 +974,9 @@ async function ensureNear(ll, m){ await ensureLines(linesNear(ll, m || 500)); }
 
 // ---------- 圖層選單 ----------
 function layerSummary(){
-  const on = Array.from(LAYERS);
-  return on.length ? on.slice(0, 3).join('、') + (on.length > 3 ? ' 等 ' + on.length + ' 條' : '') : '還沒開任何圖層';
+  const on = Array.from(LAYERS), auto = typeof autoNearOn === 'function' && autoNearOn();
+  if(!on.length && auto) return '開始定位後,會自動開啟離你最近的 3 條幹線/分線';
+  return (auto ? '最近:' : '') + (on.length ? on.slice(0, 3).join('、') + (on.length > 3 ? ' 等 ' + on.length + ' 條' : '') : '還沒開任何圖層');
 }
 function renderLayerBar(){
   const b = $('layerBtn'); if(!b) return;
@@ -1003,6 +1006,7 @@ function openLayerSheet(){
     + '<div class="lh"><b>選擇圖層</b><span class="hint" style="margin:0" id="lyCount"></span><button class="btn sm" type="button" data-a="done">完成</button></div>'
     + '<input type="search" id="lyQ" placeholder="搜尋幹線名稱,例如 民族" autocomplete="off" aria-label="搜尋幹線">'
     + '<div class="lbody">'
+    + (typeof layerSheetTop === 'function' ? layerSheetTop() : '')
     + '<div class="lsec" id="lyOn"><h3>已開啟</h3>' + (LAYERS.size ? Array.from(LAYERS).map(n => row(LINE_META.get(n) || others.find(o => o.name === n))).join('') : '<p class="hint">還沒開任何圖層。</p>') + '</div>'
     + (near.length ? '<div class="lsec"><h3>目前地圖範圍內</h3>' + near.map(row).join('') + '</div>' : '')
     + '<div class="lsec"><h3>全部幹線(依行政區)</h3>' + Array.from(byDist.keys()).sort((a, b) => a.localeCompare(b, 'zh-Hant')).map(d => {
@@ -1022,12 +1026,19 @@ function openLayerSheet(){
     if(e.target === m) return close();
     const a = e.target.closest('[data-a]'); if(!a) return;
     if(a.dataset.a === 'done') close();
-    if(a.dataset.a === 'clear'){ Array.from(LAYERS).forEach(n => LAYERS.delete(n)); saveLayers(); renderLayerBar(); if(typeof onLayersChanged === 'function') onLayersChanged();
-      m.querySelectorAll('input[data-layer]').forEach(c => { c.checked = false; }); count(); }
+    if(a.dataset.a === 'clear'){ if(typeof onLayerPicked === 'function') onLayerPicked(null, false);
+      Array.from(LAYERS).forEach(n => LAYERS.delete(n)); saveLayers(); renderLayerBar(); if(typeof onLayersChanged === 'function') onLayersChanged();
+      m.querySelectorAll('input[data-layer]').forEach(c => { c.checked = false; });
+      const ac = m.querySelector('input[data-auto]'); if(ac && typeof autoNearOn === 'function') ac.checked = autoNearOn(); count(); }
   });
   m.addEventListener('change', e => {
+    const au = e.target.closest('input[data-auto]');
+    if(au){ if(typeof onAutoNearToggled === 'function') onAutoNearToggled(au.checked).then(() => {
+        m.querySelectorAll('input[data-layer]').forEach(o => { o.checked = LAYERS.has(o.dataset.layer); }); count(); }); return; }
     const c = e.target.closest('input[data-layer]'); if(!c) return;
     const name = c.dataset.layer;
+    if(typeof onLayerPicked === 'function') onLayerPicked(name, c.checked);
+    const ac = m.querySelector('input[data-auto]'); if(ac && typeof autoNearOn === 'function') ac.checked = autoNearOn();
     setLayer(name, c.checked);
     m.querySelectorAll('input[data-layer]').forEach(o => { if(o.dataset.layer === name){ o.checked = c.checked;  } });
     count();
@@ -1913,6 +1924,60 @@ function loadAroundMe(){
   if(nearLoadedAt && dist(nearLoadedAt, me) < 300) return;
   nearLoadedAt = { lat: me.lat, lng: me.lng };
   ensureNear(me, 800).then(() => { renderMe(); LMap.req(); });
+  autoNear();
+}
+// ---------- 預設圖層:離我最近的 3 條幹線/分線,跟著位置更新 ----------
+const AUTO_N = 3;
+let autoNear_ = true, autoSet = new Set(), lastAutoAt = null;
+try{ autoNear_ = localStorage.getItem('lm:autoNear') !== '0'; autoSet = new Set(JSON.parse(localStorage.getItem('lm:autoSet') || '[]')); }catch(e){}
+function autoNearOn(){ return autoNear_; }
+function isMainLine(n){ return /幹$|分線$/.test(n); }
+async function nearestLines(ll, k){
+  const [x, y] = TPC.toPlane(ll.lat, ll.lng);
+  for(const r of [800, 2000, 5000]){
+    const cands = linesNear(ll, r).filter(isMainLine);
+    if(cands.length < k && r < 5000) continue;
+    await ensureLines(cands);
+    const best = [];
+    cands.forEach(n => {
+      let d = Infinity;
+      (S.byLine.get(n) || []).forEach(p => { if(p._p){ const dx = p._p[0] - x, dy = p._p[1] - y, q = dx * dx + dy * dy; if(q < d) d = q; } });
+      if(d < Infinity) best.push([d, n]);
+    });
+    best.sort((a, b) => a[0] - b[0]);
+    if(best.length >= k || r === 5000) return best.slice(0, k).map(b => b[1]);
+  }
+  return [];
+}
+function saveAuto(){ try{ localStorage.setItem('lm:autoNear', autoNear_ ? '1' : '0'); localStorage.setItem('lm:autoSet', JSON.stringify(Array.from(autoSet))); }catch(e){} }
+async function autoNear(force){
+  if(!autoNear_ || !me || !inRegion(me)) return;
+  if(!force && lastAutoAt && dist(lastAutoAt, me) < 150) return;
+  lastAutoAt = { lat: me.lat, lng: me.lng };
+  const pick = await nearestLines(me, AUTO_N);
+  if(!autoNear_ || !pick.length) return;
+  const next = new Set(pick);
+  if(pick.length === autoSet.size && pick.every(n => autoSet.has(n)) && pick.every(n => LAYERS.has(n))) return;
+  autoSet.forEach(n => { if(!next.has(n)) LAYERS.delete(n); });
+  next.forEach(n => LAYERS.add(n));
+  autoSet = next; saveAuto(); saveLayers(); refreshLineColors(); renderLayerBar(); onLayersChanged();
+}
+// picking a layer by hand in the 圖層 menu: turning off one of the nearest lines means "I'll choose myself"
+function onLayerPicked(name, on){
+  if(name && autoSet.has(name)){ autoSet.delete(name); if(!on){ autoNear_ = false; } }
+  if(name === null){ autoNear_ = false; autoSet.clear(); }
+  saveAuto();
+}
+async function onAutoNearToggled(on){
+  autoNear_ = on;
+  if(!on){ autoSet.clear(); saveAuto(); return; }
+  saveAuto();
+  if(!me){ toast('開始定位後,會自動開啟離你最近的 3 條線'); return; }
+  await autoNear(true);
+}
+function layerSheetTop(){
+  return '<label class="lauto"><input type="checkbox" data-auto' + (autoNear_ ? ' checked' : '') + '><span class="nm"><b>自動開啟離我最近的 3 條幹線/分線</b>'
+    + '<span class="hint" style="display:block;margin:0">跟著你的位置更新;手動關掉其中一條就會停用</span></span></label>';
 }
 function renderMe(){
   if(!me){ $('meCard').hidden = true; $('nearCard').hidden = true; return; }
@@ -2196,7 +2261,7 @@ function setBasemap(key, quiet){
 }
 // ---------- boot ----------
 function bootLocator(){
-  initLineIndex(LINE_INDEX_DATA, 'lm:layers', ['民一幹', '社尾幹', '新社幹', '望間分線', '望湖分線']);
+  initLineIndex(LINE_INDEX_DATA, 'lm:layers.v7', []);   // new key: start everyone on 「最近 3 條」
   refreshLineColors(); renderLayerBar();
   $('layerBtn').addEventListener('click', openLayerSheet);
   ensureLines(Array.from(LAYERS));
