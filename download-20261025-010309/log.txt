@@ -1,0 +1,3 @@
+錯誤 https://service.taipower.com.tw/data/opendata/apply/file/d077006/all.csv <urlopen error _ssl.c:1063: The handshake operation timed out>
+--- https://service.taipower.com.tw/robots.txt ---
+(讀不到 robots.txt:HTTP Error 404: Not Found)
