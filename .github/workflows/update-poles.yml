@@ -36,6 +36,7 @@ jobs:
 
       - name: 放進網站
         run: |
+          cp d/index.json /tmp/old-index.json
           rm -f d/p*.json && cp build/d/*.json d/ && cp build/lines-index.json d/index.json
           python3 - <<'PY'
           idx = open('d/index.json', encoding='utf-8').read().strip()
@@ -44,15 +45,22 @@ jobs:
           for i, l in enumerate(lines):
               if l.startswith('const LINE_INDEX_DATA = '): lines[i] = 'const LINE_INDEX_DATA = ' + idx + ';'; n += 1
           assert n == 1, '找不到網頁裡的線路清單'
+          # 新的版本編號:打開網頁的手機會自動換成新版
+          import datetime, json
+          build = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y%m%d-%H%M%S')
+          lines = ['const SITE_BUILD = ' + json.dumps(build) + ';' if l.startswith('const SITE_BUILD = ') else l for l in lines]
           open('index.html', 'w', encoding='utf-8').write('\n'.join(lines))
+          open('version.json', 'w').write(json.dumps({'build': build}))
           PY
 
       - name: 存回 repo
         run: |
           git config user.name "line-map-bot"
           git config user.email "line-map-bot@users.noreply.github.com"
-          git add d index.html
-          if git diff --cached --quiet; then echo "電桿資料沒有變更"; exit 0; fi
+          git add d
+          if git diff --cached --quiet -- d; then echo "電桿資料沒有變更"; exit 0; fi
+          python3 tools/changelog.py poles /tmp/old-index.json d/index.json
+          git add d index.html version.json changelog.json
           git commit -qm "自動更新全台電桿 $(TZ=Asia/Taipei date +%Y-%m-%d)"
           for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 10; done
 
