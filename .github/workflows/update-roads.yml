@@ -1,6 +1,6 @@
 name: 自動更新街道
 
-# 每月 2 日凌晨(台北時間)下載最新的 OpenStreetMap 台灣資料,裁出桃園所有道路,
+# 每月 2 日凌晨(台北時間)下載最新的 OpenStreetMap 台灣資料,取出全台所有道路,
 # 切成小區塊存到 roads/ 資料夾,GitHub Pages 會自動更新定位地圖。
 # 想馬上更新:Actions → 自動更新街道 → Run workflow
 on:
@@ -13,7 +13,7 @@ permissions:
   pages: write
 
 concurrency:
-  group: update-roads
+  group: site-update
   cancel-in-progress: false
 
 jobs:
@@ -29,10 +29,9 @@ jobs:
       - name: 下載台灣 OpenStreetMap 資料(Geofabrik)
         run: curl -fsSL --retry 3 -o taiwan.osm.pbf https://download.geofabrik.de/asia/taiwan-latest.osm.pbf
 
-      - name: 裁出桃園的道路
+      - name: 取出全台的道路
         run: |
-          osmium extract -b 120.975,24.585,121.505,25.135 taiwan.osm.pbf -o taoyuan.osm.pbf --overwrite
-          osmium tags-filter taoyuan.osm.pbf w/highway -o roads.osm.pbf --overwrite
+          osmium tags-filter taiwan.osm.pbf w/highway -o roads.osm.pbf --overwrite
           osmium export roads.osm.pbf -f geojsonseq --geometry-types=linestring -o roads.geojsonseq --overwrite
 
       - name: 切成地圖區塊
@@ -41,16 +40,20 @@ jobs:
           """Cut OpenStreetMap roads into small tiles the line map loads as you pan.
 
           input : GeoJSON / GeoJSON-seq of OSM ways (e.g. `osmium export ... -f geojsonseq`)
-          output: <out>/index.json, <out>/major.json (main roads, always loaded),
-                  <out>/t_<row>_<col>.json (everything else, per tile), <out>/names.json (street search)
+          output: <out>/index.json,
+                  <out>/m_<row>_<col>.json  主要道路(國道、省道、縣道),大格子,縮小時就載入
+                  <out>/t_<row>_<col>.json  其他道路,小格子,放大才載入
+                  <out>/n_<xx>.json         路名索引,依路名第一個字分 64 份(搜尋時只下載一份)
 
           Only the Python standard library is used, so it runs anywhere (GitHub Actions too).
           usage: python3 tools/build_road_tiles.py <roads.geojsonseq|.geojson> <out dir>
           """
           import json, math, os, sys, collections, datetime
 
-          S, W, N, E = 24.585, 120.975, 25.135, 121.505      # 桃園市
+          S, W, N, E = 21.85, 118.15, 26.45, 122.05          # 全台(含澎湖、金門、馬祖)
           CELL = 0.04                                          # tile size in degrees (~4 km)
+          MCELL = 0.16                                         # 主要道路的格子(~16 km)
+          NSHARD = 64
           CLASS = {
               'motorway': 'a', 'trunk': 'a', 'primary': 'a', 'motorway_link': 'a', 'trunk_link': 'a', 'primary_link': 'a',
               'secondary': 'b', 'tertiary': 'b', 'secondary_link': 'b', 'tertiary_link': 'b',
@@ -137,33 +140,42 @@ jobs:
               for r in roads: r['p'] = [[round(x, 5), round(y, 5)] for x, y in simplify(r['p'], 2.0)]
               for i, r in enumerate(roads): r['i'] = i
 
-              def cells(r):
+              def cells(r, cell=CELL):
                   xs = [p[0] for p in r['p']]; ys = [p[1] for p in r['p']]
-                  r0, r1 = int((min(ys) - S) // CELL), int((max(ys) - S) // CELL)
-                  c0, c1 = int((min(xs) - W) // CELL), int((max(xs) - W) // CELL)
+                  r0, r1 = int((min(ys) - S) // cell), int((max(ys) - S) // cell)
+                  c0, c1 = int((min(xs) - W) // cell), int((max(xs) - W) // cell)
                   return [(a, b) for a in range(r0, r1 + 1) for b in range(c0, c1 + 1)]
-              major = [r for r in roads if r['c'] == 'a']
               tiles = collections.defaultdict(list)
+              mtiles = collections.defaultdict(list)
               names = {}
               for r in roads:
                   keys = cells(r)
-                  if r['c'] != 'a':
+                  if r['c'] == 'a':
+                      for k in cells(r, MCELL): mtiles[k].append(r)
+                  else:
                       for k in keys: tiles[k].append(r)
                   if r['n']:
-                      e = names.setdefault(r['n'], set()); e.update(f'{a}_{b}' for a, b in keys)
+                      e = names.setdefault(r['n'], set())
+                      e.update(f'm{a}_{b}' for a, b in cells(r, MCELL)) if r['c'] == 'a' else e.update(f'{a}_{b}' for a, b in keys)
               pack = lambda rs: json.dumps({'roads': [{'i': r['i'], 'n': r['n'], 'c': r['c'], 'p': r['p']} for r in rs]}, ensure_ascii=False, separators=(',', ':'))
               for f in os.listdir(out):
-                  if f.startswith('t_') and f.endswith('.json'): os.remove(os.path.join(out, f))
-              sizes = {}
+                  if f[:2] in ('t_', 'm_', 'n_') and f.endswith('.json') or f in ('major.json', 'names.json'): os.remove(os.path.join(out, f))
+              sizes, msizes = {}, {}
               for (a, b), rs in tiles.items():
                   body = pack(rs); open(os.path.join(out, f't_{a}_{b}.json'), 'w', encoding='utf-8').write(body); sizes[f'{a}_{b}'] = len(body.encode())
-              open(os.path.join(out, 'major.json'), 'w', encoding='utf-8').write(pack(major))
-              open(os.path.join(out, 'names.json'), 'w', encoding='utf-8').write(json.dumps({n: sorted(v) for n, v in names.items()}, ensure_ascii=False, separators=(',', ':')))
-              index = {'v': 1, 'source': 'OpenStreetMap contributors (ODbL)', 'updated': datetime.date.today().isoformat(),
-                       'bbox': [S, W, N, E], 'cell': CELL, 'tiles': sorted(sizes), 'roads': len(roads), 'named': len(names)}
-              open(os.path.join(out, 'index.json'), 'w', encoding='utf-8').write(json.dumps(index, ensure_ascii=False))
-              tot = sum(sizes.values()) / 1024 / 1024
-              print(f'{len(roads)} 條道路({len(names)} 個路名、主要道路 {len(major)} 條);{len(sizes)} 個區塊,合計 {tot:.1f} MB,最大 {max(sizes.values(), default=0)/1024:.0f} KB;略過 {skipped} 條非車道')
+              for (a, b), rs in mtiles.items():
+                  body = pack(rs); open(os.path.join(out, f'm_{a}_{b}.json'), 'w', encoding='utf-8').write(body); msizes[f'{a}_{b}'] = len(body.encode())
+              shards = collections.defaultdict(dict)
+              for n, v in names.items(): shards[ord(n[0]) % NSHARD][n] = sorted(v)
+              for k in range(NSHARD):
+                  open(os.path.join(out, f'n_{k:02d}.json'), 'w', encoding='utf-8').write(json.dumps(shards.get(k, {}), ensure_ascii=False, separators=(',', ':')))
+              index = {'v': 2, 'source': 'OpenStreetMap contributors (ODbL)', 'updated': datetime.date.today().isoformat(),
+                       'bbox': [S, W, N, E], 'cell': CELL, 'tiles': sorted(sizes), 'mcell': MCELL, 'mtiles': sorted(msizes), 'nshard': NSHARD,
+                       'roads': len(roads), 'named': len(names)}
+              open(os.path.join(out, 'index.json'), 'w', encoding='utf-8').write(json.dumps(index, ensure_ascii=False, separators=(',', ':')))
+              tot = (sum(sizes.values()) + sum(msizes.values())) / 1024 / 1024
+              print(f'{len(roads)} 條道路({len(names)} 個路名);{len(sizes)} 個區塊 + {len(msizes)} 個主要道路區塊,合計 {tot:.1f} MB,'
+                    f'最大 {max(sizes.values(), default=0)/1024:.0f} KB / 主要 {max(msizes.values(), default=0)/1024:.0f} KB;略過 {skipped} 條非車道')
 
           if __name__ == '__main__':
               main()
@@ -177,7 +189,7 @@ jobs:
           git add roads
           if git diff --cached --quiet; then echo "街道沒有變更"; exit 0; fi
           git commit -m "自動更新街道 $(TZ=Asia/Taipei date +%Y-%m-%d)"
-          git push
+          for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 10; done
 
       - name: 請 GitHub Pages 重新發布
         env:

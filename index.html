@@ -379,6 +379,14 @@ input[type=datetime-local],input[type=number],select,textarea,.grid3 select,.gri
 .ldist > summary::-webkit-details-marker{display:none;}
 .ldist > summary::before{content:"▸"; color:var(--muted); font-size:12px;}
 .ldist[open] > summary::before{content:"▾";}
+.lcounty > summary{min-height:48px; display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; border-bottom:1px solid var(--line); list-style:none;}
+.lcounty > summary::-webkit-details-marker{display:none;}
+.lcounty > summary::before{content:"▸"; color:var(--muted); font-size:12px;}
+.lcounty[open] > summary::before{content:"▾";}
+.lcounty .ct{font-size:12.5px; color:var(--muted); margin-left:auto;}
+.lcounty > .ldist{padding-left:14px;}
+.ldist .ct{margin-left:auto;}
+.ldall{min-height:32px!important; padding:4px 8px!important; font-size:12.5px!important; flex:none;}
 .ldist .lrow{padding-left:14px;}
 .sb-row{grid-template-columns:auto minmax(0,1fr) auto;}
 @media (max-width:520px){ .grid2.dt{grid-template-columns:1fr;} }
@@ -490,7 +498,7 @@ body{margin:0}
     <div id="trkList"></div>
 
     <a class="btn ghost wide" id="recordsLink" target="_blank" rel="noopener" style="margin-top:14px">到「線路巡視紀錄」寫事故、巡修、日誌</a>
-    <p class="hint" style="text-align:center" id="appVer">版本 v8(10/25):全台電桿(22 縣市、約 225 萬支)</p>
+    <p class="hint" style="text-align:center" id="appVer">版本 v9(10/25):全台自繪街道、圖層依縣市→行政區分類(可整區開啟)、每月自動更新電桿與街道</p>
     <p class="hint" style="text-align:center">電桿資料:台電開放資料「台灣電力公司電桿坐標及桿號」;底圖:內政部國土測繪中心 臺灣通用電子地圖、正射影像;街道搜尋:© OpenStreetMap 貢獻者</p>
   </section>
 </div>
@@ -1010,7 +1018,9 @@ function openLayerSheet(){
   const zh = (a, b) => a.localeCompare(b, 'zh-Hant');
   const distBlock = (d, label) => {
     const ls = byDist.get(d);
-    return '<details class="ldist" data-dist="' + esc(d) + '"><summary>' + esc(label) + '<span class="ct">' + ls.length + ' 條</span></summary>'
+    const allOn = ls.every(l => LAYERS.has(l.name));
+    return '<details class="ldist" data-dist="' + esc(d) + '"><summary>' + esc(label) + '<span class="ct">' + ls.length + ' 條</span>'
+      + '<button class="btn ghost xs ldall" type="button" data-a="dist" data-dist="' + esc(d) + '">' + (allOn ? '整區關閉' : '整區開啟') + '</button></summary>'
       + (lazy ? '' : ls.sort((a, b) => zh(a.name, b.name)).map(row).join('')) + '</details>';
   };
   const byCounty = new Map();
@@ -1044,6 +1054,21 @@ function openLayerSheet(){
     if(e.target === m) return close();
     const a = e.target.closest('[data-a]'); if(!a) return;
     if(a.dataset.a === 'done') close();
+    if(a.dataset.a === 'dist'){
+      // 一次開/關一整個行政區(例如 桃園市 桃園區)的所有線路
+      e.preventDefault();
+      const ls = byDist.get(a.dataset.dist) || [], on = !ls.every(l => LAYERS.has(l.name));
+      if(on && ls.length > 25) toast('一次開 ' + ls.length + ' 條,畫面可能會比較慢');
+      ls.forEach(l => { if(typeof onLayerPicked === 'function') onLayerPicked(l.name, on); if(on) LAYERS.add(l.name); else LAYERS.delete(l.name); });
+      saveLayers(); refreshLineColors(); renderLayerBar();
+      if(on) ensureLines(ls.map(l => l.name)).then(() => { if(typeof onLayersChanged === 'function') onLayersChanged(); });
+      if(typeof onLayersChanged === 'function') onLayersChanged();
+      a.textContent = on ? '整區關閉' : '整區開啟';
+      const names = new Set(ls.map(l => l.name));
+      m.querySelectorAll('input[data-layer]').forEach(o => { if(names.has(o.dataset.layer)) o.checked = on; });
+      const ac = m.querySelector('input[data-auto]'); if(ac && typeof autoNearOn === 'function') ac.checked = autoNearOn();
+      count(); return;
+    }
     if(a.dataset.a === 'clear'){ if(typeof onLayerPicked === 'function') onLayerPicked(null, false);
       Array.from(LAYERS).forEach(n => LAYERS.delete(n)); saveLayers(); renderLayerBar(); if(typeof onLayersChanged === 'function') onLayersChanged();
       m.querySelectorAll('input[data-layer]').forEach(c => { c.checked = false; });
@@ -1310,37 +1335,57 @@ function toRoad(r){
 }
 function setRoads(j){ ROADS = ((j && j.roads) || []).map(toRoad); LMap.req(); }
 // ---- road tiles (roads/index.json, built by tools/build_road_tiles.py; refreshed monthly on GitHub) ----
-const RT = { index: null, loaded: new Set(), pending: new Map(), ids: new Set(), names: null };
-function addRoads(list){
-  if(!RT.index || !ROADS){ ROADS = []; }
-  let added = 0;
-  list.forEach(r => { if(RT.ids.has(r.i)) return; RT.ids.add(r.i); ROADS.push(toRoad(r)); added++; });
-  if(added) LMap.req();
+// v2 (全台): m_ = 主要道路大格子, t_ = 其他道路小格子, n_xx = 路名索引分片。只留畫面附近的格子,其餘丟掉省記憶體。
+const RT = { index: null, tiles: new Map(), pending: new Map(), names: new Map(), keep: new Set() };
+const RT_MAX_TILES = 60;
+function rebuildRoads(){
+  const seen = new Set(), list = [];
+  RT.tiles.forEach(rs => rs.forEach(r => { if(!seen.has(r.i)){ seen.add(r.i); list.push(r); } }));
+  ROADS = list; LMap.req();
 }
 function roadFile(name){ return fetch('roads/' + name, { cache: 'no-cache' }).then(r => { if(!r.ok) throw new Error(r.status); return r.json(); }); }
 async function initRoadTiles(){
   if(typeof HAS_ROAD_TILES !== 'undefined' && !HAS_ROAD_TILES) return false;
   try{ RT.index = await roadFile('index.json'); }catch(e){ return false; }
-  ROADS = []; RT.ids.clear();
-  try{ addRoads((await roadFile('major.json')).roads); }catch(e){}
+  RT.tiles.clear(); ROADS = [];
+  if(!RT.index.mcell){ try{ RT.tiles.set('major', (await roadFile('major.json')).roads.map(toRoad)); RT.keep.add('major'); }catch(e){} rebuildRoads(); }
   LMap.req();
   return true;
 }
+// key: '12_34' (小格子) or 'm3_8' (主要道路)
+function tileCenter(key){
+  const m = key[0] === 'm', [a, b] = key.replace(/^m/, '').split('_').map(Number), cell = m ? RT.index.mcell : RT.index.cell;
+  return { lat: RT.index.bbox[0] + (a + 0.5) * cell, lng: RT.index.bbox[1] + (b + 0.5) * cell };
+}
 function loadRoadTile(key){
-  if(RT.loaded.has(key) || !RT.index || !RT.index.tiles.includes(key)) return Promise.resolve();
-  if(!RT.pending.has(key)) RT.pending.set(key, roadFile('t_' + key + '.json').then(j => { RT.loaded.add(key); addRoads(j.roads); })
+  if(!RT.index || RT.tiles.has(key)) return Promise.resolve();
+  const m = key[0] === 'm';
+  if(!(m ? (RT.index.mtiles || []) : RT.index.tiles).includes(m ? key.slice(1) : key)) return Promise.resolve();
+  if(!RT.pending.has(key)) RT.pending.set(key, roadFile((m ? 'm_' + key.slice(1) : 't_' + key) + '.json')
+    .then(j => { RT.tiles.set(key, j.roads.map(toRoad)); evictRoadTiles(); rebuildRoads(); })
     .catch(() => {}).finally(() => RT.pending.delete(key)));
   return RT.pending.get(key);
 }
-// load the tiles under the current view once zoomed in far enough to show streets
-function loadRoadsInView(L){
-  if(!RT.index || L.mpp > 25) return;
-  const [S0, W0] = RT.index.bbox, cell = RT.index.cell;
+function evictRoadTiles(){
+  if(RT.tiles.size <= RT_MAX_TILES) return;
+  const c = TPC.fromPlane(LMap.cx, LMap.cy);
+  const far = Array.from(RT.tiles.keys()).filter(k => !RT.keep.has(k))
+    .map(k => { const t = tileCenter(k); return [Math.hypot(t.lat - c.lat, (t.lng - c.lng) * 0.92), k]; }).sort((a, b) => b[0] - a[0]);
+  while(RT.tiles.size > RT_MAX_TILES && far.length) RT.tiles.delete(far.shift()[1]);
+}
+function cellsInView(L, cell, max){
+  const [S0, W0] = RT.index.bbox;
   const c = [[0, 0], [L.W, 0], [0, L.H], [L.W, L.H]].map(([sx, sy]) => TPC.fromPlane(...L.toPlane(sx, sy)));
   const r0 = Math.floor((Math.min(...c.map(q => q.lat)) - S0) / cell), r1 = Math.floor((Math.max(...c.map(q => q.lat)) - S0) / cell);
   const c0 = Math.floor((Math.min(...c.map(q => q.lng)) - W0) / cell), c1 = Math.floor((Math.max(...c.map(q => q.lng)) - W0) / cell);
-  if((r1 - r0 + 1) * (c1 - c0 + 1) > 30) return;
-  for(let a = r0; a <= r1; a++) for(let b = c0; b <= c1; b++) loadRoadTile(a + '_' + b);
+  if((r1 - r0 + 1) * (c1 - c0 + 1) > max) return [];
+  const out = []; for(let a = r0; a <= r1; a++) for(let b = c0; b <= c1; b++) out.push(a + '_' + b); return out;
+}
+// load the tiles under the current view once zoomed in far enough to show streets
+function loadRoadsInView(L){
+  if(!RT.index) return;
+  if(RT.index.mcell && L.mpp <= 45) cellsInView(L, RT.index.mcell, 12).forEach(k => loadRoadTile('m' + k));
+  if(L.mpp <= 25) cellsInView(L, RT.index.cell, 30).forEach(loadRoadTile);
 }
 // startup: road tiles if this site has them, otherwise the single roads.json
 async function loadRoads(){
@@ -1348,13 +1393,27 @@ async function loadRoads(){
   if(!HAS_ROADS) return;
   try{ const r = await fetch('roads.json', { cache: 'force-cache' }); if(r.ok) setRoads(await r.json()); }catch(e){}
 }
-// street search across all of 桃園: names.json says which tiles hold the name
+function roadRef(){ return typeof me !== 'undefined' && me ? me : TPC.fromPlane(LMap.cx, LMap.cy); }
+// street search: the name index says which tiles hold the name; load the ones nearest to you
 async function loadRoadName(q){
-  if(!RT.index) return;
-  if(!RT.names){ try{ RT.names = await roadFile('names.json'); }catch(e){ RT.names = {}; } }
-  let name = RT.names[q] ? q : Object.keys(RT.names).find(n => n.includes(q));
+  if(!RT.index || !q) return;
+  let names;
+  if(RT.index.nshard){
+    const k = q.codePointAt(0) % RT.index.nshard;
+    if(!RT.names.has(k)){ try{ RT.names.set(k, await roadFile('n_' + String(k).padStart(2, '0') + '.json')); }catch(e){ RT.names.set(k, {}); } }
+    names = RT.names.get(k);
+  } else {
+    if(!RT.names.has('all')){ try{ RT.names.set('all', await roadFile('names.json')); }catch(e){ RT.names.set('all', {}); } }
+    names = RT.names.get('all');
+  }
+  const keys = Object.keys(names);
+  const name = names[q] ? q : keys.find(n => n.startsWith(q)) || keys.find(n => n.includes(q));
   if(!name) return;
-  await Promise.all(RT.names[name].map(loadRoadTile));
+  const ref = roadRef();
+  const tiles = names[name].slice().sort((a, b) => { const ta = tileCenter(a), tb = tileCenter(b);
+    return Math.hypot(ta.lat - ref.lat, ta.lng - ref.lng) - Math.hypot(tb.lat - ref.lat, tb.lng - ref.lng); }).slice(0, 8);
+  RT.keep = new Set(['major'].concat(tiles));
+  await Promise.all(tiles.map(loadRoadTile));
 }
 const MAIN_ZONES = ['A','B','C','D','E','F','G','H','J','K','L','M','N','O','P','Q','R','T','U','V','W'];
 const planeCache = new Map();
@@ -1845,7 +1904,12 @@ function findRoad(raw){
   let hits = ROADS.filter(r => r.n === q);
   if(!hits.length) hits = ROADS.filter(r => r.n && r.n.includes(q));
   if(!hits.length) return null;
-  const name = hits[0].n, same = ROADS.filter(r => r.n === name);
+  // 同名的路全台很多條:用離你(或畫面中央)最近的那一段,只取它附近 8 公里內的同名路段
+  const ref = typeof roadRef === 'function' ? TPC.toPlane(roadRef().lat, roadRef().lng) : null;
+  const gap = r => ref ? Math.hypot(Math.max(r.bb.x0 - ref[0], 0, ref[0] - r.bb.x1), Math.max(r.bb.y0 - ref[1], 0, ref[1] - r.bb.y1)) : 0;
+  hits.sort((a, b) => gap(a) - gap(b));
+  const h = hits[0], name = h.n;
+  const same = ROADS.filter(r => r.n === name && Math.max(r.bb.x0 - h.bb.x1, h.bb.x0 - r.bb.x1, r.bb.y0 - h.bb.y1, h.bb.y0 - r.bb.y1) < 8000);
   return { name, count: same.length, pts: [].concat(...same.map(r => r.pp)) };
 }
 function natCmp(a, b){ return a.localeCompare(b, 'zh-Hant', { numeric: true }); }

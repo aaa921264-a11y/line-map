@@ -1,0 +1,64 @@
+name: 自動更新全台電桿
+
+# 每月 3 日凌晨(台北時間)下載台電開放資料「電桿坐標及桿號」(全台),
+# 重新整理成每條線一個圖層,更新 d/ 資料夾和網頁裡的線路清單。已經有的線維持原本的顏色。
+# 想馬上更新:Actions → 自動更新全台電桿 → Run workflow
+on:
+  schedule:
+    - cron: "41 18 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: site-update
+  cancel-in-progress: false
+
+jobs:
+  poles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 下載台電電桿資料(全台)
+        run: |
+          curl -fsSL --retry 6 --retry-all-errors --retry-delay 20 --connect-timeout 60 --max-time 1800 \
+            -A "line-map-bot/1.0 (+https://github.com/aaa921264-a11y/line-map)" \
+            -o all.csv https://service.taipower.com.tw/data/opendata/apply/file/d077006/all.csv
+          ls -la all.csv
+          head -1 all.csv | grep -q "桿號" || { echo "下載的檔案格式不對,這次不更新"; exit 1; }
+
+      - name: 整理成圖層
+        run: python3 tools/build_lines_tw.py all.csv build d/index.json tools/taoyuan-colors.json
+
+      - name: 放進網站
+        run: |
+          rm -f d/p*.json && cp build/d/*.json d/ && cp build/lines-index.json d/index.json
+          python3 - <<'PY'
+          idx = open('d/index.json', encoding='utf-8').read().strip()
+          lines = open('index.html', encoding='utf-8').read().split('\n')
+          n = 0
+          for i, l in enumerate(lines):
+              if l.startswith('const LINE_INDEX_DATA = '): lines[i] = 'const LINE_INDEX_DATA = ' + idx + ';'; n += 1
+          assert n == 1, '找不到網頁裡的線路清單'
+          open('index.html', 'w', encoding='utf-8').write('\n'.join(lines))
+          PY
+
+      - name: 存回 repo
+        run: |
+          git config user.name "line-map-bot"
+          git config user.email "line-map-bot@users.noreply.github.com"
+          git add d index.html
+          if git diff --cached --quiet; then echo "電桿資料沒有變更"; exit 0; fi
+          git commit -qm "自動更新全台電桿 $(TZ=Asia/Taipei date +%Y-%m-%d)"
+          for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 10; done
+
+      - name: 請 GitHub Pages 重新發布
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds" || echo "(Pages 會自己更新,略過)"
