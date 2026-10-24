@@ -1,0 +1,3 @@
+ok https://service.taipower.com.tw/data/opendata/apply/file/d077006/all.csv -> 00_all.csv.xz.part* 原始 319,982,717 bytes
+--- https://service.taipower.com.tw/robots.txt ---
+(讀不到 robots.txt:<urlopen error _ssl.c:1063: The handshake operation timed out>)
