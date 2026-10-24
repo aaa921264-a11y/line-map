@@ -423,6 +423,25 @@ body{margin:0}
 #trkGap{margin-top:8px;}
 .lauto{display:flex; gap:10px; border:1px solid var(--line, #8884); border-radius:8px; padding:10px; margin-bottom:10px; align-items:flex-start; cursor:pointer;}
 .lauto input{width:20px; height:20px; margin:2px 0 0; flex:none; accent-color:var(--accent, #e8a317);}
+.searchbar{position:relative;}
+.qhist{position:absolute; left:0; right:0; top:52px; z-index:30; background:var(--card, var(--bg)); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px #0003; max-height:60vh; overflow:auto;}
+.qh-row{display:flex; align-items:stretch; border-bottom:1px solid var(--line);}
+.qh-go{flex:1; display:flex; align-items:center; gap:10px; min-height:46px; padding:6px 10px; background:none; border:0; color:inherit; font:inherit; text-align:left; cursor:pointer;}
+.qh-go i{font-style:normal; font-size:12px; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:var(--info-wash); color:var(--info); flex:none;}
+.qh-go span{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.qh-go small{color:var(--muted); font-size:12px;}
+.qh-del{width:46px; background:none; border:0; color:var(--muted); font-size:20px; cursor:pointer;}
+.qh-foot{display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px; font-size:14px;}
+.qh-foot label{display:flex; align-items:center; gap:6px; flex:1; min-width:12em;}
+.qh-foot input{width:20px; height:20px; accent-color:var(--accent);}
+.qh-foot select{padding:6px;}
+.qh-clear{background:none; border:0; color:var(--danger); font:inherit; cursor:pointer; padding:6px;}
+.qh-note{margin:0 10px 10px!important; font-size:12px;}
+.map .recent path{fill:#f59e0b; stroke:#fff; stroke-width:1.5;}
+.map .recent.latest path{fill:#e8590c;}
+.map .recent text{font-size:11px; font-weight:700; fill:#fff; pointer-events:none;}
+.map .recent text.rl{fill:var(--fg); font-weight:600; font-size:11.5px; paint-order:stroke; stroke:var(--map-bg, #fff); stroke-width:3px;}
+#recentBtn[aria-pressed=false]{opacity:.45;}
 </style>
 </head>
 <body>
@@ -438,6 +457,7 @@ body{margin:0}
       <input type="search" id="q" placeholder="民一43、B0721HD63 或路名" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="找電桿或路名">
       <button class="btn" id="qGo" type="button">找</button>
     </div>
+    <div class="qhist" id="qHist" hidden></div>
     <p class="hint" id="qMsg" aria-live="polite"></p>
     <div class="layerbar"><span id="layerSum"></span></div>
   </div>
@@ -450,6 +470,7 @@ body{margin:0}
       <button type="button" id="followBtn" aria-pressed="true" aria-label="跟著我的位置" title="跟著我的位置">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
       </button>
+      <button type="button" id="recentBtn" aria-pressed="true" aria-label="顯示/隱藏最近搜尋的桿" title="最近搜尋的桿"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button>
       <button type="button" id="baseBtn" aria-label="切換底圖" title="切換底圖"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="m3 13 9 5 9-5"/></svg></button>
       <button type="button" id="zoomIn" aria-label="放大">＋</button>
       <button type="button" id="zoomOut" aria-label="縮小">－</button>
@@ -498,7 +519,7 @@ body{margin:0}
     <div id="trkList"></div>
 
     <a class="btn ghost wide" id="recordsLink" target="_blank" rel="noopener" style="margin-top:14px">到「線路巡視紀錄」寫事故、巡修、日誌</a>
-    <p class="hint" style="text-align:center" id="appVer">版本 v9(10/25):全台自繪街道、圖層依縣市→行政區分類(可整區開啟)、每月自動更新電桿與街道</p>
+    <p class="hint" style="text-align:center" id="appVer">版本 v10(10/25):搜尋紀錄、地圖標出最近搜尋的桿;v9:全台自繪街道、圖層依縣市→行政區分類(可整區開啟)、每月自動更新電桿與街道</p>
     <p class="hint" style="text-align:center">電桿資料:台電開放資料「台灣電力公司電桿坐標及桿號」;底圖:內政部國土測繪中心 臺灣通用電子地圖、正射影像;街道搜尋:© OpenStreetMap 貢獻者</p>
   </section>
 </div>
@@ -1800,6 +1821,7 @@ const LMap = {
       this.pickMark = ll; this.stopPick(); this.draw(); cb(ll);
       return;
     }
+    if(typeof mapTapHook === 'function' && mapTapHook(sx, sy)) return;
     let best = null, bd = 24;
     (this._pts || []).forEach(f => { const d = Math.hypot(f.sx - sx, f.sy - sy); if(d < bd){ bd = d; best = f; } });
     this.select(best ? best.key : null);
@@ -1962,6 +1984,7 @@ function mapOverlay(L){
     });
     flush();
   };
+  out += recentSvg(L);
   if(shown) pl(shown.points, 'trk');
   if(rec && rec.points.length) pl(rec.points.concat(rec.on && me ? [me] : []), 'trk live');
   if(me){
@@ -2289,6 +2312,81 @@ document.addEventListener('click', e => {
   if(b.dataset.act === 'follow') setFollow(true);
   if(b.dataset.act === 'show-pole'){ const p = S.poles.find(x => x.id === b.dataset.id); if(p) selectPole(p); }
 });
+// ---------- 搜尋紀錄(只存在這支手機的瀏覽器,不佔網站空間) ----------
+const HIST_KEY = 'lm:hist', HIST_MAX = 30;
+let HIST = [];
+let recentOn = true, recentN = 10;
+try{ HIST = JSON.parse(localStorage.getItem(HIST_KEY) || '[]') || []; recentOn = localStorage.getItem('lm:recentOn') !== '0'; recentN = +localStorage.getItem('lm:recentN') || 10; }catch(e){ HIST = []; }
+function saveHist(){ try{ localStorage.setItem(HIST_KEY, JSON.stringify(HIST)); localStorage.setItem('lm:recentOn', recentOn ? '1' : '0'); localStorage.setItem('lm:recentN', String(recentN)); }catch(e){} }
+// e: { q: 打的字, label: 顯示名稱, kind: 'pole' | 'code' | 'road', lat, lng, line, no }
+function addHist(e){
+  e.t = Date.now();
+  HIST = [e].concat(HIST.filter(h => h.label !== e.label)).slice(0, HIST_MAX);
+  saveHist(); LMap.req();
+}
+function recentPoles(){ return recentOn ? HIST.filter(h => h.kind !== 'road' && h.lat != null).slice(0, recentN) : []; }
+let recentHits = [];
+function recentSvg(L){
+  recentHits = [];
+  let out = '';
+  const list = recentPoles();
+  list.slice().reverse().forEach((h, ri) => {
+    const i = list.length - 1 - ri;
+    if(!inRegion(h)) return;
+    const [x, y] = L.toScreen(...plane(h));
+    if(x < -30 || y < -30 || x > L.W + 30 || y > L.H + 30) return;
+    recentHits.push({ h, x, y });
+    const X = x.toFixed(1), Y = y.toFixed(1);
+    out += '<g class="recent' + (i === 0 ? ' latest' : '') + '"><path d="M' + X + ' ' + (y - 24).toFixed(1) + 'c-7 0-11 5-11 10c0 7 11 14 11 14s11-7 11-14c0-5-4-10-11-10z"/>'
+      + '<text x="' + X + '" y="' + (y - 10.5).toFixed(1) + '" text-anchor="middle">' + (i + 1) + '</text>'
+      + (L.mpp < 30 ? '<text class="rl" x="' + (x + 13).toFixed(1) + '" y="' + (y - 12).toFixed(1) + '">' + esc(h.label) + '</text>' : '') + '</g>';
+  });
+  return out;
+}
+// tapping a recent-search pin searches it again
+function mapTapHook(sx, sy){
+  let best = null, bd = 22;
+  recentHits.forEach(r => { const d = Math.hypot(r.x - sx, r.y - 14 - sy); if(d < bd){ bd = d; best = r; } });
+  if(!best) return false;
+  $('q').value = best.h.q; runSearch();
+  return true;
+}
+function renderHistBox(){
+  const box = $('qHist'), q = toHalf($('q').value.trim());
+  const list = HIST.filter(h => !q || h.q.includes(q) || h.label.includes(q)).slice(0, 8);
+  const icon = k => k === 'road' ? '路' : k === 'code' ? '座' : '桿';
+  box.innerHTML = (list.length ? list.map((h, i) => '<div class="qh-row"><button type="button" class="qh-go" data-h="' + HIST.indexOf(h) + '"><i>' + icon(h.kind) + '</i>'
+      + '<span>' + esc(h.label) + '</span><small>' + hhmmDay(h.t) + '</small></button>'
+      + '<button type="button" class="qh-del" data-hdel="' + HIST.indexOf(h) + '" aria-label="刪除這筆">×</button></div>').join('')
+    : '<p class="hint" style="margin:8px 10px">' + (HIST.length ? '沒有符合的紀錄' : '還沒有搜尋紀錄') + '</p>')
+    + '<div class="qh-foot"><label><input type="checkbox" id="qhOn"' + (recentOn ? ' checked' : '') + '> 地圖顯示最近搜尋的桿</label>'
+    + '<select id="qhN" aria-label="顯示幾支">' + [5, 10].map(n => '<option value="' + n + '"' + (n === recentN ? ' selected' : '') + '>' + n + ' 支</option>').join('') + '</select>'
+    + (HIST.length ? '<button type="button" class="qh-clear" data-hclear>清除全部</button>' : '') + '</div>'
+    + '<p class="hint qh-note">紀錄只存在這支手機,不會上傳。</p>';
+  box.hidden = false;
+}
+function hhmmDay(t){ const d = new Date(t), n = new Date(); return (d.toDateString() === n.toDateString() ? '' : (d.getMonth() + 1) + '/' + d.getDate() + ' ') + hhmm(t); }
+function hideHistBox(){ $('qHist').hidden = true; }
+function setRecentOn(v){ recentOn = v; saveHist(); LMap.req(); const b = $('recentBtn'); if(b) b.setAttribute('aria-pressed', v ? 'true' : 'false'); }
+function initHist(){
+  const q = $('q'), box = $('qHist');
+  q.addEventListener('focus', renderHistBox);
+  q.addEventListener('input', renderHistBox);
+  // close when tapping elsewhere
+  document.addEventListener('pointerdown', e => { if(!e.target.closest('#qHist') && e.target !== q) hideHistBox(); });
+  box.addEventListener('click', e => {
+    const go = e.target.closest('[data-h]'), del = e.target.closest('[data-hdel]');
+    if(del){ HIST.splice(+del.dataset.hdel, 1); saveHist(); LMap.req(); renderHistBox(); return; }
+    if(go){ const h = HIST[+go.dataset.h]; q.value = h.q; hideHistBox(); q.blur(); runSearch(); return; }
+    if(e.target.closest('[data-hclear]')){ HIST = []; saveHist(); LMap.req(); renderHistBox(); toast('已清除搜尋紀錄'); }
+  });
+  box.addEventListener('change', e => {
+    if(e.target.id === 'qhOn') setRecentOn(e.target.checked);
+    if(e.target.id === 'qhN'){ recentN = +e.target.value; saveHist(); LMap.req(); }
+  });
+  $('recentBtn').addEventListener('click', () => { setRecentOn(!recentOn); toast(recentOn ? '顯示最近搜尋的桿' : '隱藏最近搜尋的桿'); });
+  setRecentOn(recentOn);
+}
 function selectPole(p){
   setFollow(false);
   LMap.sel = 'pole:' + p.id;
@@ -2308,7 +2406,8 @@ async function runSearch(){
   if(r){
     if(inRegion(r)){ msg.textContent = '查詢中…'; await ensureNear(r, 300); }
     const known = S.poles.find(p => p.tpc && TPC.normalize(p.tpc) === code);
-    if(known) return selectPole(known);
+    if(known){ addHist({ q: raw.trim(), label: shortLine(known.line) + known.poleNo, kind: 'pole', lat: known.lat, lng: known.lng, line: known.line, no: known.poleNo }); return selectPole(known); }
+    addHist({ q: raw.trim(), label: tpcDisplay(code), kind: 'code', lat: r.lat, lng: r.lng });
     setFollow(false);
     msg.textContent = tpcDisplay(code) + ' → ' + coordText(r) + '(精度約 ' + r.precision + ' 公尺)。' + (inRegion(r) ? '' : '不在' + REGION.name + ',地圖上不顯示,但可以導航。');
     LMap.showFound(r.lat, r.lng, tpcDisplay(code));
@@ -2321,7 +2420,7 @@ async function runSearch(){
     if(!(q.alts || [q.line]).every(lineLoaded)) msg.textContent = '下載 ' + q.line + ' 的電桿資料…';
     q = await resolvePoleQuery(q);
     const { exact, list } = findPoleMatches(q);
-    if(exact) return selectPole(exact);
+    if(exact){ addHist({ q: raw.trim(), label: shortLine(exact.line) + exact.poleNo, kind: 'pole', lat: exact.lat, lng: exact.lng, line: exact.line, no: exact.poleNo }); return selectPole(exact); }
     if(!LAYERS.has(q.line) && list.length){ setLayer(q.line, true); toast('已開啟「' + q.line + '」圖層'); }
     if(!q.key && list.length){ setFollow(false); LMap.fit(list); msg.textContent = q.line + ' 共 ' + list.length + ' 支電桿。加上桿號找單一支,例如 ' + q.line + '43。'; return; }
     if(list.length){
@@ -2342,15 +2441,16 @@ async function runSearch(){
     LMap.hiRoad = road.name; LMap.sel = null; renderPlace();
     LMap.fit(road.pts.map(([x, y]) => TPC.fromPlane(x, y)));
     msg.textContent = '已顯示「' + road.name + '」' + (road.count > 1 ? '(共 ' + road.count + ' 段)' : '') + '。';
+    addHist({ q: raw.trim(), label: road.name, kind: 'road' });
     return;
   }
   msg.innerHTML = '讀不懂「' + esc(raw) + '」。可以輸入電力座標(<b>B0721 HD63</b>)、幹線加桿號(<b>民一43</b>、<b>社尾37R1</b>)或路名(<b>中山路</b>)。';
 }
-$('qGo').addEventListener('click', runSearch);
-$('q').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); runSearch(); } });
+$('qGo').addEventListener('click', () => { hideHistBox(); runSearch(); });
+$('q').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); hideHistBox(); $('q').blur(); runSearch(); } if(e.key === 'Escape') hideHistBox(); });
 $('qMsg').addEventListener('click', e => {
   const b = e.target.closest('[data-pole]'); if(!b) return;
-  const p = S.poles.find(x => x.id === b.dataset.pole); if(p){ $('q').value = p.line + p.poleNo; selectPole(p); }
+  const p = S.poles.find(x => x.id === b.dataset.pole); if(p){ $('q').value = shortLine(p.line) + p.poleNo.replace(/^#/, ''); addHist({ q: $('q').value, label: shortLine(p.line) + p.poleNo, kind: 'pole', lat: p.lat, lng: p.lng, line: p.line, no: p.poleNo }); selectPole(p); }
 });
 function renderLegend(){
   const lines = shownLines();
@@ -2392,6 +2492,7 @@ function bootLocator(){
   LMap.regionView(); LMap.draw();
   ensureLines(Array.from(LAYERS)).then(() => { if(!me) LMap.fit(); });
   $('followBtn').addEventListener('click', () => setFollow(true));
+  initHist();
   $('baseBtn').addEventListener('click', () => {
     const cur = LMap.basemap ? LMap.basemap.key : 'none', i = BASEMAPS.findIndex(b => b.key === cur);
     setBasemap(BASEMAPS[(i + 1) % BASEMAPS.length].key);
