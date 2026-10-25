@@ -1,0 +1,358 @@
+{
+ "taiwan_total": 4658,
+ "taoyuan_bbox": 1015,
+ "tag_counts": [
+  [
+   "highway",
+   1015
+  ],
+  [
+   "operator",
+   397
+  ],
+  [
+   "operator:wikidata",
+   333
+  ],
+  [
+   "lamp_mount",
+   317
+  ],
+  [
+   "ref",
+   306
+  ],
+  [
+   "ref:signed",
+   128
+  ],
+  [
+   "direction",
+   85
+  ],
+  [
+   "operator:en",
+   84
+  ],
+  [
+   "light:direction",
+   60
+  ],
+  [
+   "light:count",
+   50
+  ],
+  [
+   "lamp_type",
+   44
+  ],
+  [
+   "height",
+   15
+  ],
+  [
+   "name",
+   7
+  ],
+  [
+   "man_made",
+   5
+  ],
+  [
+   "material",
+   3
+  ],
+  [
+   "internet_access",
+   1
+  ],
+  [
+   "internet_access:fee",
+   1
+  ],
+  [
+   "internet_access:operator",
+   1
+  ],
+  [
+   "internet_access:ssid",
+   1
+  ],
+  [
+   "amenity",
+   1
+  ],
+  [
+   "brand",
+   1
+  ],
+  [
+   "brand:en",
+   1
+  ],
+  [
+   "brand:wikidata",
+   1
+  ],
+  [
+   "brand:zh",
+   1
+  ],
+  [
+   "cuisine",
+   1
+  ],
+  [
+   "name:en",
+   1
+  ],
+  [
+   "name:zh",
+   1
+  ],
+  [
+   "takeaway",
+   1
+  ],
+  [
+   "contact:phone",
+   1
+  ],
+  [
+   "operator:zh",
+   1
+  ]
+ ],
+ "with_ref": 306,
+ "samples": [
+  {
+   "lng": 120.9983276,
+   "lat": 24.7876723,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9975441,
+   "lat": 24.7874797,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9964229,
+   "lat": 24.7876454,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9959082,
+   "lat": 24.7876674,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9961952,
+   "lat": 24.7876552,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9968309,
+   "lat": 24.7875432,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9971742,
+   "lat": 24.7875043,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9979463,
+   "lat": 24.7874798,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9956346,
+   "lat": 24.787682,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9986755,
+   "lat": 24.7886438,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 121.4182135,
+   "lat": 24.9806027,
+   "tags": {
+    "highway": "street_lamp",
+    "lamp_type": "electric",
+    "ref": "81693"
+   }
+  },
+  {
+   "lng": 121.418128,
+   "lat": 24.9807438,
+   "tags": {
+    "highway": "street_lamp",
+    "lamp_type": "electric",
+    "ref": "81697"
+   }
+  },
+  {
+   "lng": 120.9979088,
+   "lat": 24.7878924,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 121.4151266,
+   "lat": 24.9930626,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12011"
+   }
+  },
+  {
+   "lng": 121.4137382,
+   "lat": 24.9939643,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12012"
+   }
+  },
+  {
+   "lng": 121.4125937,
+   "lat": 24.9949444,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12014"
+   }
+  },
+  {
+   "lng": 121.4064267,
+   "lat": 24.997745,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "10169"
+   }
+  },
+  {
+   "lng": 121.4087424,
+   "lat": 24.9983488,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "10165"
+   }
+  },
+  {
+   "lng": 121.4045698,
+   "lat": 24.9986315,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "10174"
+   }
+  },
+  {
+   "lng": 121.4048986,
+   "lat": 24.9991086,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "10179"
+   }
+  },
+  {
+   "lng": 121.4156299,
+   "lat": 24.993075,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12010"
+   }
+  },
+  {
+   "lng": 121.4146339,
+   "lat": 24.9932432,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12012"
+   }
+  },
+  {
+   "lng": 121.4161709,
+   "lat": 24.9933628,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12009"
+   }
+  },
+  {
+   "lng": 121.4140251,
+   "lat": 24.9935588,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12013"
+   }
+  },
+  {
+   "lng": 121.4138074,
+   "lat": 24.9939883,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12014"
+   }
+  },
+  {
+   "lng": 121.4132043,
+   "lat": 24.9946841,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "12016"
+   }
+  },
+  {
+   "lng": 121.4096612,
+   "lat": 24.9988141,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "10163"
+   }
+  },
+  {
+   "lng": 121.4107425,
+   "lat": 24.9990391,
+   "tags": {
+    "highway": "street_lamp",
+    "ref": "10137"
+   }
+  },
+  {
+   "lng": 120.9987621,
+   "lat": 24.7874693,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  },
+  {
+   "lng": 120.9986757,
+   "lat": 24.7874709,
+   "tags": {
+    "highway": "street_lamp"
+   }
+  }
+ ]
+}
