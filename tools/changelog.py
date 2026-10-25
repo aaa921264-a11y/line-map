@@ -1,4 +1,4 @@
-"""在 changelog.json 加一筆每月自動更新的紀錄(新增 / 保留 / 移除)。
+"""在 .github/auto-log.json 加一筆(不在網站上公開顯示;Claude 每月同步到「線路地圖後台」)每月自動更新的紀錄(新增 / 保留 / 移除)。
 
 python3 tools/changelog.py poles <舊 d/index.json> <新 d/index.json>
 python3 tools/changelog.py roads <舊 roads/index.json> <新 roads/index.json>
@@ -24,7 +24,8 @@ else:
     e = {'date': today, 'ver': '自動', 'title': '每月更新全台街道(OpenStreetMap)',
          'added': [f'道路 {ra:,} → {rb:,} 條({rb - ra:+,})', f'路名 {na:,} → {nb:,} 個({nb - na:+,})'] if (rb != ra or nb != na) else [],
          'kept': ['其他道路保留,自繪街道的畫法不變'], 'removed': [] if rb >= ra else [f'減少 {ra - rb:,} 條(OpenStreetMap 上已刪除或合併的路段)']}
-log = load('changelog.json') or []
+LOG = '.github/auto-log.json'
+log = load(LOG) or []
 log.append(e)
-json.dump(log, open('changelog.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+json.dump(log, open(LOG, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print(json.dumps(e, ensure_ascii=False))

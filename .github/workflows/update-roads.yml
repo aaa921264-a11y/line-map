@@ -190,7 +190,7 @@ jobs:
           git add roads
           if git diff --cached --quiet; then echo "街道沒有變更"; exit 0; fi
           python3 tools/changelog.py roads /tmp/old-roads.json roads/index.json
-          git add changelog.json
+          git add .github/auto-log.json
           git commit -m "自動更新街道 $(TZ=Asia/Taipei date +%Y-%m-%d)"
           for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 10; done
 

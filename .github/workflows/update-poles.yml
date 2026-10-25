@@ -50,7 +50,9 @@ jobs:
           build = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8))).strftime('%Y%m%d-%H%M%S')
           lines = ['const SITE_BUILD = ' + json.dumps(build) + ';' if l.startswith('const SITE_BUILD = ') else l for l in lines]
           open('index.html', 'w', encoding='utf-8').write('\n'.join(lines))
-          open('version.json', 'w').write(json.dumps({'build': build}))
+          v = json.load(open('version.json'))
+          v['build'] = build
+          open('version.json', 'w').write(json.dumps(v))
           PY
 
       - name: 存回 repo
@@ -60,7 +62,7 @@ jobs:
           git add d
           if git diff --cached --quiet -- d; then echo "電桿資料沒有變更"; exit 0; fi
           python3 tools/changelog.py poles /tmp/old-index.json d/index.json
-          git add d index.html version.json changelog.json
+          git add d index.html version.json .github/auto-log.json
           git commit -qm "自動更新全台電桿 $(TZ=Asia/Taipei date +%Y-%m-%d)"
           for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 10; done
 
