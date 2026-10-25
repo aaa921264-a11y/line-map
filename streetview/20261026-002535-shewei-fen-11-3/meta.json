@@ -1,0 +1,10 @@
+{
+ "pole": {
+  "lat": 24.958099,
+  "lng": 121.08653
+ },
+ "radius_m": 40.0,
+ "source": "Mapillary (CC BY-SA 4.0)",
+ "images": [],
+ "status": "no_token"
+}
