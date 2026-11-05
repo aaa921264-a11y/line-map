@@ -34,6 +34,20 @@ jobs:
       - name: 整理成圖層
         run: python3 tools/build_lines_tw.py all.csv build d/index.json tools/taoyuan-colors.json
 
+      - name: 檢查資料是否完整(不完整就不覆蓋)
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          old = json.load(open('d/index.json', encoding='utf-8'))
+          new = json.load(open('build/lines-index.json', encoding='utf-8'))
+          po = sum(l[1] for l in old['lines']); pn = sum(l[1] for l in new['lines'])
+          do, dn = len(old.get('dists', [])), len(new.get('dists', []))
+          print(f'電桿 {po} -> {pn};區 {do} -> {dn};線 {len(old["lines"])} -> {len(new["lines"])}')
+          if pn < po * 0.8 or dn < do * 0.8:
+              print('::error::這次下載的台電資料不完整(電桿或區數少於舊資料的八成),保留舊資料不更新')
+              sys.exit(1)
+          PY
+
       - name: 放進網站
         run: |
           cp d/index.json /tmp/old-index.json
