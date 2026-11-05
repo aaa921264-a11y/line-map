@@ -482,6 +482,15 @@ body{margin:0}
 .t-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:6px 0 10px;}
 .t-grid button{display:flex; flex-direction:column; gap:2px; align-items:flex-start; text-align:left; padding:10px; min-height:64px; border-radius:10px; border:1px solid var(--line); background:var(--surface); color:var(--fg); font:inherit; cursor:pointer;}
 .t-grid button span{font-size:12.5px; color:var(--muted);}
+.map .pole-own{fill:none; stroke:#e8590c; stroke-width:1.6; stroke-dasharray:2.5 2.5; pointer-events:none;}
+.own-f{display:flex; flex-direction:column; gap:8px;}
+.own-f label{display:flex; flex-direction:column; gap:3px; font-size:13px; color:var(--muted);}
+.own-f label.own-chk{flex-direction:row; align-items:center; gap:8px; color:var(--fg);}
+.own-f input[type=text],.own-f select{font:inherit; font-size:16px; color:var(--fg); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px;}
+.own-msg{font-size:13.5px; line-height:1.5;}
+.own-msg.err{color:var(--danger);}
+.own-item{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 0; border-top:1px solid var(--line);}
+.bx-own{font-size:13px; padding:8px; border-radius:8px; background:var(--surface-2); border:1px dashed #e8590c; display:flex; flex-direction:column; gap:6px;}
 .t-note{display:flex; flex-direction:column; align-items:flex-start; gap:2px; width:100%; text-align:left; padding:8px 4px; border:0; border-bottom:1px solid var(--line); background:none; color:var(--fg); font:inherit; cursor:pointer;}
 .t-note span{font-size:13px; color:var(--muted);}
 #tAcc{width:100%; box-sizing:border-box; font:inherit; font-size:13px; background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:8px;}
@@ -600,7 +609,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261026-005658";
+const SITE_BUILD = "20261105-223230";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -1795,6 +1804,7 @@ const LMap = {
         const net = netOf(f.o), r = net === 'ohl' || net === 'ugl' ? 3.5 : f.o.kind === 'b' ? 4.5 : 5.5;
         if(net === 'ugh' || net === 'ugl') out += '<rect class="pole ug" fill="' + lineColor(f.o.line) + '" x="' + (x - r).toFixed(1) + '" y="' + (y - r).toFixed(1) + '" width="' + (2 * r) + '" height="' + (2 * r) + '" rx="1"/>';
         else out += '<circle class="pole" fill="' + lineColor(f.o.line) + '" cx="' + X + '" cy="' + Y + '" r="' + r + '"/>';
+        if(f.o.own) out += '<circle class="pole-own" cx="' + X + '" cy="' + Y + '" r="' + (r + 3.5) + '"/>';
         if(this.mpp <= (f.o.kind === 'l' ? 1 : 2.5) && f.o.poleNo) labels.push({ x, y, text: shortLine(f.o.line) + f.o.poleNo, pri: f.o.kind === 'l' ? 2 : f.o.kind === 'b' ? 1 : 0, sel: this.sel === f.key });
       } else if(f.kind === 'pat'){
         out += '<rect class="pat" x="' + (x - 5.5).toFixed(1) + '" y="' + (y - 5.5).toFixed(1) + '" width="11" height="11" rx="2"/>';
@@ -2231,6 +2241,7 @@ function betaPoleExtras(p){
   const n = NOTES[poleKey(p)] || {};
   const dn = DOWN && DOWN.root.id === p.id ? DOWN : null;
   return '<div class="bx">'
+    + (p.own ? '<div class="bx-own">➕ 自己新增的桿(不是台電資料),只存在這支手機;位置依圖號座標,誤差約 10 公尺。<span class="row"><button class="btn danger sm" type="button" data-b="own-del">刪除這支桿</button></span></div>' : '')
     + (shared || same.length ? '<div class="bx-same">🔗 ' + (shared ? '這是<b>併桿</b>,桿上還掛有其他線路' + (same.length ? ';' : '。') : '') + (same.length ? '10 公尺內還有:' + same.map(esc).join('、') : '') + '</div>' : '')
     + (dn ? '<div class="bx-down">下游 <b>' + dn.list.length + '</b> 支桿' + (dn.branches ? '、分歧 ' + dn.branches + ' 處' : '') + (dn.far ? ',最遠 ' + fmtM(dn.far) : '') + '<span class="hint">(只算同一條線上接在後面的桿)</span></div>' : '')
     + '<div class="row">'
@@ -2248,6 +2259,7 @@ document.addEventListener('change', e => { if(e.target.id === 'bNote'){ const p 
 document.addEventListener('click', async e => {
   const b = e.target.closest('[data-b]'); if(!b) return;
   const a = b.dataset.b, p = sel();
+  if(a === 'own-del' && p && p.own){ if(confirm('刪除自己新增的「' + shortLine(p.line) + p.poleNo + '」?')) removeOwn(p.id); return; }
   if(a === 'down' && p) showDown(p);
   if(a === 'down-clear'){ DOWN = null; renderPlace(); LMap.req(); }
   if(a === 'share' && p){
@@ -2282,6 +2294,7 @@ function openTools(){
     + '<div class="lh"><b>工具(測試版)</b><span></span><button class="btn sm" type="button" data-t="close">完成</button></div><div class="lbody">'
     + '<div class="t-grid">'
     + '<button type="button" data-t="measure"><b>📏 量距離</b><span>點地圖量直線與沿線距離</span></button>'
+    + '<button type="button" data-t="addpole"><b>➕ 新增電桿</b><span>用圖號座標加一支桿</span></button>'
     + '<button type="button" data-t="ocr"><b>📷 拍桿牌找位置</b><span>拍電桿牌,讀出電力座標</span></button>'
     + '<button type="button" data-t="heat"><b>🔥 事故熱點</b><span>' + (HEAT ? (heatOn ? '關閉熱點' : '顯示熱點(' + HEAT.length + ' 筆)') : '先匯入事故資料') + '</span></button>'
     + '<button type="button" data-t="offline"><b>📦 下載這一區離線用</b><span>沒訊號也能看電桿和街道</span></button>'
@@ -2309,9 +2322,123 @@ function openTools(){
       catch(err){ toast('看不懂這段資料,請從紀錄網頁重新複製'); } }
     if(a === 'acc-clear'){ HEAT = null; heatOn = false; LS.set('lmb:acc', null); close(); LMap.req(); }
     if(a === 'ocr') $('bOcrFile').click();
+    if(a === 'addpole') renderAddPole($('tOut'));
+    if(a === 'own-line'){ const el = $('ownLine'); if(el){ el.value = t.dataset.v; $('ownSug').innerHTML = ''; $('ownNo').focus(); } }
+    if(a === 'own-save') saveOwnPole();
+    if(a === 'own-show'){ const np = S.poles.find(x => x.id === t.dataset.id); if(np){ close(); selectPole(np); } }
+    if(a === 'own-del'){ const np = S.poles.find(x => x.id === t.dataset.id);
+      if(np && confirm('刪除自己新增的「' + shortLine(np.line) + np.poleNo + '」?')){ removeOwn(np.id); const lst = $('ownList'); if(lst) lst.innerHTML = ownListHtml(); } }
     if(a === 'offline') offlineDownload($('tOut'));
   });
   $('bOcrFile').addEventListener('change', e => { const f = e.target.files[0]; if(f) ocrPlate(f, $('tOut')); });
+}
+
+// ---------- 新增電桿:用圖號座標加一支桿(只存在這支手機,不會改到台電資料) ----------
+// 存在 localStorage 'lm:own';跟台電的桿一樣畫在地圖上(外面多一圈橘色虛線)、搜尋得到、可以刪除。
+S.poleDocs = (LS.get('lm:own', []) || []).filter(q => q && q.own && hasLoc(q));
+if(S.poleDocs.length) rebuildPoles();
+function saveOwn(){
+  try{ localStorage.setItem('lm:own', JSON.stringify(S.poleDocs.filter(q => q.own))); return true; }
+  catch(e){ toast('手機儲存空間不足,這支桿沒有存進去'); return false; }
+}
+function removeOwn(id){
+  S.poleDocs = S.poleDocs.filter(q => q.id !== id); saveOwn(); rebuildPoles();
+  if(LMap.sel === 'pole:' + id) LMap.select(null);
+  renderPlace(); LMap.req(); toast('已刪除');
+}
+function normPoleNo(raw){
+  const t = toHalf(raw).replace(/\s+/g, '').replace(/^#/, '').replace(/R/gi, '右').replace(/L/gi, '左');
+  return t ? '#' + t : '';
+}
+let OWN_NAMES = null;
+function lineNames(){
+  const set = new Set(LINE_META.keys());
+  S.poleDocs.forEach(q => { if(q.line) set.add(q.line); });
+  if(!OWN_NAMES || OWN_NAMES.size !== set.size) OWN_NAMES = set;
+  return Array.from(OWN_NAMES);
+}
+function ownLineMatches(raw){
+  const t = toHalf(raw).replace(/\s+/g, ''); if(!t) return [];
+  const all = lineNames();
+  if(all.includes(t)) return [t];
+  const sh = all.filter(n => shortLine(n) === t); if(sh.length) return sh.slice(0, 8);
+  return all.filter(n => n.includes(t)).slice(0, 8);
+}
+function ownListHtml(){
+  const l = S.poleDocs.filter(q => q.own).sort((a, b) => (b.at || 0) - (a.at || 0));
+  return '<h3 style="margin-top:12px">我新增的電桿(' + l.length + ')</h3>' + (l.length
+    ? l.map(q => '<div class="own-item"><div><b>' + esc(shortLine(q.line) + q.poleNo) + '</b><span class="hint" style="display:block;margin:0">' + esc(q.line) + (q.tpc ? ' · ' + esc(q.tpc) : '') + '</span></div>'
+      + '<div class="row"><button class="btn ghost sm" type="button" data-t="own-show" data-id="' + esc(q.id) + '">看</button><button class="btn danger sm" type="button" data-t="own-del" data-id="' + esc(q.id) + '">刪</button></div></div>').join('')
+    : '<p class="hint" style="margin:0">還沒有。新增的桿只存在這支手機,清除瀏覽器資料就會不見。</p>');
+}
+let ownLp = null;
+function renderAddPole(box){
+  const cur = sel(), def = cur ? cur.line : (NEAR_ME && NEAR_ME.p ? NEAR_ME.p.line : '');
+  const forms = LINE_FORMS.length ? LINE_FORMS : ['水泥桿'];
+  box.innerHTML = '<div class="lsec own-f"><h3>新增電桿</h3>'
+    + '<label>線路名稱<input type="text" id="ownLine" value="' + esc(def) + '" placeholder="例如 蚵殼分線" autocomplete="off" spellcheck="false"></label><div id="ownSug" class="chips"></div>'
+    + '<label>桿號<input type="text" id="ownNo" placeholder="例如 #63-13低6,右 R、左 L 可以直接打" autocomplete="off" spellcheck="false"></label>'
+    + '<div id="ownLoc"></div>'
+    + '<label>桿型<select id="ownForm">' + forms.map(f => '<option' + (f === '水泥桿' ? ' selected' : '') + '>' + esc(f) + '</option>').join('') + '</select></label>'
+    + '<label class="own-chk"><input type="checkbox" id="ownLink" checked> 自動接到同一條線最近的一支桿(150 公尺內)</label>'
+    + '<div class="row"><button class="btn sm" type="button" data-t="own-save">儲存這支桿</button></div>'
+    + '<div id="ownMsg" class="own-msg" aria-live="polite"></div>'
+    + '<div id="ownList">' + ownListHtml() + '</div></div>';
+  ownLp = locPicker(box.querySelector('#ownLoc'), '位置:圖號座標');
+  const mapBtn = box.querySelector('.lp-map'); if(mapBtn) mapBtn.hidden = true;
+  const head = box.querySelector('.lhead'); if(head) head.textContent = '位置:輸入圖號座標,例如 A9718 DD46(兩選一,也可以貼座標)';
+  const tpcIn = box.querySelector('.lp-tpc'); if(tpcIn && !def) tpcIn.focus();
+  $('ownLine').addEventListener('input', () => {
+    const m = ownLineMatches($('ownLine').value);
+    $('ownSug').innerHTML = m.length === 1 && m[0] === toHalf($('ownLine').value).replace(/\s+/g, '') ? ''
+      : m.map(n => '<button type="button" class="chip" data-t="own-line" data-v="' + esc(n) + '">' + esc(n) + '</button>').join('');
+  });
+  box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+async function saveOwnPole(){
+  const msg = $('ownMsg'), say = (t, err) => { msg.className = 'own-msg' + (err ? ' err' : ''); msg.innerHTML = t; };
+  const lineRaw = $('ownLine').value, no = normPoleNo($('ownNo').value), loc = ownLp && ownLp.get();
+  if(!toHalf(lineRaw).replace(/\s+/g, '')) return say('請輸入線路名稱,例如 蚵殼分線。', true);
+  if(!no || !/\d/.test(no)) return say('請輸入桿號,例如 #63-13低6。', true);
+  if(!loc) return say('請輸入圖號座標(例如 A9718 DD46),或貼上座標。', true);
+  const t = toHalf(lineRaw).replace(/\s+/g, ''), names = lineNames();
+  let line = null;
+  if(names.includes(t)) line = t;
+  else {
+    const c = names.filter(n => shortLine(n) === t), part = names.filter(n => n.includes(t));
+    const pick = c.length ? c : part;
+    if(pick.length === 1) line = pick[0];
+    else if(pick.length > 1){
+      $('ownSug').innerHTML = pick.slice(0, 8).map(n => '<button type="button" class="chip" data-t="own-line" data-v="' + esc(n) + '">' + esc(n) + '</button>').join('');
+      return say('有好幾條線符合「' + esc(t) + '」,請點上面一條。', true);
+    } else line = t;
+  }
+  say('儲存中…');
+  if(LINE_META.has(line)) await ensureLines([line]);
+  if(inRegion(loc)) await ensureNear(loc, 300);
+  const same = (S.byLine.get(line) || []).find(q => q.poleNo === no);
+  if(same) return say(esc(line + no) + ' 已經有了' + (same.own ? '(是你之前新增的)' : '(台電資料裡' + (same.tpc ? ',圖號座標 ' + esc(same.tpc) : '') + ')') + ',不用再新增。', true);
+  const lp = S.byLine.get(line) || [];
+  let prev = null;
+  if($('ownLink').checked){
+    // 先照桿號找上一支(#63-13低3 → #63-13低2 → #63-13);找不到再用 150 公尺內同線最近的一支
+    const byNo = new Map(lp.map(q => [q.poleNo, q]));
+    const parentNo = n => { const m = n.match(/^(.*?)(低|右|左)(\d+)$/); if(m) return +m[3] > 1 ? m[1] + m[2] + (+m[3] - 1) : m[1]; return n.replace(/-\d+$/, ''); };
+    let c = parentNo(no), par = null;
+    for(let k = 0; k < 6 && c && c !== '#'; k++){ par = byNo.get(c); if(par) break; const nc = parentNo(c); if(nc === c) break; c = nc; }
+    if(par) prev = par.id;
+    else { const n = polesNear(loc, 150).filter(o => o.p.line === line && o.p.poleNo).sort((a, b) => a.d - b.d)[0]; if(n) prev = n.p.id; }
+  }
+  const obj = { id: 'own-' + uid(), line, poleNo: no, lat: +loc.lat.toFixed(7), lng: +loc.lng.toFixed(7), tpc: loc.src === 'tpc' ? loc.tpc : '',
+    prev, order: lp.reduce((m, q) => Math.max(m, q.order || 0), 0) + 1,
+    kind: /低/.test(no) ? 'l' : (/^#\d+$/.test(no) ? 't' : 'b'), form: $('ownForm').value, net: '', own: true, at: Date.now() };
+  S.poleDocs = [obj].concat(S.poleDocs);
+  if(!saveOwn()){ S.poleDocs = S.poleDocs.filter(q => q.id !== obj.id); return say('儲存失敗,手機空間不足。', true); }
+  rebuildPoles(); showLayerOf(line); LMap.req();
+  const np = S.poles.find(q => q.id === obj.id);
+  $('overlay').innerHTML = '';
+  if(np) selectPole(np);
+  toast('已新增 ' + shortLine(line) + no + (prev ? ',並接到上一支桿' : ',附近沒有同線的桿可以接,先單獨一點') + '(位置誤差約 10 公尺)');
 }
 
 // ---------- 8. 拍桿牌找位置(在手機上辨識,照片不上傳) ----------
