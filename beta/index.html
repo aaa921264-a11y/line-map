@@ -611,7 +611,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261107-023412";
+const SITE_BUILD = "20261107-023948";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2995,23 +2995,41 @@ function mapTapHook(sx, sy){
 }
 // ---------- 打線路名稱的一部分,搜尋欄下面就列出相關的線路 ----------
 // 輸入的文字裡「開頭的中文」當線名關鍵字(後面接的桿號會保留),例如 慷榔59-10-3 → 列出 慷榔幹,點了就變成 慷榔幹59-10-3
+// 全台有 1.5 萬條線,名單只整理一次(線路數或自己新增的線有變才重做),每打一個字只做字串比對
+let SUG = null, SUG_SIG = '';
+function sugNames(){
+  const own = (typeof S !== 'undefined' ? (S.poleDocs || []).concat(S.polesets || []) : []).map(o => o.line).filter(Boolean);
+  const sig = LINE_META.size + '|' + own.length;
+  if(SUG && sig === SUG_SIG) return SUG;
+  const set = new Set(LINE_META.keys()); own.forEach(n => set.add(n));
+  SUG = Array.from(set).map(n => ({ n, sh: shortLine(n) })); SUG_SIG = sig;
+  return SUG;
+}
 function lineSuggest(raw){
+  const none = { list: [], more: 0, rest: '' };
   const t = toHalf(raw).replace(/\s+/g, '');
-  if(!t || TPC.parse(TPC.normalize(t))) return { list: [], more: 0, rest: '' };
+  if(!t || t.length > 30 || /^[A-Za-z]\d{4}/.test(t)) return none;
   const m = t.match(/^([^\d#]+)(.*)$/);
-  if(!m || !/[一-鿿]/.test(m[1])) return { list: [], more: 0, rest: '' };
+  if(!m || !/[一-鿿]/.test(m[1])) return none;
   const name = m[1], rest = m[2];
-  const score = n => { const sh = shortLine(n); return (n === name || sh === name) ? 0 : n.startsWith(name) ? 2 : sh.startsWith(name) ? 3 : n.includes(name) ? 4 : 9; };
-  // 同一組裡:離現在地圖畫面近的排前面(同名的線全台都有),再比桿數
-  const here = typeof me !== 'undefined' && me ? TPC.toPlane(me.lat, me.lng) : (typeof LMap !== 'undefined' && LMap ? [LMap.cx, LMap.cy] : null);
-  const away = n => { const mt = LINE_META.get(n); if(!mt || !here || !mt.bb) return 0; const b = mt.bb; return Math.round(Math.hypot(Math.max(b[0] - here[0], 0, here[0] - b[2]), Math.max(b[1] - here[1], 0, here[1] - b[3])) / 3000); };
-  const hits = lineNames().map(n => ({ n, sc: score(n) })).filter(h => h.sc < 9);
-  const info = n => { const mt = LINE_META.get(n); return mt ? { cnt: mt.n, dist: mt.dist } : { cnt: (S.byLine.get(n) || []).length, dist: '自己新增' }; };
-  hits.forEach(h => Object.assign(h, info(h.n)));
-  hits.forEach(h => { h.far = away(h.n); });
-  hits.sort((a, b) => (a.sc - b.sc) || (a.far - b.far) || (b.cnt - a.cnt) || (a.n.length - b.n.length));
+  const hits = [];
+  for(const e of sugNames()){
+    const n = e.n, sh = e.sh;
+    const sc = (n === name || sh === name) ? 0 : n.startsWith(name) ? 2 : sh.startsWith(name) ? 3 : n.includes(name) ? 4 : 9;
+    if(sc < 9) hits.push({ n, sc });
+  }
+  if(!hits.length) return { list: [], more: 0, rest };
   // 已經打完整的線名又接了桿號,而且只有這一條 → 不用再提示
   if(rest && hits.length === 1 && hits[0].sc <= 1) return { list: [], more: 0, rest };
+  // 同一組裡:離現在地圖畫面近的排前面(同名的線全台都有),再比桿數;只對符合的那幾條算
+  const here = typeof me !== 'undefined' && me ? TPC.toPlane(me.lat, me.lng) : (typeof LMap !== 'undefined' && LMap ? [LMap.cx, LMap.cy] : null);
+  const away = n => { const mt = LINE_META.get(n); if(!mt || !here || !mt.bb) return 0; const b = mt.bb; return Math.round(Math.hypot(Math.max(b[0] - here[0], 0, here[0] - b[2]), Math.max(b[1] - here[1], 0, here[1] - b[3])) / 3000); };
+  hits.forEach(h => {
+    const mt = LINE_META.get(h.n);
+    if(mt){ h.cnt = mt.n; h.dist = mt.dist; } else { h.cnt = (typeof S !== 'undefined' && S.byLine && S.byLine.get(h.n) || []).length; h.dist = '自己新增'; }
+    h.far = away(h.n);
+  });
+  hits.sort((a, b) => (a.sc - b.sc) || (a.far - b.far) || (b.cnt - a.cnt) || (a.n.length - b.n.length));
   return { list: hits.slice(0, 8), more: Math.max(0, hits.length - 8), rest };
 }
 function lineSuggestHtml(ls){
