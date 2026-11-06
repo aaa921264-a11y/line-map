@@ -57,6 +57,18 @@ def to_main(x, y, county):
     if not (140000 < x < 360000 and 2400000 < y < 2820000): return None
     return x, y
 
+# ---------- 台電資料的造字碼 / 錯字 ----------
+# 台電把「慷」存成私人造字碼(手機顯示不出來,搜尋也對不到):
+#   U+F318、U+E1C7 都是「慷」(新屋區慷榔里、清水區慷榔里的線名;桿號 #98、#99 只出現在「康榔幹」,是同一條線的另一種寫法)
+# 其他造字碼(聖□幹、□祥幹…)還不確定是哪個字,先不動,以免改錯。
+PUA_FIX = {'\uf318': '慷', '\ue1c7': '慷'}
+TYPO_FIX = {(HOME, '康榔幹#'): '慷榔幹#'}      # (縣市, 桿號開頭) → 改成
+def fix_no(no, county):
+    no = no.translate(str.maketrans(PUA_FIX))
+    for (c, a), b in TYPO_FIX.items():
+        if county == c and no.startswith(a): no = b + no[len(a):]
+    return no
+
 # ---------- 桿號 ----------
 TOK_TY = re.compile(r'(左-|右-|右低|左低|左分|右分|低|右|左|分|-)?(\d+)([A-Z]?)')
 def parse_ty(s):
@@ -113,7 +125,7 @@ dist_count = collections.defaultdict(collections.Counter)
 stat = collections.Counter()
 for r in csv.DictReader(open(SRC, encoding='utf-8-sig')):
     county = r['縣市'].strip(); stat[county, 'all'] += 1
-    sp = split_no(r['桿號'], county)
+    sp = split_no(fix_no(r['桿號'], county), county)
     if not sp: continue
     try: xy = to_main(float(r['TWD_97_X']), float(r['TWD_97_Y']), county)
     except ValueError: xy = None
