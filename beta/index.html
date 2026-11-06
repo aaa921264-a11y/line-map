@@ -429,6 +429,8 @@ body{margin:0}
 .searchbar{position:relative;}
 .qhist{position:absolute; left:0; right:0; top:52px; z-index:30; background:var(--card, var(--bg)); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px #0003; max-height:60vh; overflow:auto;}
 .qh-row{display:flex; align-items:stretch; border-bottom:1px solid var(--line);}
+.qh-sec{padding:8px 12px 2px; font-size:12px; color:var(--muted); letter-spacing:.04em;}
+.qh-go i.ln{background:var(--accent-wash); color:var(--accent-text);}
 .qh-go{flex:1; display:flex; align-items:center; gap:10px; min-height:46px; padding:6px 10px; background:none; border:0; color:inherit; font:inherit; text-align:left; cursor:pointer;}
 .qh-go i{font-style:normal; font-size:12px; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; background:var(--info-wash); color:var(--info); flex:none;}
 .qh-go span{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -609,7 +611,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261107-022033";
+const SITE_BUILD = "20261107-023412";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2991,14 +2993,42 @@ function mapTapHook(sx, sy){
   $('q').value = best.h.q; runSearch();
   return true;
 }
+// ---------- 打線路名稱的一部分,搜尋欄下面就列出相關的線路 ----------
+// 輸入的文字裡「開頭的中文」當線名關鍵字(後面接的桿號會保留),例如 慷榔59-10-3 → 列出 慷榔幹,點了就變成 慷榔幹59-10-3
+function lineSuggest(raw){
+  const t = toHalf(raw).replace(/\s+/g, '');
+  if(!t || TPC.parse(TPC.normalize(t))) return { list: [], more: 0, rest: '' };
+  const m = t.match(/^([^\d#]+)(.*)$/);
+  if(!m || !/[一-鿿]/.test(m[1])) return { list: [], more: 0, rest: '' };
+  const name = m[1], rest = m[2];
+  const score = n => { const sh = shortLine(n); return (n === name || sh === name) ? 0 : n.startsWith(name) ? 2 : sh.startsWith(name) ? 3 : n.includes(name) ? 4 : 9; };
+  // 同一組裡:離現在地圖畫面近的排前面(同名的線全台都有),再比桿數
+  const here = typeof me !== 'undefined' && me ? TPC.toPlane(me.lat, me.lng) : (typeof LMap !== 'undefined' && LMap ? [LMap.cx, LMap.cy] : null);
+  const away = n => { const mt = LINE_META.get(n); if(!mt || !here || !mt.bb) return 0; const b = mt.bb; return Math.round(Math.hypot(Math.max(b[0] - here[0], 0, here[0] - b[2]), Math.max(b[1] - here[1], 0, here[1] - b[3])) / 3000); };
+  const hits = lineNames().map(n => ({ n, sc: score(n) })).filter(h => h.sc < 9);
+  const info = n => { const mt = LINE_META.get(n); return mt ? { cnt: mt.n, dist: mt.dist } : { cnt: (S.byLine.get(n) || []).length, dist: '自己新增' }; };
+  hits.forEach(h => Object.assign(h, info(h.n)));
+  hits.forEach(h => { h.far = away(h.n); });
+  hits.sort((a, b) => (a.sc - b.sc) || (a.far - b.far) || (b.cnt - a.cnt) || (a.n.length - b.n.length));
+  // 已經打完整的線名又接了桿號,而且只有這一條 → 不用再提示
+  if(rest && hits.length === 1 && hits[0].sc <= 1) return { list: [], more: 0, rest };
+  return { list: hits.slice(0, 8), more: Math.max(0, hits.length - 8), rest };
+}
+function lineSuggestHtml(ls){
+  if(!ls.list.length) return '';
+  return '<div class="qh-sec">線路(點一條)</div>' + ls.list.map(h => '<div class="qh-row"><button type="button" class="qh-go" data-ln="' + esc(h.n) + '" data-rest="' + esc(ls.rest) + '"><i class="ln">線</i>'
+    + '<span>' + esc(h.n) + '</span><small>' + esc(h.dist || '') + ' · ' + h.cnt + ' 支</small></button></div>').join('')
+    + (ls.more ? '<p class="hint" style="margin:4px 12px 6px">還有 ' + ls.more + ' 條,再多打幾個字縮小範圍。</p>' : '')
+    + '<div class="qh-sec">最近搜尋</div>';
+}
 function renderHistBox(){
-  const box = $('qHist'), q = toHalf($('q').value.trim());
+  const box = $('qHist'), q = toHalf($('q').value.trim()), ls = lineSuggest($('q').value);
   const list = HIST.filter(h => !q || h.q.includes(q) || h.label.includes(q)).slice(0, 8);
   const icon = k => k === 'road' ? '路' : k === 'code' ? '座' : '桿';
-  box.innerHTML = (list.length ? list.map((h, i) => '<div class="qh-row"><button type="button" class="qh-go" data-h="' + HIST.indexOf(h) + '"><i>' + icon(h.kind) + '</i>'
+  box.innerHTML = lineSuggestHtml(ls) + (list.length ? list.map((h, i) => '<div class="qh-row"><button type="button" class="qh-go" data-h="' + HIST.indexOf(h) + '"><i>' + icon(h.kind) + '</i>'
       + '<span>' + esc(h.label) + '</span><small>' + hhmmDay(h.t) + '</small></button>'
       + '<button type="button" class="qh-del" data-hdel="' + HIST.indexOf(h) + '" aria-label="刪除這筆">×</button></div>').join('')
-    : '<p class="hint" style="margin:8px 10px">' + (HIST.length ? '沒有符合的紀錄' : '還沒有搜尋紀錄') + '</p>')
+    : (ls.list.length ? '<p class="hint" style="margin:4px 12px 8px">沒有符合的紀錄</p>' : '<p class="hint" style="margin:8px 10px">' + (HIST.length ? '沒有符合的紀錄' : '還沒有搜尋紀錄') + '</p>'))
     + '<div class="qh-foot"><label><input type="checkbox" id="qhOn"' + (recentOn ? ' checked' : '') + '> 地圖顯示最近搜尋的桿</label>'
     + '<select id="qhN" aria-label="顯示幾支">' + [5, 10].map(n => '<option value="' + n + '"' + (n === recentN ? ' selected' : '') + '>' + n + ' 支</option>').join('') + '</select>'
     + (HIST.length ? '<button type="button" class="qh-clear" data-hclear>清除全部</button>' : '') + '</div>'
@@ -3015,7 +3045,8 @@ function initHist(){
   // close when tapping elsewhere
   document.addEventListener('pointerdown', e => { if(!e.target.closest('#qHist') && e.target !== q) hideHistBox(); });
   box.addEventListener('click', e => {
-    const go = e.target.closest('[data-h]'), del = e.target.closest('[data-hdel]');
+    const go = e.target.closest('[data-h]'), del = e.target.closest('[data-hdel]'), ln = e.target.closest('[data-ln]');
+    if(ln){ q.value = ln.dataset.ln + (ln.dataset.rest || ''); hideHistBox(); q.blur(); runSearch(); return; }
     if(del){ HIST.splice(+del.dataset.hdel, 1); saveHist(); LMap.req(); renderHistBox(); return; }
     if(go){ const h = HIST[+go.dataset.h]; q.value = h.q; hideHistBox(); q.blur(); runSearch(); return; }
     if(e.target.closest('[data-hclear]')){ HIST = []; saveHist(); LMap.req(); renderHistBox(); toast('已清除搜尋紀錄'); }
