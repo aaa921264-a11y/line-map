@@ -558,7 +558,7 @@ html.big .map text{font-size:14px;}
   <div class="searchbar">
     <div class="scope-bar">
       <button class="btn ghost" type="button" id="scopeBtn" aria-label="選擇搜尋的縣市">縣市 全部 ▾</button>
-      <button class="btn ghost" type="button" id="layerBtn" aria-label="選擇圖層">圖層</button>
+      <button class="btn ghost" type="button" id="layerBtn" aria-label="選擇線路圖層">線路</button>
     </div>
     <div class="sb-wrap">
       <div class="sb-row">
@@ -631,7 +631,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261107-144128";
+const SITE_BUILD = "20261108-000643";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -1160,7 +1160,7 @@ function openScopeSheet(){
 }
 function renderLayerBar(){
   const b = $('layerBtn'); if(!b) return;
-  b.innerHTML = '圖層 <b class="num">' + LAYERS.size + '</b>';
+  b.innerHTML = '線路 <b class="num">' + LAYERS.size + '</b>';
   const s = $('layerSum'); if(s) s.textContent = layerSummary();
 }
 function setLayer(name, on){
