@@ -428,6 +428,21 @@ body{margin:0}
 .lauto input{width:20px; height:20px; margin:2px 0 0; flex:none; accent-color:var(--accent, #e8a317);}
 .searchbar{position:relative;}
 .qhist{position:absolute; left:0; right:0; top:52px; z-index:30; background:var(--card, var(--bg)); border:1px solid var(--line); border-radius:10px; box-shadow:0 8px 24px #0003; max-height:60vh; overflow:auto;}
+.searchbar .sb-row{grid-template-columns:minmax(0,1fr) auto;}
+.sb-wrap{position:relative;}
+.scope-bar{display:flex; gap:8px;}
+.scope-bar .btn{flex:1; min-height:48px; font-size:16px; font-weight:600; display:flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;}
+#scopeBtn small{font-weight:400; font-size:13px; color:var(--muted);}
+#scopeBtn.on{border:2px solid var(--accent); background:var(--accent-wash);}
+.modal.sc .sheet{max-width:480px; max-height:86dvh; overflow:auto; border-radius:18px 18px 0 0; padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));}
+.modal.sc h3{margin:0 0 4px; font-size:18px;}
+.modal.sc .sub{margin:0 0 12px; font-size:13px; color:var(--muted); white-space:normal;}
+.sc-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+.sc-grid button{min-height:58px; border-radius:12px; border:1px solid var(--line); background:var(--surface-2); color:var(--fg); font:inherit; font-weight:600; font-size:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:pointer;}
+.sc-grid button small{font-weight:400; font-size:12px; color:var(--muted);}
+.sc-grid button.on{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
+.sc-grid button.on small{color:inherit; opacity:.8;}
+.sc-grid button.all{grid-column:1/-1; min-height:52px; flex-direction:row; gap:10px;}
 .qh-row{display:flex; align-items:stretch; border-bottom:1px solid var(--line);}
 .qh-sec{padding:8px 12px 2px; font-size:12px; color:var(--muted); letter-spacing:.04em;}
 .qh-go i.ln{background:var(--accent-wash); color:var(--accent-text);}
@@ -541,12 +556,17 @@ html.big .map text{font-size:14px;}
   </section>
 
   <div class="searchbar">
-    <div class="sb-row">
+    <div class="scope-bar">
+      <button class="btn ghost" type="button" id="scopeBtn" aria-label="選擇搜尋的縣市">縣市 全部 ▾</button>
       <button class="btn ghost" type="button" id="layerBtn" aria-label="選擇圖層">圖層</button>
-      <input type="search" id="q" placeholder="民一43、B0721HD63 或路名" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="找電桿或路名">
-      <button class="btn" id="qGo" type="button">找</button>
     </div>
-    <div class="qhist" id="qHist" hidden></div>
+    <div class="sb-wrap">
+      <div class="sb-row">
+        <input type="search" id="q" placeholder="民一43、B0721HD63 或路名" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="找電桿或路名">
+        <button class="btn" id="qGo" type="button">找</button>
+      </div>
+      <div class="qhist" id="qHist" hidden></div>
+    </div>
     <p class="hint" id="qMsg" aria-live="polite"></p>
     <div class="layerbar"><span id="layerSum"></span></div>
   </div>
@@ -611,7 +631,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261107-023948";
+const SITE_BUILD = "20261107-143750";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -775,6 +795,11 @@ const nowTime = () => nowLocal().slice(11, 16);
 const fmtDT = v => v ? v.replace('T', ' ') : '—';
 const isThisMonth = s => !!s && s.slice(0, 7) === today().slice(0, 7);
 const clone = o => JSON.parse(JSON.stringify(o));
+// ---------- 搜尋範圍(縣市):影響搜尋、線路建議、圖層清單;不影響地圖上已開的線 ----------
+let SCOPE = '';
+try{ SCOPE = localStorage.getItem('lm:scope') || ''; }catch(e){}
+const countyOf = l => (l && l.dist ? String(l.dist).split(' ')[0] : '');
+const inScope = l => !SCOPE || !l || !l.dist || countyOf(l) === SCOPE;   // 沒有縣市資料的線(自己新增的)一律留著
 const WEEK = ['日','一','二','三','四','五','六'];
 function matchQ(q, fields){
   if(!q) return true;
@@ -1096,6 +1121,42 @@ function layerSummary(){
   if(!on.length && auto) return '開始定位後,會自動開啟離你最近的 3 條線路';
   return (auto ? '最近:' : '') + (on.length ? on.slice(0, 3).join('、') + (on.length > 3 ? ' 等 ' + on.length + ' 條' : '') : '還沒開任何圖層');
 }
+// ---------- 縣市按鈕與選單 ----------
+function countyList(){
+  const cnt = new Map();
+  LINE_META.forEach(l => { const c = countyOf(l); if(c) cnt.set(c, (cnt.get(c) || 0) + 1); });
+  const order = typeof MAP_COUNTIES !== 'undefined' ? MAP_COUNTIES.map(c => c[0]) : [];
+  const idx = c => { const i = order.indexOf(c); return i < 0 ? 999 : i; };
+  return Array.from(cnt.keys()).sort((a, b) => (b === '桃園市') - (a === '桃園市') || idx(a) - idx(b)).map(c => ({ name: c, n: cnt.get(c) }));
+}
+function renderScopeBtn(){
+  const b = $('scopeBtn'); if(!b) return;
+  b.innerHTML = '<small>縣市</small> ' + esc(SCOPE || '全部') + ' ▾';
+  b.classList.toggle('on', !!SCOPE);
+}
+function setScope(c){
+  SCOPE = c || '';
+  try{ if(SCOPE) localStorage.setItem('lm:scope', SCOPE); else localStorage.removeItem('lm:scope'); }catch(e){}
+  renderScopeBtn();
+  if($('q') && document.activeElement === $('q')) renderHistBox();
+  toast(SCOPE ? '搜尋範圍:' + SCOPE : '搜尋範圍:全部縣市');
+}
+function openScopeSheet(){
+  const ov = $('overlay'), list = countyList();
+  ov.innerHTML = '<div class="modal sc" role="dialog" aria-modal="true" aria-label="搜尋範圍"><div class="sheet">'
+    + '<h3>搜尋範圍</h3><p class="sub">搜尋、線路建議和圖層清單,只找選的縣市;選「全部縣市」就是全台。地圖上已經開的線不受影響。</p>'
+    + '<div class="sc-grid"><button type="button" class="all' + (SCOPE ? '' : ' on') + '" data-c=""><span>全部縣市</span><small>' + LINE_META.size + ' 條</small></button>'
+    + list.map(c => '<button type="button"' + (c.name === SCOPE ? ' class="on"' : '') + ' data-c="' + esc(c.name) + '"><span>' + esc(c.name) + '</span><small>' + c.n + ' 條</small></button>').join('')
+    + '</div></div></div>';
+  const m = ov.firstChild, close = () => { ov.innerHTML = ''; document.removeEventListener('keydown', key); };
+  const key = e => { if(e.key === 'Escape') close(); };
+  document.addEventListener('keydown', key);
+  m.addEventListener('click', e => {
+    if(e.target === m) return close();
+    const b = e.target.closest('[data-c]'); if(!b) return;
+    setScope(b.dataset.c); close();
+  });
+}
 function renderLayerBar(){
   const b = $('layerBtn'); if(!b) return;
   b.innerHTML = '圖層 <b class="num">' + LAYERS.size + '</b>';
@@ -1112,11 +1173,11 @@ function openLayerSheet(){
   const near = (() => {
     const [cx, cy] = [LMap.cx, LMap.cy], w = LMap.W * LMap.mpp / 2, h = LMap.H * LMap.mpp / 2;
     const out = [];
-    LINE_META.forEach(l => { const b = l.bb; if(b[0] <= cx + w && b[2] >= cx - w && b[1] <= cy + h && b[3] >= cy - h) out.push(l); });
+    LINE_META.forEach(l => { if(!inScope(l)) return; const b = l.bb; if(b[0] <= cx + w && b[2] >= cx - w && b[1] <= cy + h && b[3] >= cy - h) out.push(l); });
     return out.sort((a, b) => b.n - a.n).slice(0, 25);
   })();
   const byDist = new Map();
-  LINE_META.forEach(l => { if(!byDist.has(l.dist)) byDist.set(l.dist, []); byDist.get(l.dist).push(l); });
+  LINE_META.forEach(l => { if(!inScope(l)) return; if(!byDist.has(l.dist)) byDist.set(l.dist, []); byDist.get(l.dist).push(l); });
   const row = l => '<label class="lrow" data-name="' + esc(l.name) + '"><input type="checkbox" data-layer="' + esc(l.name) + '"' + (LAYERS.has(l.name) ? ' checked' : '') + '>'
     + '<i class="ln" style="background:' + lineColor(l.name) + '"></i><span class="nm">' + esc(l.name) + '</span><span class="ct num">' + l.n + ' 支</span></label>';
   const others = Array.from(LAYERS).filter(n => !LINE_META.has(n)).map(n => ({ name: n, n: S.poles.filter(p => p.line === n).length, dist: '' }));
@@ -1137,17 +1198,17 @@ function openLayerSheet(){
     const ds = byCounty.get(c).sort(zh);
     if(!c) return ds.map(d => distBlock(d, d)).join('');
     const n = ds.reduce((s, d) => s + byDist.get(d).length, 0);
-    return '<details class="lcounty"><summary>' + esc(c) + '<span class="ct">' + n + ' 條</span></summary>' + ds.map(d => distBlock(d, d.split(' ')[1] || d)).join('') + '</details>';
+    return '<details class="lcounty"' + (SCOPE ? ' open' : '') + '><summary>' + esc(c) + '<span class="ct">' + n + ' 條</span></summary>' + ds.map(d => distBlock(d, d.split(' ')[1] || d)).join('') + '</details>';
   }).join('');
   ov.innerHTML = '<div class="modal layers" role="dialog" aria-modal="true" aria-label="選擇圖層"><div class="sheet">'
     + '<div class="lh"><b>選擇圖層</b><span class="hint" style="margin:0" id="lyCount"></span><button class="btn sm" type="button" data-a="done">完成</button></div>'
-    + '<input type="search" id="lyQ" placeholder="搜尋線路名稱,例如 民族" autocomplete="off" aria-label="搜尋線路">'
+    + '<input type="search" id="lyQ" placeholder="' + (SCOPE ? '在' + esc(SCOPE) + '裡搜尋線路名稱' : '搜尋線路名稱,例如 民族') + '" autocomplete="off" aria-label="搜尋線路">'
     + '<div class="lbody">'
     + (typeof layerSheetTop === 'function' ? layerSheetTop() : '')
     + '<div class="lsec" id="lyOn"><h3>已開啟</h3>' + (LAYERS.size ? Array.from(LAYERS).map(n => row(LINE_META.get(n) || others.find(o => o.name === n) || { name: n, n: 0 })).join('') : '<p class="hint">還沒開任何圖層。</p>') + '</div>'
     + (near.length ? '<div class="lsec"><h3>目前地圖範圍內</h3>' + near.map(row).join('') + '</div>' : '')
     + (lazy ? '<div class="lsec" id="lyRes" hidden><h3>搜尋結果</h3><div></div></div>' : '')
-    + '<div class="lsec" id="lyAll"><h3>' + (byCounty.size > 1 ? '全部線路(依縣市、行政區)' : '全部幹線(依行政區)') + '</h3>' + allHtml + '</div>'
+    + '<div class="lsec" id="lyAll"><h3>' + (SCOPE ? esc(SCOPE) + ' 的全部線路(依行政區)' : byCounty.size > 1 ? '全部線路(依縣市、行政區)' : '全部幹線(依行政區)') + '</h3>' + allHtml + '</div>'
     + '<p class="hint" id="lyNone" hidden>找不到這個名稱的幹線。</p></div>'
     + '<div class="lf"><button class="btn ghost sm" type="button" data-a="clear">全部關閉</button><span class="hint" style="margin:0">同時開 15 條以上會比較慢</span></div>'
     + '</div></div>';
@@ -1206,7 +1267,7 @@ function openLayerSheet(){
       res.hidden = !q;
       if(!q){ $('lyNone').hidden = true; return; }
       const hits = [];
-      LINE_META.forEach(l => { if(l.name.includes(q)) hits.push(l); });
+      LINE_META.forEach(l => { if(inScope(l) && l.name.includes(q)) hits.push(l); });
       hits.sort((a, b) => (b.name.startsWith(q) - a.name.startsWith(q)) || (b.dist.startsWith('桃園市') - a.dist.startsWith('桃園市')) || zh(a.name, b.name));
       res.lastChild.innerHTML = hits.slice(0, 200).map(l => row(l).replace('</span><span class="ct', '<small class="hint" style="margin:0 0 0 6px">' + esc(l.dist) + '</small></span><span class="ct')).join('')
         + (hits.length > 200 ? '<p class="hint">還有 ' + (hits.length - 200) + ' 條,請打完整一點的名稱。</p>' : '');
@@ -2005,7 +2066,7 @@ function toHalf(t){ return String(t || '').replace(/[０-９Ａ-Ｚａ-ｚ＃－
 function parsePoleQuery(raw){
   const t = toHalf(raw).replace(/\s+/g, '');
   if(!t) return null;
-  const names = allLines();
+  const names = SCOPE ? allLines().filter(n => inScope(LINE_META.get(n))) : allLines();
   const shortOf = n => n.replace(/\([^)]*\)$/, '').replace(/(幹線|幹|分線|線)$/, '');
   let line = null, rest = t, alts = [];
   // 同一個開頭可能對到好幾條線(民一幹、社尾幹/社尾分線,或其他縣市同名的線):全部留著,近的、幹線優先,
@@ -3002,7 +3063,7 @@ function sugNames(){
   const sig = LINE_META.size + '|' + own.length;
   if(SUG && sig === SUG_SIG) return SUG;
   const set = new Set(LINE_META.keys()); own.forEach(n => set.add(n));
-  SUG = Array.from(set).map(n => ({ n, sh: shortLine(n) })); SUG_SIG = sig;
+  SUG = Array.from(set).map(n => ({ n, sh: shortLine(n), cty: countyOf(LINE_META.get(n)) })); SUG_SIG = sig;
   return SUG;
 }
 function lineSuggest(raw){
@@ -3012,13 +3073,15 @@ function lineSuggest(raw){
   const m = t.match(/^([^\d#]+)(.*)$/);
   if(!m || !/[一-鿿]/.test(m[1])) return none;
   const name = m[1], rest = m[2];
-  const hits = [];
+  const hits = []; let elsewhere = 0;
   for(const e of sugNames()){
     const n = e.n, sh = e.sh;
     const sc = (n === name || sh === name) ? 0 : n.startsWith(name) ? 2 : sh.startsWith(name) ? 3 : n.includes(name) ? 4 : 9;
-    if(sc < 9) hits.push({ n, sc });
+    if(sc >= 9) continue;
+    if(SCOPE && e.cty && e.cty !== SCOPE){ elsewhere++; continue; }
+    hits.push({ n, sc });
   }
-  if(!hits.length) return { list: [], more: 0, rest };
+  if(!hits.length) return { list: [], more: 0, rest, elsewhere };
   // 已經打完整的線名又接了桿號,而且只有這一條 → 不用再提示
   if(rest && hits.length === 1 && hits[0].sc <= 1) return { list: [], more: 0, rest };
   // 同一組裡:離現在地圖畫面近的排前面(同名的線全台都有),再比桿數;只對符合的那幾條算
@@ -3030,11 +3093,11 @@ function lineSuggest(raw){
     h.far = away(h.n);
   });
   hits.sort((a, b) => (a.sc - b.sc) || (a.far - b.far) || (b.cnt - a.cnt) || (a.n.length - b.n.length));
-  return { list: hits.slice(0, 8), more: Math.max(0, hits.length - 8), rest };
+  return { list: hits.slice(0, 8), more: Math.max(0, hits.length - 8), rest, elsewhere };
 }
 function lineSuggestHtml(ls){
-  if(!ls.list.length) return '';
-  return '<div class="qh-sec">線路(點一條)</div>' + ls.list.map(h => '<div class="qh-row"><button type="button" class="qh-go" data-ln="' + esc(h.n) + '" data-rest="' + esc(ls.rest) + '"><i class="ln">線</i>'
+  if(!ls.list.length) return ls.elsewhere ? '<p class="hint" style="margin:8px 12px 4px">「' + esc(SCOPE) + '」裡沒有符合的線路,其他縣市有 ' + ls.elsewhere + ' 條;要找請按上面的縣市按鈕改成「全部」。</p><div class="qh-sec">最近搜尋</div>' : '';
+  return '<div class="qh-sec">線路(點一條)' + (SCOPE ? '・只列' + esc(SCOPE) : '') + '</div>' + ls.list.map(h => '<div class="qh-row"><button type="button" class="qh-go" data-ln="' + esc(h.n) + '" data-rest="' + esc(ls.rest) + '"><i class="ln">線</i>'
     + '<span>' + esc(h.n) + '</span><small>' + esc(h.dist || '') + ' · ' + h.cnt + ' 支</small></button></div>').join('')
     + (ls.more ? '<p class="hint" style="margin:4px 12px 6px">還有 ' + ls.more + ' 條,再多打幾個字縮小範圍。</p>' : '')
     + '<div class="qh-sec">最近搜尋</div>';
@@ -3133,7 +3196,8 @@ async function runSearch(){
     addHist({ q: raw.trim(), label: road.name, kind: 'road' });
     return;
   }
-  msg.innerHTML = '讀不懂「' + esc(raw) + '」。可以輸入電力座標(<b>B0721 HD63</b>)、幹線加桿號(<b>民一43</b>、<b>社尾37R1</b>)或路名(<b>中山路</b>)。';
+  msg.innerHTML = '讀不懂「' + esc(raw) + '」。可以輸入電力座標(<b>B0721 HD63</b>)、幹線加桿號(<b>民一43</b>、<b>社尾37R1</b>)或路名(<b>中山路</b>)。'
+    + (SCOPE ? '<br>目前只找「' + esc(SCOPE) + '」的線路;要找別的縣市,請按上面的縣市按鈕改成別的縣市或「全部」。' : '');
 }
 $('qGo').addEventListener('click', () => { hideHistBox(); runSearch(); });
 $('q').addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); hideHistBox(); $('q').blur(); runSearch(); } if(e.key === 'Escape') hideHistBox(); });
@@ -3166,8 +3230,10 @@ function setBasemap(key, quiet){
 // ---------- boot ----------
 function bootLocator(){
   initLineIndex(LINE_INDEX_DATA, 'lm:layers.v7', []);   // new key: start everyone on 「最近 3 條」
-  refreshLineColors(); renderLayerBar();
+  if(SCOPE && !countyList().some(c => c.name === SCOPE)){ SCOPE = ''; try{ localStorage.removeItem('lm:scope'); }catch(e){} }
+  refreshLineColors(); renderLayerBar(); renderScopeBtn();
   $('layerBtn').addEventListener('click', openLayerSheet);
+  $('scopeBtn').addEventListener('click', openScopeSheet);
   ensureLines(Array.from(LAYERS));
   renderLegend();
   $('recordsLink').href = RECORDS_URL;
