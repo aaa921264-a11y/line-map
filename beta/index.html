@@ -631,7 +631,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261107-143750";
+const SITE_BUILD = "20261107-144128";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -796,8 +796,9 @@ const fmtDT = v => v ? v.replace('T', ' ') : '—';
 const isThisMonth = s => !!s && s.slice(0, 7) === today().slice(0, 7);
 const clone = o => JSON.parse(JSON.stringify(o));
 // ---------- 搜尋範圍(縣市):影響搜尋、線路建議、圖層清單;不影響地圖上已開的線 ----------
-let SCOPE = '';
-try{ SCOPE = localStorage.getItem('lm:scope') || ''; }catch(e){}
+// 預設桃園市;選「全部縣市」會存成 '*'
+let SCOPE = '桃園市';
+try{ const sv = localStorage.getItem('lm:scope'); if(sv !== null) SCOPE = sv === '*' ? '' : sv; }catch(e){}
 const countyOf = l => (l && l.dist ? String(l.dist).split(' ')[0] : '');
 const inScope = l => !SCOPE || !l || !l.dist || countyOf(l) === SCOPE;   // 沒有縣市資料的線(自己新增的)一律留著
 const WEEK = ['日','一','二','三','四','五','六'];
@@ -1136,7 +1137,7 @@ function renderScopeBtn(){
 }
 function setScope(c){
   SCOPE = c || '';
-  try{ if(SCOPE) localStorage.setItem('lm:scope', SCOPE); else localStorage.removeItem('lm:scope'); }catch(e){}
+  try{ localStorage.setItem('lm:scope', SCOPE || '*'); }catch(e){}
   renderScopeBtn();
   if($('q') && document.activeElement === $('q')) renderHistBox();
   toast(SCOPE ? '搜尋範圍:' + SCOPE : '搜尋範圍:全部縣市');
@@ -3230,7 +3231,7 @@ function setBasemap(key, quiet){
 // ---------- boot ----------
 function bootLocator(){
   initLineIndex(LINE_INDEX_DATA, 'lm:layers.v7', []);   // new key: start everyone on 「最近 3 條」
-  if(SCOPE && !countyList().some(c => c.name === SCOPE)){ SCOPE = ''; try{ localStorage.removeItem('lm:scope'); }catch(e){} }
+  if(SCOPE && !countyList().some(c => c.name === SCOPE)){ SCOPE = ''; }
   refreshLineColors(); renderLayerBar(); renderScopeBtn();
   $('layerBtn').addEventListener('click', openLayerSheet);
   $('scopeBtn').addEventListener('click', openScopeSheet);
