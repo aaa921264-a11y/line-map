@@ -5,6 +5,8 @@ on:
       url:
         description: 影片網址
         required: true
+permissions:
+  contents: write
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -41,6 +43,16 @@ jobs:
           PY
             rm -f out/audio.wav "$V"
           fi
+      - name: Push results to branch
+        if: always()
+        run: |
+          cd out
+          python3 -c "import json;d=json.load(open('video.info.json'));open('meta.txt','w').write('\n'.join(f'{k}: {d.get(k)}' for k in ['title','description','uploader','upload_date','duration','view_count','like_count','comment_count','webpage_url']))" || true
+          rm -f video.info.json
+          git init -q && git checkout -q -b video-results
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com add -A
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "result ${{ github.run_id }}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" video-results
       - uses: actions/upload-artifact@v4
         if: always()
         with:
