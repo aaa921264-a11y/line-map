@@ -29,19 +29,22 @@ jobs:
           V=$(ls out/video.* 2>/dev/null | grep -v info.json | head -1)
           if [ -n "$V" ]; then
             ffmpeg -loglevel error -i "$V" -vf "fps=1/3,scale=480:-1" out/frame_%03d.jpg || true
-            ffmpeg -loglevel error -i "$V" -vn -ac 1 -ar 16000 out/audio.wav || true
+            ffmpeg -loglevel error -i "$V" -vn -ac 1 -ar 16000 -c:a pcm_s16le out/audio.wav || true
             python - <<'PY'
           from faster_whisper import WhisperModel
           import os
           if os.path.exists("out/audio.wav"):
               m = WhisperModel("small", device="cpu", compute_type="int8")
-              segs, info = m.transcribe("out/audio.wav", vad_filter=True)
+              import wave, numpy as np
+              w = wave.open("out/audio.wav")
+              audio = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768.0
+              segs, info = m.transcribe(audio, vad_filter=True)
               with open("out/transcript.txt", "w") as f:
                   f.write(f"lang={info.language} p={info.language_probability:.2f}\n")
                   for s in segs:
                       f.write(f"[{s.start:.0f}s] {s.text.strip()}\n")
           PY
-            rm -f out/audio.wav "$V"
+            rm -f out/audio.wav
           fi
       - name: Push results to branch
         if: always()
@@ -53,8 +56,3 @@ jobs:
           git -c user.name=bot -c user.email=bot@users.noreply.github.com add -A
           git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "result ${{ github.run_id }}"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" video-results
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: video-result
-          path: out/
