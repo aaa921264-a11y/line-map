@@ -13,7 +13,7 @@ jobs:
       - name: Install tools
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-          pip install -q -U yt-dlp faster-whisper
+          pip install -q -U yt-dlp faster-whisper av
       - name: Download
         env:
           URL: ${{ github.event.inputs.url }}
@@ -22,6 +22,7 @@ jobs:
           yt-dlp --no-playlist --write-info-json -o "out/video.%(ext)s" "$URL" 2>&1 | tee out/yt-dlp.log || true
           ls -la out
       - name: Frames and transcript
+        continue-on-error: true
         run: |
           V=$(ls out/video.* 2>/dev/null | grep -v info.json | head -1)
           if [ -n "$V" ]; then
@@ -41,6 +42,7 @@ jobs:
             rm -f out/audio.wav "$V"
           fi
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: video-result
           path: out/
