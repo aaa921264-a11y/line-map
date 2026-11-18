@@ -570,6 +570,13 @@ html.rec-open{overflow:hidden;}
 .rc-tbl > div{display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px;}
 .rc-tbl span{color:var(--muted); white-space:nowrap;}
 .rc-tok{margin-top:12px; border:1px dashed var(--line); border-radius:var(--r); padding:10px;}
+.phist{margin-top:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); font-size:13px;}
+.phist .ph-t{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+.phist .ph-i{padding:4px 0; border-top:1px solid var(--line);}
+.phist .ph-m{font-size:12px; color:var(--muted,#6b7580);}
+.phist .ph-b{overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
+.phist .btn{margin-top:6px;}
+.phist[hidden]{display:none;}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -671,7 +678,7 @@ html.rec-open{overflow:hidden;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-063519";
+const SITE_BUILD = "20261119-065000";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -3009,8 +3016,31 @@ function renderPlace(){
     + '<div class="row act">' + navGroup(ll)
     + (pole ? '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + ll.lat.toFixed(6) + ',' + ll.lng.toFixed(6) + '">街景</a>' : '')
     + '<button class="btn ghost sm x" type="button" data-act="unsel" aria-label="關閉">✕</button></div>'
+    + (pole ? '<div id="poleHist" class="phist" hidden></div>' : '')
     + (pole && typeof betaPoleExtras === 'function' ? betaPoleExtras(pole) : '')
     + (pole ? photoHtml(pole) : '') + '</div>';
+  if(pole) poleHist(pole);
+}
+// ---------- 電桿卡片:這支桿最近出過什麼狀況(讀事故紀錄 r/acc.json,近 6 個月＋還沒處理完的,最多 3 筆) ----------
+const pNo = x => String(x || '').replace(/^#/, '').trim();
+function poleHitAcc(a, p){
+  if(a.pole && pNo(a.pole)){ return pNo(a.pole) === pNo(p.poleNo) && (a.line === p.line || (a.line && shortLine(a.line) === shortLine(p.line))); }
+  return !!(a.loc && dist(a.loc, p) <= 30);
+}
+async function poleHist(p){
+  const el = $('poleHist'); if(!el) return;
+  let all = [];
+  try{ all = rList(await rLoad('r/acc.json')); }catch(e){ return; }
+  if($('poleHist') !== el || !LMap.sel || LMap.sel !== 'pole:' + p.id) return;
+  const since = rMonths(6).pop();
+  const hit = all.filter(a => poleHitAcc(a, p)).sort((a, b) => (b.start || '').localeCompare(a.start || ''));
+  const show = hit.filter(a => !a.end || (a.start || '').slice(0, 7) >= since);
+  if(!show.length){ el.hidden = true; el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="ph-t"><b>⚠ 這支桿近期狀況</b><span class="hint">' + show.length + ' 筆</span></div>'
+    + show.slice(0, 3).map(a => '<div class="ph-i"><div class="ph-m num">' + esc(rFmtDT(a.start)) + ' <span class="tag ' + (a.end ? 'ok' : 'warn') + '">' + (a.end ? '已完成' : '處理中') + '</span></div>'
+      + '<div class="ph-b">' + esc(((a.types || []).join('、') || '事故') + (a.note ? ':' + a.note : '')) + '</div></div>').join('')
+    + '<button class="btn ghost sm" type="button" data-phist="' + esc(pNo(p.poleNo)) + '">看全部紀錄</button>';
+  el.hidden = false;
 }
 // ---------- 資料檢查:編號跟自己的線接不上,旁邊別條線卻有它的上一支(台電資料線名可能寫錯) ----------
 let SUSPECT = null;
@@ -3693,6 +3723,11 @@ document.addEventListener('click', e => {
   const b = e.target.closest('[data-rec]'); if(!b) return;
   if(b.dataset.rec === 'open') recOpen();
   if(b.dataset.rec === 'acc'){ const p = S.poles.find(x => x.id === b.dataset.id); if(p) recNewAccAt(p); }
+
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-phist]'); if(!b) return;
+  RS = RS || { f: {} }; RS.f = { aq: b.dataset.phist }; recOpen('acc', 'list');
 });
 // 連結只能帶英數字和 - _ 的錨點,所以把「民一43」這種桿號編成 base64url
 function b64url(t){ return btoa(String.fromCharCode(...new TextEncoder().encode(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
