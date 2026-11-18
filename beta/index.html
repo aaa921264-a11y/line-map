@@ -555,6 +555,21 @@ html.big .place .name, html.big #nearName{font-size:21px;}
 html.big .hint, html.big .place .kind{font-size:15px;}
 html.big .map text{font-size:14px;}
 @media (prefers-color-scheme: dark){ .bx-down{background:#3b1d1d; color:#ffc9c9;} }
+#recSheet{z-index:65;}
+#recSheet[hidden]{display:none;}
+html.rec-open{overflow:hidden;}
+.rec .rc-filt{display:flex; flex-direction:column; gap:8px; margin:10px 0 4px;}
+.rec .lbody > .btn.wide{margin-top:8px;}
+.rec .lbody .field{margin-top:10px;}
+.rec .lbody .loc{margin-top:10px;}
+.rec .tag.ok{color:var(--ok); border-color:var(--ok);}
+.rec .tag.warn{color:var(--accent-text); border-color:var(--accent);}
+.rc-ph{display:flex; gap:6px; overflow-x:auto; margin-top:8px; align-items:center;}
+.rc-ph span{font-size:12px; color:var(--muted); flex:none;}
+.rc-ph img{height:72px; border-radius:6px; cursor:zoom-in; flex:none; background:var(--line);}
+.rc-tbl > div{display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); font-size:14px;}
+.rc-tbl span{color:var(--muted); white-space:nowrap;}
+.rc-tok{margin-top:12px; border:1px dashed var(--line); border-radius:var(--r); padding:10px;}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -646,7 +661,7 @@ html.big .map text{font-size:14px;}
     <div class="section-title"><h2>已存的軌跡</h2><span class="count" id="trkCount"></span></div>
     <div id="trkList"></div>
 
-    <a class="btn ghost wide" id="recordsLink" target="_blank" rel="noopener" style="margin-top:14px">到「線路巡視紀錄」寫事故、巡修、日誌</a>
+    <button class="btn wide" type="button" data-rec="open" style="margin-top:14px">📋 巡視紀錄(事故、巡修、工作日誌、統計)</button>
     <p class="hint" style="text-align:center" id="appVer"></p>
     <p class="hint" style="text-align:center">電桿資料:台電開放資料「台灣電力公司電桿坐標及桿號」;底圖:內政部國土測繪中心 臺灣通用電子地圖、正射影像;街道搜尋:© OpenStreetMap 貢獻者</p>
   </section>
@@ -656,7 +671,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-061905";
+const SITE_BUILD = "20261119-063519";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2278,7 +2293,7 @@ function renderPatrol(){
     + '<div class="bp-bar"><i style="width:' + (all.length ? (100 * (all.length - left.length) / all.length).toFixed(1) : 0) + '%"></i></div>'
     + '<p class="num" style="margin:6px 0">已巡 <b>' + (all.length - left.length) + '</b> / ' + all.length + ' 支(' + esc(PAT.day) + ')</p>'
     + (left.length ? '<p class="hint" style="margin:0 0 8px">還沒巡:' + left.slice(0, 30).map(p => esc(p.poleNo)).join('、') + (left.length > 30 ? ' …等 ' + left.length + ' 支' : '') + '</p>' : '<p>全部巡完了 ✓</p>')
-    + '<div class="row"><button class="btn sm" type="button" data-b="pat-near">最近的桿打勾</button><button class="btn ghost sm" type="button" data-b="pat-copy">複製巡視結果</button><button class="btn ghost sm" type="button" data-b="pat-end">結束巡線</button></div>';
+    + '<div class="row"><button class="btn sm" type="button" data-b="pat-near">最近的桿打勾</button><button class="btn ghost sm" type="button" data-b="pat-copy">存成巡修紀錄</button><button class="btn ghost sm" type="button" data-b="pat-end">結束巡線</button></div>';
 }
 function patrolSvg(L){
   if(!PAT || L.mpp > 8) return '';
@@ -2302,8 +2317,8 @@ function notesSvg(L){
   return out;
 }
 
-// ---------- 11. 事故熱點(資料從「線路巡視紀錄」複製過來,只存在這支手機) ----------
-let HEAT = LS.get('lmb:acc', null), heatOn = false;
+// ---------- 11. 事故熱點(用「巡視紀錄」裡有位置的事故) ----------
+let HEAT = null, heatOn = false;   // 事故熱點:用「巡視紀錄」裡有位置的事故
 function heatCells(){
   const cells = new Map(); if(!HEAT) return [];
   HEAT.forEach(a => { if(!a.lat) return; const [x, y] = TPC.toPlane(a.lat, a.lng), k = Math.floor(x / 200) + ',' + Math.floor(y / 200);
@@ -2367,7 +2382,7 @@ function betaPoleExtras(p){
     + '</div>';
 }
 function betaNearBtns(p){
-  return '<a class="btn ghost sm b-acc" target="_blank" rel="noopener" href="' + RECORDS_URL + '#acc-' + b64url(JSON.stringify({ line: p.line, pole: p.poleNo, lat: +(me ? me.lat : p.lat).toFixed(6), lng: +(me ? me.lng : p.lng).toFixed(6) })) + '">⚠ 這裡出事</a>';
+  return '<button class="btn ghost sm b-acc" type="button" data-rec="acc" data-id="' + esc(p.id) + '">⚠ 這裡出事</button>';
 }
 document.addEventListener('change', e => { if(e.target.id === 'bNote'){ const p = sel(); if(p){ saveNote(p, { note: e.target.value.trim() }); toast('筆記已存在這支手機'); } } });
 document.addEventListener('click', async e => {
@@ -2386,8 +2401,8 @@ document.addEventListener('click', async e => {
   if(a === 'pat-near'){ const n = me ? polesNear(me, 60).filter(o => PAT && o.p.line === PAT.line).sort((x, y) => x.d - y.d)[0] : null;
     if(n){ markDone(n.p); renderPatrol(); LMap.req(); toast(n.p.poleNo + ' 已打勾'); } else toast('60 公尺內沒有這條線的桿'); }
   if(a === 'pat-copy' && PAT){ const all = patrolPoles(), done = new Set(PAT.done);
-    const t = PAT.day + ' 巡視 ' + PAT.line + ':已巡 ' + done.size + ' / ' + all.length + ' 支\n已巡:' + all.filter(q => done.has(q.poleNo)).map(q => q.poleNo).join('、') + '\n未巡:' + all.filter(q => !done.has(q.poleNo)).map(q => q.poleNo).join('、');
-    try{ await navigator.clipboard.writeText(t); toast('已複製,可以貼到紀錄網頁的巡修備註'); }catch(err){ prompt('複製:', t); } }
+    const t = '已巡 ' + done.size + ' / ' + all.length + ' 支\n已巡:' + all.filter(q => done.has(q.poleNo)).map(q => q.poleNo).join('、') + '\n未巡:' + all.filter(q => !done.has(q.poleNo)).map(q => q.poleNo).join('、');
+    recOpen('pat', 'form', { kind: 'pat', pre: { line: PAT.line, date: PAT.day, item: '巡線', note: t } }); }
   if(a === 'pat-end'){ PAT = null; LS.set('lmb:patrol', null); renderPatrol(); LMap.req(); }
   if(a === 'star' && p){ const n = NOTES[poleKey(p)] || {}; saveNote(p, { star: !n.star, note: n.note || '' }); renderPlace(); }
   if(a === 'tools') openTools();
@@ -2410,15 +2425,13 @@ function openTools(){
     + '<button type="button" data-t="measure"><b>📏 量距離</b><span>點地圖量直線與沿線距離</span></button>'
     + '<button type="button" data-t="addpole"><b>➕ 新增電桿</b><span>用圖號座標加一支桿</span></button>'
     + '<button type="button" data-t="ocr"><b>📷 拍桿牌找位置</b><span>拍電桿牌,讀出電力座標</span></button>'
-    + '<button type="button" data-t="heat"><b>🔥 事故熱點</b><span>' + (HEAT ? (heatOn ? '關閉熱點' : '顯示熱點(' + HEAT.length + ' 筆)') : '先匯入事故資料') + '</span></button>'
+    + '<button type="button" data-t="heat"><b>🔥 事故熱點</b><span>' + (heatOn ? '關閉熱點' : '用巡視紀錄的事故') + '</span></button>'
     + '<button type="button" data-t="offline"><b>📦 下載這一區離線用</b><span>沒訊號也能看電桿和街道</span></button>'
     + '<button type="button" data-t="big"><b>🔠 大字戶外模式</b><span>' + (document.documentElement.classList.contains('big') ? '已開啟,按一下關閉' : '按鈕和字放大') + '</span></button>'
     + '</div>'
     + '<input type="file" accept="image/*" capture="environment" id="bOcrFile" hidden>'
     + '<div id="tOut"></div>'
     + '<div class="lsec"><h3>我的收藏與筆記(' + notes.length + ')</h3>' + (notes.length ? notes.map(n => '<button type="button" class="t-note" data-q="' + esc(n.q) + '"><b>' + (n.star ? '★ ' : '') + esc(n.label) + '</b><span>' + esc(n.note || '') + '</span></button>').join('') : '<p class="hint">在電桿卡片按「☆ 收藏」或寫筆記,就會出現在這裡。</p>') + '</div>'
-    + '<div class="lsec"><h3>事故資料</h3><p class="hint" style="margin:0 0 6px">到「線路巡視紀錄」→ 統計 → 按「複製事故資料」,再貼到下面。資料只存在這支手機。</p>'
-    + '<textarea id="tAcc" rows="3" placeholder="貼上事故資料"></textarea><div class="row" style="margin-top:6px"><button class="btn sm" type="button" data-t="acc-save">匯入</button>' + (HEAT ? '<button class="btn ghost sm" type="button" data-t="acc-clear">清除(' + HEAT.length + ' 筆)</button>' : '') + '</div></div>'
     + '</div></div></div>';
   const m = ov.firstChild, close = () => { ov.innerHTML = ''; };
   m.addEventListener('click', async e => {
@@ -2430,7 +2443,7 @@ function openTools(){
     if(a === 'close') close();
     if(a === 'measure'){ close(); startMeasure(); $('mapWrap').scrollIntoView({ block: 'start', behavior: 'smooth' }); }
     if(a === 'big'){ const on = !document.documentElement.classList.contains('big'); document.documentElement.classList.toggle('big', on); LS.set('lmb:big', on); close(); LMap.sizeDirty = true; LMap.req(); }
-    if(a === 'heat'){ if(!HEAT){ $('tAcc').focus(); return; } heatOn = !heatOn; close(); if(heatOn){ LMap.fit(HEAT.filter(x => x.lat)); } LMap.req(); }
+    if(a === 'heat'){ close(); if(heatOn){ heatOn = false; LMap.req(); return; } await recHeat(false); if(HEAT){ LMap.fit(HEAT); toast('事故熱點:' + HEAT.length + ' 筆'); } else toast('巡視紀錄裡還沒有有位置的事故'); }
     if(a === 'acc-save'){ try{ const j = JSON.parse($('tAcc').value.trim()); const list = (Array.isArray(j) ? j : j.accidents || []).filter(x => x && x.lat && x.lng);
         if(!list.length) throw 0; HEAT = list; LS.set('lmb:acc', HEAT); heatOn = true; close(); LMap.fit(HEAT); LMap.req(); toast('已匯入 ' + list.length + ' 筆事故'); }
       catch(err){ toast('看不懂這段資料,請從紀錄網頁重新複製'); } }
@@ -2631,7 +2644,6 @@ function betaBoot(){
 // Runs outside Claude (needs https for GPS). Poles and streets are bundled into the
 // page; tracks stay on this phone (localStorage) until exported as GPX.
 let curLine = '';
-const RECORDS_URL = 'https://claude.ai/artifact/1RTdwomHLTZRrho3QWXEGt';
 const DATA_BASE = typeof DATA_BASE_OVERRIDE !== 'undefined' ? DATA_BASE_OVERRIDE : '';   // 測試版放在 beta/,資料用正式版的 ../
 const MAX_ACC = 50;          // ignore fixes worse than this (metres) for the track
 const MIN_STEP = 10;         // record a point after moving this far …
@@ -2896,7 +2908,7 @@ async function finishRec(){
   releaseWake();
   shown = t;
   renderRec(); renderTracks(); LMap.req();
-  toast('已存檔:' + t.km + ' 公里。按「匯出 GPX」交到紀錄網頁。' + (dropped ? '(最舊的 ' + dropped + ' 筆已刪除)' : ''), 5000);
+  toast('已存檔:' + t.km + ' 公里。可以在「巡視紀錄」→ 巡修附上這條軌跡。' + (dropped ? '(最舊的 ' + dropped + ' 筆已刪除)' : ''), 5000);
 }
 function renderRec(){
   const btn = $('recBtn'), st = $('trkStats');
@@ -2948,7 +2960,7 @@ async function exportGpx(t){
   a.href = URL.createObjectURL(blob); a.download = name;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  toast('已下載 ' + name + '。到紀錄網頁的「巡修」→ 附上軌跡,選這個檔案。', 5000);
+  toast('已下載 ' + name, 4000);
   return 'download';
 }
 function renderTracks(){
@@ -3305,6 +3317,383 @@ document.addEventListener('click', e => {
   if(b.dataset.nt === 'add') openNoteDraft(b.dataset.line, b.dataset.pole);
   else if(b.dataset.nt === 'del') deleteNote(b.dataset.line, b.dataset.pole, b.dataset.id);
 });
+// ---------- 巡視紀錄(原「線路巡視紀錄」合併進來):事故、巡修(含行車軌跡)、工作日誌、統計 ----------
+// 全組共用,存在 Pole-photo 的 r/ 資料夾:r/acc.json(全部事故)、r/pat/<年-月>.json、r/log/<年-月>.json、r/trk/<id>.json(軌跡點)、r/settings.json
+// 每個檔案是 { id: 紀錄 },用 ghCommit 一次寫入,別人同時寫入會自動重讀合併。照片存在 p/r_*.jpg、t/r_*.jpg
+const R_TYPES_DEF = ['LCO', 'CO', '設備損壞'];
+const WL_STATUS = { doing: '進行中', material: '待料', next: '待續', done: '已完成' };
+const WL_CATS = ['事故搶修', '定期巡視', '計畫性維修', '停電作業', '新設/改善工程', '樹木修剪', '用戶報修', '其他'];
+const PAT_RES = { normal: '正常', abnormal: '異常', pending: '待修' };
+const RD = {};   // 路徑 → { data, at, local }
+const rId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const rYm = d => String(d || '').slice(0, 7);
+const rNowLocal = () => { const d = new Date(); return ymd(d) + 'T' + hhmm(d); };
+const rMonths = n => { const out = [], d = new Date(); d.setDate(1); for(let i = 0; i < n; i++){ out.push(ymd(d).slice(0, 7)); d.setMonth(d.getMonth() - 1); } return out; };
+const rMe = () => lsGet('lm:me', '');
+const rFmtDT = s => s ? s.replace('T', ' ') : '';
+async function rLoad(path, force){
+  const c = RD[path];
+  if(c && !force && Date.now() - c.at < 60000) return c.data;
+  if(c && !ghTok() && Date.now() - c.local < 180000) return c.data;   // 剛寫入,網站可能還沒更新
+  let data = null;
+  if(ghTok()){ try{ const g = await ghApi('GET', '/contents/' + path + '?ref=' + GH_BRANCH, null, true); if(g.ok) data = JSON.parse(await g.text()); else if(g.status === 404) data = {}; }catch(e){} }
+  if(data === null){ try{ const r = await fetch(PH_SITE[PH_SITE_DEF] + path + '?t=' + Date.now(), { cache: 'no-store' }); data = r.ok ? await r.json() : {}; }catch(e){ data = c ? c.data : {}; } }
+  RD[path] = { data: data || {}, at: Date.now(), local: c ? c.local : 0 };
+  return RD[path].data;
+}
+async function rSave(msg, edits, files){
+  const out = await ghCommit(msg, files || [], edits);
+  for(const p in out) RD[p] = { data: out[p], at: Date.now(), local: Date.now() };
+}
+const rList = o => Object.values(o || {});
+async function rLoadMonths(kind, months){ const all = []; for(const m of months) all.push(...rList(await rLoad('r/' + kind + '/' + m + '.json'))); return all; }
+async function rTypes(){ const s = await rLoad('r/settings.json'); return (s.types && s.types.length) ? s.types : R_TYPES_DEF; }
+// 照片:標準畫質 + 縮圖,檔名 r_*.jpg
+async function rPhotoFiles(fileList){
+  const files = [], names = [];
+  for(const f of Array.from(fileList || []).slice(0, PH_MAX_FILES)){
+    try{
+      const full = await compressPhoto(f, 'std'), th = await compressPhoto(f, 'th'), n = 'r_' + rId() + '.jpg';
+      files.push({ path: 'p/' + n, b64: ghB64(new Uint8Array(await full.blob.arrayBuffer())) }, { path: 't/' + n, b64: ghB64(new Uint8Array(await th.blob.arrayBuffer())) });
+      PH_LOCAL[n] = { full: URL.createObjectURL(full.blob), thumb: URL.createObjectURL(th.blob) };
+      names.push(n);
+    }catch(e){}
+  }
+  return { files, names };
+}
+const rThumbs = (arr, label) => (arr && arr.length) ? '<div class="rc-ph">' + (label ? '<span>' + esc(label) + '</span>' : '') + arr.map(n => '<img class="rc-img" loading="lazy" alt="照片" src="' + esc(phThumb({ f: n })) + '" data-full="' + esc(phFull({ f: n })) + '">').join('') + '</div>' : '';
+document.addEventListener('click', e => { const i = e.target.closest('img.rc-img'); if(i) showPhoto(i.dataset.full); });
+
+// ---- 畫面 ----
+let RS = null;   // { tab, view, ctx }
+function recOpen(tab, view, ctx){
+  let el = $('recSheet');
+  if(!el){ el = document.createElement('div'); el.id = 'recSheet'; el.className = 'modal layers rec'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); el.addEventListener('click', recClick); el.addEventListener('change', recChange); el.addEventListener('input', recInput); }
+  el.hidden = false; document.documentElement.classList.add('rec-open');
+  RS = { tab: tab || (RS && RS.tab) || 'acc', view: view || 'list', ctx: ctx || {}, f: (RS && RS.f) || {} };
+  recRender();
+}
+function recClose(){ const el = $('recSheet'); if(el){ el.hidden = true; el.innerHTML = ''; } document.documentElement.classList.remove('rec-open'); }
+const R_TABS = [['acc', '事故'], ['pat', '巡修'], ['log', '工作日誌'], ['stat', '統計']];
+function recShell(inner, title, back){
+  return '<div class="sheet"><div class="lh">' + (back ? '<button class="btn ghost sm" type="button" data-rk="back">‹ 返回</button>' : '') + '<b>' + esc(title) + '</b><span class="hint"></span><button class="btn sm" type="button" data-rk="close">關閉</button></div>'
+    + (back ? '' : '<div class="seg-tabs" role="tablist">' + R_TABS.map(([k, n]) => '<button role="tab" type="button" data-rt="' + k + '" aria-selected="' + (RS.tab === k) + '">' + n + '</button>').join('') + '</div>')
+    + '<div class="lbody" id="recBody">' + inner + '</div></div>';
+}
+async function recRender(){
+  const el = $('recSheet'); if(!el || el.hidden) return;
+  if(RS.view === 'form'){ return recForm(el); }
+  el.innerHTML = recShell('<div class="empty">讀取中…</div>', '巡視紀錄');
+  try{
+    const html = RS.tab === 'acc' ? await recAccList() : RS.tab === 'pat' ? await recPatList() : RS.tab === 'log' ? await recLogList() : await recStats();
+    if($('recBody')) $('recBody').innerHTML = html;
+  }catch(e){ if($('recBody')) $('recBody').innerHTML = '<div class="warnbox">讀不到紀錄,請確認網路。</div>'; }
+}
+const rFilt = (key, ph, extra) => '<div class="rc-filt"><input type="search" data-rf="' + key + 'q" value="' + esc(RS.f[key + 'q'] || '') + '" placeholder="' + esc(ph) + '"><div class="grid2"><input type="month" data-rf="' + key + 'm" value="' + esc(RS.f[key + 'm'] || '') + '" aria-label="月份">' + extra + '</div></div>';
+const rSel = (key, opts, all) => '<select data-rf="' + key + '" aria-label="篩選"><option value="">' + all + '</option>' + Object.entries(opts).map(([k, v]) => '<option value="' + k + '"' + (RS.f[key] === k ? ' selected' : '') + '>' + v + '</option>').join('') + '</select>';
+const rHit = (o, q) => !q || JSON.stringify(o).toLowerCase().includes(q.toLowerCase());
+const rWhere = o => o.loc ? '<div class="where">' + plateHtml(codeFor(o.loc), '') + '<button class="btn ghost sm" type="button" data-rk="map" data-lat="' + o.loc.lat + '" data-lng="' + o.loc.lng + '" data-label="' + esc((o.line || '') + ' ' + (o.pole || '')) + '">在地圖上看</button></div>' : '';
+const rBtns = (kind, o, more) => '<div class="row">' + (more || '') + '<button class="btn ghost sm" type="button" data-rk="edit" data-kind="' + kind + '" data-id="' + esc(o.id) + '">編輯</button><button class="btn ghost sm" type="button" data-rk="del" data-kind="' + kind + '" data-id="' + esc(o.id) + '">刪除</button></div>';
+async function recAccList(){
+  const all = rList(await rLoad('r/acc.json')).sort((a, b) => (b.start || '').localeCompare(a.start || ''));
+  const q = RS.f.aq, m = RS.f.am, st = RS.f.as;
+  const list = all.filter(a => rHit(a, q) && (!m || rYm(a.start) === m) && (!st || (st === 'done' ? a.end : !a.end)));
+  return '<button class="btn wide" type="button" data-rk="new" data-kind="acc">＋ 新增事故</button>'
+    + rFilt('a', '搜尋線路、桿號、類型、備註', rSel('as', { open: '處理中', done: '已完成' }, '全部狀態'))
+    + '<div class="section-title"><h2>事故清單</h2><span class="count">' + list.length + ' 筆</span></div>'
+    + (list.length ? list.map(a => '<article class="item"><div class="t"><div class="title">' + esc((a.line || '') + ' ' + (a.pole || '')) + '</div><span class="tag ' + (a.end ? 'ok' : 'warn') + '">' + (a.end ? '已完成' : '處理中') + '</span></div>'
+      + '<div class="meta num">' + esc(rFmtDT(a.start)) + (a.end ? ' → ' + esc(rFmtDT(a.end)) : '') + ((a.types || []).length ? ' · ' + esc(a.types.join('、')) : '') + (a.by ? ' · ' + esc(a.by) : '') + '</div>'
+      + (a.note ? '<div class="body">' + esc(a.note) + '</div>' : '') + rWhere(a) + rThumbs(a.before, '未完成') + rThumbs(a.after, '完成後')
+      + rBtns('acc', a, a.end ? '' : '<button class="btn sm" type="button" data-rk="acc-log" data-id="' + esc(a.id) + '">寫處理日誌</button>') + '</article>').join('')
+      : '<div class="empty">' + (all.length ? '沒有符合的事故。' : '還沒有事故紀錄。') + '</div>');
+}
+async function recPatList(){
+  const months = RS.f.pm ? [RS.f.pm] : rMonths(3);
+  const all = (await rLoadMonths('pat', months)).sort((a, b) => ((b.date || '') + (b.time || '')).localeCompare((a.date || '') + (a.time || '')));
+  const list = all.filter(p => rHit(p, RS.f.pq) && (!RS.f.pr || p.result === RS.f.pr));
+  return '<button class="btn wide" type="button" data-rk="new" data-kind="pat">＋ 新增巡修紀錄</button>'
+    + rFilt('p', '搜尋線路、人員、項目、備註', rSel('pr', PAT_RES, '全部結果'))
+    + '<div class="section-title"><h2>巡修清單</h2><span class="count">' + list.length + ' 筆' + (RS.f.pm ? '' : '(近 3 個月)') + '</span></div>'
+    + (list.length ? list.map(p => '<article class="item"><div class="t"><div class="title">' + esc((p.line || '') + ' ' + (p.pole || '')) + '</div><span class="tag ' + (p.result === 'normal' ? 'ok' : 'warn') + '">' + esc(PAT_RES[p.result] || '') + '</span></div>'
+      + '<div class="meta num">' + esc(p.date || '') + ' ' + esc(p.time || '') + (p.staff ? ' · ' + esc(p.staff) : '') + (p.item ? ' · ' + esc(p.item) : '') + '</div>'
+      + (p.note ? '<div class="body">' + esc(p.note) + '</div>' : '') + rWhere(p) + rThumbs(p.ph)
+      + (p.trk ? '<div class="meta">🚗 行車軌跡 ' + p.trk.km + ' 公里</div>' : '')
+      + rBtns('pat', p, p.trk ? '<button class="btn ghost sm" type="button" data-rk="trk" data-id="' + esc(p.trk.id) + '">看軌跡</button>' : '') + '</article>').join('')
+      : '<div class="empty">' + (all.length ? '沒有符合的巡修紀錄。' : '這段期間還沒有巡修紀錄。') + '</div>');
+}
+async function recLogList(){
+  const months = RS.f.lm ? [RS.f.lm] : rMonths(3);
+  const all = (await rLoadMonths('log', months)).sort((a, b) => ((b.date || '') + (b.start || '')).localeCompare((a.date || '') + (a.start || '')));
+  const list = all.filter(w => rHit(w, RS.f.lq) && (!RS.f.ls || (RS.f.ls === 'open' ? w.status !== 'done' : w.status === RS.f.ls)) && (!RS.f.lc || w.cat === RS.f.lc));
+  const cats = {}; WL_CATS.forEach(c => cats[c] = c);
+  return '<button class="btn wide" type="button" data-rk="new" data-kind="log">＋ 新增工作日誌</button>'
+    + rFilt('l', '搜尋線路、地點、內容、人員', rSel('ls', Object.assign({ open: '未完成' }, WL_STATUS), '全部進度')) + '<div style="margin-top:8px">' + rSel('lc', cats, '全部類別') + '</div>'
+    + '<div class="section-title"><h2>工作日誌</h2><span class="count">' + list.length + ' 筆' + (RS.f.lm ? '' : '(近 3 個月)') + '</span></div>'
+    + (list.length ? list.map(w => '<article class="item"><div class="t"><div class="title">' + esc(w.cat || '') + ' ' + esc((w.line || '') + ' ' + (w.pole || '')) + '</div><span class="tag ' + (w.status === 'done' ? 'ok' : 'warn') + '">' + esc(WL_STATUS[w.status] || '') + '</span></div>'
+      + '<div class="meta num">' + esc(w.date || '') + ' ' + esc(w.start || '') + (w.end ? '–' + esc(w.end) : '') + (w.place ? ' · ' + esc(w.place) : '') + (w.leader ? ' · ' + esc(w.leader) : '') + (w.weather ? ' · ' + esc(w.weather) : '') + '</div>'
+      + (w.content ? '<div class="body">' + esc(w.content) + '</div>' : '')
+      + (w.outage ? '<div class="meta">⚡ 停電作業' + (w.sw ? ' · ' + esc(w.sw) : '') + (w.off ? ' · ' + esc(w.off) + '–' + esc(w.on || '') : '') + ' · 接地線 掛 ' + (w.gon || 0) + ' / 拆 ' + (w.goff || 0) + ' 組</div>' : '')
+      + (w.mat ? '<div class="meta">材料:' + esc(w.mat) + '</div>' : '') + (w.next ? '<div class="note">下一步:' + esc(w.next) + (w.due ? '(預計 ' + esc(w.due) + ')' : '') + '</div>' : '')
+      + rThumbs(w.ph) + rBtns('log', w, w.status !== 'done' ? '<button class="btn sm" type="button" data-rk="follow" data-id="' + esc(w.id) + '">接續</button>' : '') + '</article>').join('')
+      : '<div class="empty">' + (all.length ? '沒有符合的工作日誌。' : '這段期間還沒有工作日誌。') + '</div>');
+}
+async function recStats(){
+  const ym = ymd(new Date()).slice(0, 7);
+  const acc = rList(await rLoad('r/acc.json')), pats = await rLoadMonths('pat', [ym]), logs = await rLoadMonths('log', rMonths(3));
+  const monLogs = logs.filter(w => rYm(w.date) === ym);
+  const tile = (n, t) => '<div class="stat"><b>' + n + '</b><span>' + t + '</span></div>';
+  const byLine = {}; pats.forEach(p => { const k = p.line || '(未填)'; const o = byLine[k] = byLine[k] || { normal: 0, abnormal: 0, pending: 0 }; o[p.result] = (o[p.result] || 0) + 1; });
+  const types = {}; acc.forEach(a => (a.types || []).forEach(t => types[t] = (types[t] || 0) + 1));
+  const poles = {}; acc.forEach(a => { if(a.pole){ const k = (a.line || '') + ' ' + a.pole; poles[k] = (poles[k] || 0) + 1; } });
+  const top = o => Object.entries(o).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const withLoc = acc.filter(a => a.loc).length;
+  return '<div class="stats">' + tile(acc.filter(a => rYm(a.start) === ym).length, '本月事故') + tile(acc.filter(a => !a.end).length, '事故處理中(全部)')
+    + tile(pats.length, '本月巡修') + tile(pats.filter(p => p.result !== 'normal').length, '本月巡修異常/待修')
+    + tile(monLogs.length, '本月工作日誌') + tile(logs.filter(w => w.status !== 'done').length, '未完成工作(近 3 個月)') + '</div>'
+    + '<div class="section-title"><h2>各線路本月巡修結果</h2></div>' + (Object.keys(byLine).length ? '<div class="rc-tbl">' + Object.entries(byLine).map(([k, o]) => '<div><b>' + esc(k) + '</b><span>正常 ' + o.normal + ' · 異常 ' + o.abnormal + ' · 待修 ' + o.pending + '</span></div>').join('') + '</div>' : '<div class="empty">本月還沒有巡修。</div>')
+    + '<div class="section-title"><h2>事故類型(全部)</h2></div>' + (top(types).length ? '<div class="rc-tbl">' + top(types).map(([k, n]) => '<div><b>' + esc(k) + '</b><span>' + n + ' 次</span></div>').join('') + '</div>' : '<div class="empty">還沒有事故。</div>')
+    + '<div class="section-title"><h2>事故最多的電桿</h2></div>' + (top(poles).length ? '<div class="rc-tbl">' + top(poles).map(([k, n]) => '<div><b>' + esc(k) + '</b><span>' + n + ' 次</span></div>').join('') + '</div>' : '<div class="empty">還沒有記錄電桿的事故。</div>')
+    + (typeof heatSvg === 'function' ? '<div class="section-title"><h2>事故熱點</h2></div><button class="btn wide" type="button" data-rk="heat"' + (withLoc ? '' : ' disabled') + '>在地圖上看事故熱點(' + withLoc + ' 筆有位置)</button>' : '');
+}
+
+// ---- 表單 ----
+const rIn = (id, label, val, type, ph, attrs) => '<label class="field"><span>' + label + '</span><input type="' + (type || 'text') + '" id="' + id + '" value="' + esc(val == null ? '' : val) + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + (attrs || '') + '></label>';
+const rTa = (id, label, val, ph) => '<label class="field"><span>' + label + '</span><textarea id="' + id + '"' + (ph ? ' placeholder="' + esc(ph) + '"' : '') + '>' + esc(val || '') + '</textarea></label>';
+const rChips = (id, opts, cur, multi) => '<div class="chips" id="' + id + '" data-multi="' + (multi ? 1 : 0) + '">' + Object.entries(opts).map(([k, v]) => '<button type="button" class="chip" data-v="' + esc(k) + '" aria-pressed="' + (multi ? (cur || []).includes(k) : cur === k) + '">' + esc(v) + '</button>').join('') + '</div>';
+const rPhIn = (id, label) => '<div class="field"><span>' + label + '</span><span class="btn ghost sm file-btn" style="align-self:flex-start">📷 拍照/選照片<input type="file" id="' + id + '" accept="image/*" multiple></span><span class="hint" id="' + id + 'N" style="margin:0"></span></div>';
+let RF = null;   // 目前表單:{ kind, id, o, picker, files }
+async function recForm(el){
+  const { kind, id } = RS.ctx, edit = !!id;
+  let o = Object.assign({}, RS.ctx.pre || {});
+  if(edit){
+    if(kind === 'acc') o = Object.assign({}, (await rLoad('r/acc.json'))[id] || {});
+    else o = Object.assign({}, (await rLoad('r/' + kind + '/' + RS.ctx.ym + '.json'))[id] || {});
+  }
+  RF = { kind, id, o, files: {} };
+  const title = (edit ? '編輯' : '新增') + { acc: '事故', pat: '巡修紀錄', log: '工作日誌' }[kind];
+  let h = '';
+  const lp = '<div class="grid2">' + rIn('rLine', '幹線 / 分線', o.line, 'text', '例如 民一幹') + rIn('rPole', '電桿編號', o.pole, 'text', '例如 #43') + '</div>';
+  if(kind === 'acc'){
+    const types = await rTypes(), tobj = {}; types.forEach(t => tobj[t] = t); (o.types || []).forEach(t => tobj[t] = t);
+    h = lp + '<div class="field"><span>事故類型</span>' + rChips('rTypes', tobj, o.types || [], true)
+      + '<div class="inline" style="margin-top:6px"><input type="text" id="rNewType" placeholder="新增類型"><button class="btn ghost sm" type="button" data-rk="addtype">加入</button></div></div>'
+      + '<div class="grid2 dt">' + rIn('rStart', '發生時間', o.start || rNowLocal(), 'datetime-local') + rIn('rEnd', '完成時間(未完成可空白)', o.end, 'datetime-local') + '</div>'
+      + '<div id="rLoc"></div>' + rTa('rNote', '備註', o.note, '現象、研判原因、處理情形') + rPhIn('rPh1', '未完成照片') + rThumbs(o.before) + (edit ? rPhIn('rPh2', '完成後照片') + rThumbs(o.after) : '');
+  }
+  if(kind === 'pat'){
+    const d = new Date();
+    h = rIn('rLine', '巡修路線(幹線 / 分線)', o.line, 'text', '例如 民一幹')
+      + '<div class="grid3">' + rIn('rDate', '日期', o.date || ymd(d), 'date') + rIn('rTime', '發現時間', o.time || hhmm(d), 'time') + rIn('rStaff', '巡修人員', o.staff || rMe(), 'text', '姓名') + '</div>'
+      + rIn('rPole', '電桿編號(選填)', o.pole, 'text', '例如 #43-10') + rIn('rItem', '檢查項目', o.item, 'text', '例如 礙子破損、電桿傾斜、樹木接近')
+      + '<div class="field"><span>檢查結果</span>' + rChips('rRes', PAT_RES, o.result || 'normal') + (edit ? '' : '<p class="hint">選「異常」會同時建立一筆事故,並帶入位置。</p>') + '</div>'
+      + '<div id="rLoc"></div>'
+      + '<div class="field"><span>這趟的行車軌跡(選填)</span>' + (o.trk ? '<p class="hint" style="margin:0">已附 ' + o.trk.km + ' 公里</p>' : '')
+      + '<select id="rTrk"><option value="">' + (o.trk ? '維持原本的軌跡' : '不附軌跡') + '</option>' + tracks.map(t => '<option value="' + esc(t.id) + '">' + esc(t.name) + '(' + t.km + ' 公里)</option>').join('') + '</select>'
+      + '<span class="btn ghost sm file-btn" style="align-self:flex-start;margin-top:6px">或附上 GPX 檔<input type="file" id="rGpx" accept=".gpx,application/gpx+xml"></span><span class="hint" id="rGpxN" style="margin:0"></span></div>'
+      + rTa('rNote', '備註', o.note) + rPhIn('rPh1', '照片') + rThumbs(o.ph);
+  }
+  if(kind === 'log'){
+    const d = new Date(), accs = rList(await rLoad('r/acc.json')).filter(a => !a.end || a.id === o.acc);
+    const st = o.status || 'doing';
+    h = '<div class="grid2">' + rIn('rDate', '日期', o.date || ymd(d), 'date') + '<label class="field"><span>工作類別</span><select id="rCat">' + WL_CATS.map(c => '<option' + (o.cat === c ? ' selected' : '') + '>' + c + '</option>').join('') + '</select></label></div>'
+      + '<div class="grid2">' + rIn('rStart', '開始時間', o.start || hhmm(d), 'time') + rIn('rEnd', '結束時間', o.end, 'time') + '</div>'
+      + lp + rIn('rPlace', '工作地點', o.place, 'text', '地址或地標') + '<div id="rLoc"></div>' + rTa('rContent', '工作內容', o.content, '做了什麼、發現什麼、怎麼處理')
+      + '<div class="grid2">' + rIn('rLeader', '工作負責人', o.leader || rMe(), 'text', '姓名') + rIn('rCrew', '作業人員', o.crew, 'text', '用頓號分隔') + '</div>'
+      + '<label class="check"><input type="checkbox" id="rOut"' + (o.outage ? ' checked' : '') + '><span>有停電作業</span></label>'
+      + '<div class="outage" id="rOutBox"' + (o.outage ? '' : ' hidden') + '>' + rIn('rSw', '停電開關 / 設備編號', o.sw, 'text', '例如 開關 #1234、FC 編號')
+      + '<div class="grid2">' + rIn('rOff', '停電時間', o.off, 'time') + rIn('rOn', '復電時間', o.on, 'time') + '</div>'
+      + '<div class="grid2">' + rIn('rGon', '接地線掛設(組)', o.gon, 'number', '', ' inputmode="numeric" min="0"') + rIn('rGoff', '接地線拆除(組)', o.goff, 'number', '', ' inputmode="numeric" min="0"') + '</div><div class="warnbox" id="rGwarn" hidden></div></div>'
+      + rTa('rMat', '使用材料', o.mat, '品名與數量,例如 熔絲鏈 ×2、礙子 ×1')
+      + '<div class="field"><span>進度</span>' + rChips('rSt', WL_STATUS, st) + '</div>'
+      + '<div id="rNextBox"' + (st === 'done' ? ' hidden' : '') + '>' + rTa('rNext', '下一步 / 待辦事項', o.next, '還沒完成的部分、下次要帶的材料') + rIn('rDue', '預計完成日', o.due, 'date') + '</div>'
+      + '<div class="grid2"><label class="field"><span>天氣</span><select id="rWx"><option value="">—</option>' + ['晴', '陰', '雨', '雷雨', '強風'].map(w => '<option' + (o.weather === w ? ' selected' : '') + '>' + w + '</option>').join('') + '</select></label>'
+      + '<label class="field"><span>關聯事故</span><select id="rAcc"><option value="">無</option>' + accs.map(a => '<option value="' + esc(a.id) + '"' + (o.acc === a.id ? ' selected' : '') + '>' + esc(rFmtDT(a.start).slice(5, 16) + ' ' + (a.line || '') + ' ' + (a.pole || '') + ' ' + (a.types || []).join('、')) + '</option>').join('') + '</select></label></div>'
+      + '<div class="accbox" id="rAccBox"' + (o.acc && !edit ? '' : ' hidden') + '><label class="check"><input type="checkbox" id="rAccDone"' + (st === 'done' ? ' checked' : '') + '><span>標記事故已處理完成(完成時間用這筆日誌的日期與結束時間)</span></label>'
+      + '<label class="check"><input type="checkbox" id="rAccNote" checked><span>把工作內容加到事故備註</span></label><label class="check"><input type="checkbox" id="rAccPh" checked><span>照片加到事故的「完成後照片」</span></label></div>'
+      + rPhIn('rPh1', '現場照片') + rThumbs(o.ph);
+  }
+  const tok = ghTok() ? '' : '<div class="rc-tok">' + tokFormHtml('rk') + '</div>';
+  el.innerHTML = recShell(h + tok + '<button class="btn wide" type="button" data-rk="save" style="margin-top:12px">儲存</button><p class="hint" style="text-align:center">存在 GitHub,全組都看得到。</p>', title, true);
+  const lpEl = $('rLoc');
+  if(lpEl){
+    RF.picker = locPicker(lpEl, '位置');
+    if(o.loc) RF.picker.set(Object.assign({ src: 'paste' }, o.loc));
+    if(me) lpEl.querySelector('.row').insertAdjacentHTML('afterbegin', '<button type="button" class="btn ghost sm" data-rk="here">用我現在的位置</button>');
+  }
+}
+function recChips(e){
+  const c = e.target.closest('.chips .chip'); if(!c) return false;
+  const box = c.parentElement;
+  if(box.dataset.multi === '1') c.setAttribute('aria-pressed', String(c.getAttribute('aria-pressed') !== 'true'));
+  else { box.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', String(x === c))); if(box.id === 'rSt'){ $('rNextBox').hidden = c.dataset.v === 'done'; if($('rAccDone')) $('rAccDone').checked = c.dataset.v === 'done'; } }
+  return true;
+}
+const rVal = id => { const e = $(id); return e ? e.value.trim() : ''; };
+const rPicked = id => Array.from(($(id) || { querySelectorAll: () => [] }).querySelectorAll('.chip[aria-pressed="true"]')).map(c => c.dataset.v);
+function rGpxParse(text){
+  const doc = new DOMParser().parseFromString(text, 'application/xml'), pts = [];
+  doc.querySelectorAll('trkseg').forEach((seg, si) => seg.querySelectorAll('trkpt').forEach((p, i) => {
+    const t = p.querySelector('time'); pts.push({ lat: +p.getAttribute('lat'), lng: +p.getAttribute('lon'), t: t ? Date.parse(t.textContent) : 0, gap: si > 0 && i === 0 });
+  }));
+  if(!pts.length) doc.querySelectorAll('rtept,wpt').forEach(p => pts.push({ lat: +p.getAttribute('lat'), lng: +p.getAttribute('lon'), t: 0 }));
+  return pts.filter(p => isFinite(p.lat) && isFinite(p.lng));
+}
+function rSimplify(pts){   // 每 10 公尺留一點,斷點保留
+  const out = []; let last = null;
+  pts.forEach(p => { if(!last || p.gap || dist(last, p) >= 10){ out.push([+p.lat.toFixed(6), +p.lng.toFixed(6), Math.round((p.t || 0) / 1000), p.gap ? 1 : 0]); last = p; } });
+  return out;
+}
+async function recSave(btn){
+  if(!ghTok()){ toast('請先貼上 GitHub token'); return; }
+  const { kind, id, o } = RF, edit = !!id, now = Date.now(), by = rMe();
+  const loc = RF.picker ? RF.picker.get() : null, L = loc ? { lat: +loc.lat.toFixed(6), lng: +loc.lng.toFixed(6) } : null;
+  const r = Object.assign({}, o, { id: id || rId(), line: rVal('rLine'), pole: rVal('rPole'), loc: L, upd: now }); if(!edit){ r.at = now; if(by) r.by = by; }
+  btn.disabled = true; btn.textContent = '儲存中…';
+  try{
+    const ph1 = await rPhotoFiles($('rPh1') && $('rPh1').files), ph2 = await rPhotoFiles($('rPh2') && $('rPh2').files), files = ph1.files.concat(ph2.files), edits = [];
+    let msg = '';
+    if(kind === 'acc'){
+      r.types = rPicked('rTypes'); r.start = rVal('rStart'); r.end = rVal('rEnd'); r.note = rVal('rNote');
+      r.before = (o.before || []).concat(ph1.names); r.after = (o.after || []).concat(ph2.names);
+      if(!r.line && !L){ throw new Error('請至少填線路或位置'); }
+      edits.push({ path: 'r/acc.json', mutate: d => { d[r.id] = r; } });
+      msg = (edit ? '更新' : '新增') + '事故 ' + r.line + ' ' + r.pole;
+    }
+    if(kind === 'pat'){
+      Object.assign(r, { date: rVal('rDate'), time: rVal('rTime'), staff: rVal('rStaff'), item: rVal('rItem'), result: rPicked('rRes')[0] || 'normal', note: rVal('rNote'), ph: (o.ph || []).concat(ph1.names) });
+      if(!r.line) throw new Error('請填巡修路線');
+      if(r.staff && !by) lsSet('lm:me', r.staff.split(/[、,\s]/)[0]);
+      let pts = null;
+      const tsel = rVal('rTrk'); if(tsel){ const t = tracks.find(x => x.id === tsel); if(t) pts = t.points; }
+      if(RF.gpx) pts = RF.gpx;
+      if(pts && pts.length > 1){ const tid = 't' + rId(); edits.push({ path: 'r/trk/' + tid + '.json', mutate: d => { d.points = rSimplify(pts); d.line = r.line; d.date = r.date; } }); r.trk = { id: tid, km: +km(pts).toFixed(2) }; }
+      const ym = rYm(r.date), oldYm = RS.ctx.ym;
+      if(edit && oldYm && oldYm !== ym) edits.push({ path: 'r/pat/' + oldYm + '.json', mutate: d => { delete d[r.id]; } });
+      edits.push({ path: 'r/pat/' + ym + '.json', mutate: d => { d[r.id] = r; } });
+      if(!edit && r.result === 'abnormal'){
+        const a = { id: rId(), line: r.line, pole: r.pole, types: [], start: r.date + 'T' + (r.time || '00:00'), end: '', loc: L, note: '巡修發現異常' + (r.item ? ':' + r.item : '') + (r.note ? '\n' + r.note : ''), before: ph1.names.slice(), after: [], at: now, upd: now, from: r.id };
+        if(by) a.by = by; r.accId = a.id;
+        edits.push({ path: 'r/acc.json', mutate: d => { d[a.id] = a; } });
+      }
+      msg = (edit ? '更新' : '新增') + '巡修 ' + r.line + ' ' + r.date;
+    }
+    if(kind === 'log'){
+      Object.assign(r, { date: rVal('rDate'), cat: rVal('rCat'), start: rVal('rStart'), end: rVal('rEnd'), place: rVal('rPlace'), content: rVal('rContent'), leader: rVal('rLeader'), crew: rVal('rCrew'),
+        outage: $('rOut').checked, sw: rVal('rSw'), off: rVal('rOff'), on: rVal('rOn'), gon: +rVal('rGon') || 0, goff: +rVal('rGoff') || 0, mat: rVal('rMat'), status: rPicked('rSt')[0] || 'doing',
+        next: rVal('rNext'), due: rVal('rDue'), weather: rVal('rWx'), acc: rVal('rAcc'), ph: (o.ph || []).concat(ph1.names) });
+      if(r.status === 'done'){ r.next = ''; r.due = ''; }
+      if(!r.outage){ ['sw', 'off', 'on', 'gon', 'goff'].forEach(k => delete r[k]); }
+      if(!r.content) throw new Error('請填工作內容');
+      if(r.leader && !by) lsSet('lm:me', r.leader.split(/[、,\s]/)[0]);
+      const ym = rYm(r.date), oldYm = RS.ctx.ym;
+      if(edit && oldYm && oldYm !== ym) edits.push({ path: 'r/log/' + oldYm + '.json', mutate: d => { delete d[r.id]; } });
+      edits.push({ path: 'r/log/' + ym + '.json', mutate: d => { d[r.id] = r; } });
+      if(r.prev) edits.push({ path: 'r/log/' + RS.ctx.prevYm + '.json', mutate: d => { if(d[r.prev]) d[r.prev].followed = r.id; } });
+      const box = $('rAccBox');
+      if(r.acc && box && !box.hidden){
+        const done = $('rAccDone').checked, addN = $('rAccNote').checked, addP = $('rAccPh').checked;
+        edits.push({ path: 'r/acc.json', mutate: d => { const a = d[r.acc]; if(!a) return;
+          if(done && !a.end) a.end = r.date + 'T' + (r.end || hhmm(new Date()));
+          if(addN && r.content) a.note = (a.note ? a.note + '\n' : '') + r.date + ' ' + r.content;
+          if(addP && ph1.names.length) a.after = (a.after || []).concat(ph1.names);
+          a.upd = now; } });
+      }
+      msg = (edit ? '更新' : '新增') + '工作日誌 ' + r.date + ' ' + r.cat;
+    }
+    await rSave(msg, edits, files);
+    toast('已儲存');
+    RS.view = 'list'; RS.ctx = {}; RS.tab = kind === 'pat' && !edit && r.result === 'abnormal' ? 'pat' : kind; recRender();
+    if(typeof HEAT !== 'undefined' && heatOn) recHeat(false);
+  }catch(e){ toast(e.message || '儲存失敗', 6000); btn.disabled = false; btn.textContent = '儲存'; }
+}
+async function recDel(kind, id){
+  if(!ghTok()){ toast('要先貼 token 才能刪除:請按「新增」貼上 token', 5000); return; }
+  if(!(await askConfirm('刪除這筆紀錄?刪了就找不回來。', { ok: '刪除', danger: true }))) return;
+  try{
+    let path = 'r/acc.json', o = null;
+    if(kind === 'acc') o = (await rLoad(path))[id];
+    else { for(const m of RS.f[kind === 'pat' ? 'pm' : 'lm'] ? [RS.f[kind === 'pat' ? 'pm' : 'lm']] : rMonths(3)){ const d = await rLoad('r/' + kind + '/' + m + '.json'); if(d[id]){ path = 'r/' + kind + '/' + m + '.json'; o = d[id]; break; } } }
+    if(!o) throw new Error('找不到這筆紀錄');
+    const phs = [].concat(o.before || [], o.after || [], o.ph || []).filter(n => /^r_/.test(n)), dels = [];
+    phs.forEach(n => dels.push('p/' + n, 't/' + n));
+    if(o.trk) dels.push('r/trk/' + o.trk.id + '.json');
+    await ghCommit('刪除紀錄 ' + (o.line || '') + ' ' + (o.date || o.start || ''), [], [{ path, mutate: d => { delete d[id]; } }], dels).then(out => { for(const p in out) RD[p] = { data: out[p], at: Date.now(), local: Date.now() }; });
+    toast('已刪除'); recRender();
+  }catch(e){ toast(e.message || '刪除失敗', 6000); }
+}
+function rFindYm(kind, id){
+  for(const p in RD){ if(p.startsWith('r/' + kind + '/') && RD[p].data[id]) return p.slice(kind.length + 3, -5); }
+  return '';
+}
+async function recHeat(go){
+  if(typeof HEAT === 'undefined') return;
+  const list = rList(await rLoad('r/acc.json')).filter(a => a.loc).map(a => ({ lat: a.loc.lat, lng: a.loc.lng, line: a.line, pole: a.pole, types: a.types }));
+  HEAT = list.length ? list : null; heatOn = !!HEAT;
+  if(go && HEAT){ recClose(); LMap.fit(HEAT); }
+  LMap.req();
+}
+// 地圖選點時把紀錄畫面先收起來
+const rOrigPick = LMap.startPick.bind(LMap), rOrigStop = LMap.stopPick.bind(LMap);
+LMap.startPick = function(cb, label){
+  const el = $('recSheet'), open = el && !el.hidden;
+  if(open){ el.hidden = true; document.documentElement.classList.remove('rec-open'); }
+  this._recBack = open;
+  rOrigPick(p => { if(this._recBack){ this._recBack = false; el.hidden = false; document.documentElement.classList.add('rec-open'); } cb(p); }, label);
+};
+LMap.stopPick = function(){ rOrigStop(); const el = $('recSheet'); if(this._recBack && el && !this.pick){ this._recBack = false; el.hidden = false; document.documentElement.classList.add('rec-open'); } };
+async function recClick(e){
+  const el = $('recSheet');
+  if(recChips(e)) return;
+  const t = e.target.closest('[data-rt]'); if(t){ RS.tab = t.dataset.rt; RS.view = 'list'; recRender(); return; }
+  const b = e.target.closest('[data-rk]'); if(!b) return;
+  const a = b.dataset.rk;
+  if(a === 'close'){ if(RS.view === 'form' && !(await askConfirm('還沒儲存的內容會不見,確定關閉?', { ok: '關閉' }))) return; recClose(); }
+  if(a === 'back'){ RS.view = 'list'; RS.ctx = {}; recRender(); }
+  if(a === 'new'){ RS.view = 'form'; RS.ctx = { kind: b.dataset.kind }; recRender(); }
+  if(a === 'edit'){ const k = b.dataset.kind; RS.view = 'form'; RS.ctx = { kind: k, id: b.dataset.id, ym: k === 'acc' ? '' : rFindYm(k, b.dataset.id) }; recRender(); }
+  if(a === 'del') recDel(b.dataset.kind, b.dataset.id);
+  if(a === 'save') recSave(b);
+  if(a === 'savetok'){ if(await saveTokFrom($('ghTokIn'))){ const x = el.querySelector('.rc-tok'); if(x) x.remove(); } }
+  if(a === 'map'){ recClose(); setFollow(false); LMap.showFound(+b.dataset.lat, +b.dataset.lng, b.dataset.label || '紀錄位置'); $('mapWrap').scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  if(a === 'here' && me && RF && RF.picker){ RF.picker.set({ lat: me.lat, lng: me.lng, src: 'paste' }); }
+  if(a === 'addtype'){ const v = rVal('rNewType'); if(!v) return; const box = $('rTypes');
+    if(!box.querySelector('[data-v="' + CSS.escape(v) + '"]')) box.insertAdjacentHTML('beforeend', '<button type="button" class="chip" data-v="' + esc(v) + '" aria-pressed="true">' + esc(v) + '</button>');
+    $('rNewType').value = '';
+    if(ghTok()){ try{ await rSave('新增事故類型 ' + v, [{ path: 'r/settings.json', mutate: d => { d.types = Array.from(new Set((d.types && d.types.length ? d.types : R_TYPES_DEF).concat(v))); } }]); }catch(err){} } }
+  if(a === 'trk'){ try{ const d = await rLoad('r/trk/' + b.dataset.id + '.json'); if(!d.points || !d.points.length) throw 0;
+      shown = { id: b.dataset.id, points: d.points.map(p => ({ lat: p[0], lng: p[1], t: p[2] * 1000, gap: !!p[3] })) };
+      recClose(); setFollow(false); LMap.fit(shown.points); $('mapWrap').scrollIntoView({ block: 'start', behavior: 'smooth' }); LMap.req(); }
+    catch(err){ toast('讀不到這條軌跡'); } }
+  if(a === 'follow'){ const ym = rFindYm('log', b.dataset.id), w = ym && RD['r/log/' + ym + '.json'].data[b.dataset.id]; if(!w) return;
+    RS.view = 'form'; RS.ctx = { kind: 'log', prevYm: ym, pre: { prev: w.id, cat: w.cat, line: w.line, pole: w.pole, place: w.place, loc: w.loc, acc: w.acc, leader: w.leader, crew: w.crew, content: w.next ? '接續:' + w.next : '' } }; recRender(); }
+  if(a === 'acc-log'){ const ac = (await rLoad('r/acc.json'))[b.dataset.id]; if(!ac) return;
+    RS.tab = 'log'; RS.view = 'form'; RS.ctx = { kind: 'log', pre: { cat: '事故搶修', line: ac.line, pole: ac.pole, loc: ac.loc, acc: ac.id } }; await recRender(); if($('rAccBox')) $('rAccBox').hidden = false; }
+  if(a === 'heat') recHeat(true);
+}
+function recChange(e){
+  const t = e.target;
+  if(t.dataset.rf !== undefined){ RS.f[t.dataset.rf] = t.value; recRender(); return; }
+  if(t.id === 'rOut') $('rOutBox').hidden = !t.checked;
+  if(t.id === 'rAcc'){ $('rAccBox').hidden = !t.value; }
+  if(t.id === 'rGpx' && t.files[0]){ const f = t.files[0]; f.text().then(txt => { const pts = rGpxParse(txt); if(pts.length < 2){ toast('GPX 檔裡沒有軌跡點'); RF.gpx = null; $('rGpxN').textContent = ''; return; } RF.gpx = pts; $('rGpxN').textContent = f.name + ':' + km(pts).toFixed(2) + ' 公里,' + pts.length + ' 點'; }); }
+  if(/^rPh\d$/.test(t.id)) $(t.id + 'N').textContent = t.files.length ? '已選 ' + Math.min(t.files.length, PH_MAX_FILES) + ' 張,儲存時一起上傳' : '';
+}
+function recInput(e){
+  const t = e.target;
+  if(t.dataset.rf !== undefined && t.type === 'search'){ clearTimeout(recInput.tm); recInput.tm = setTimeout(() => { RS.f[t.dataset.rf] = t.value; recRender().then(() => { const n = $('recSheet').querySelector('[data-rf="' + t.dataset.rf + '"]'); if(n){ n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }); }, 400); }
+  if(t.id === 'rGon' || t.id === 'rGoff'){ const on = +rVal('rGon') || 0, off = +rVal('rGoff') || 0, w = $('rGwarn'); w.hidden = on === off; w.textContent = '接地線掛設 ' + on + ' 組、拆除 ' + off + ' 組,數量不一樣,請確認都拆了。'; }
+}
+// 從電桿卡片開事故表單(帶入線路、桿號、位置)
+function recNewAccAt(p){
+  const L = me ? { lat: +me.lat.toFixed(6), lng: +me.lng.toFixed(6) } : { lat: +p.lat.toFixed(6), lng: +p.lng.toFixed(6) };
+  RS = RS || { f: {} };
+  recOpen('acc', 'form', { kind: 'acc', pre: { line: p.line, pole: p.poleNo, loc: L } });
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-rec]'); if(!b) return;
+  if(b.dataset.rec === 'open') recOpen();
+  if(b.dataset.rec === 'acc'){ const p = S.poles.find(x => x.id === b.dataset.id); if(p) recNewAccAt(p); }
+});
 // 連結只能帶英數字和 - _ 的錨點,所以把「民一43」這種桿號編成 base64url
 function b64url(t){ return btoa(String.fromCharCode(...new TextEncoder().encode(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 $('placePanel').addEventListener('click', e => { const b = e.target.closest('[data-act="unsel"]'); if(b) LMap.select(null); });
@@ -3536,7 +3925,6 @@ function bootLocator(){
   $('scopeBtn').addEventListener('click', openScopeSheet);
   ensureLines(Array.from(LAYERS));
   renderLegend();
-  $('recordsLink').href = RECORDS_URL;
   LMap.init();
   LMap.unlocked = true; LMap.svg.classList.add('unlocked'); $('mapWrap').classList.add('unlocked');
   // dragging or pinching the map stops following the blue dot
