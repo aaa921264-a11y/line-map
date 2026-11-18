@@ -611,6 +611,7 @@ html.big .map text{font-size:14px;}
     <div class="place" id="nearCard" hidden>
       <div class="head"><div><div class="kind">離我最近的電桿</div><div class="name" id="nearName"></div><div class="kind" id="nearSub"></div></div><span id="nearPlate"></span></div>
       <div class="row" id="nearBtns"></div>
+      <div id="nearPh"></div>
     </div>
 
     <div id="placePanel"></div>
@@ -638,7 +639,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-045140";
+const SITE_BUILD = "20261119-051754";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2782,6 +2783,9 @@ function renderMe(){
     + uploadBtn(p)
     + (codeFor(p) ? '<button class="btn ghost sm" type="button" data-copy="' + esc(codeFor(p)) + '">複製電力座標</button>' : '')
     + (typeof betaNearBtns === 'function' ? betaNearBtns(p) : '');
+  // 照片與文字:內容有變才重畫,避免每次 GPS 更新都重載縮圖
+  const ph = p.poleNo ? photoHtml(p) : '', box = $('nearPh');
+  if(box && box.dataset.h !== ph){ box.innerHTML = ph; box.dataset.h = ph; }
 }
 function setFollow(v){
   follow = v;
@@ -3006,9 +3010,10 @@ function getShard(kind, line){
   if(s && (s.loading || Date.now() - s.at < 10 * 60 * 1000)) return s.data;
   const n = SHARDS[k] = { at: Date.now(), data: s ? s.data : null, loading: true };
   fetch(PH_SITE[PH_SITE_DEF] + k + '.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
-    .then(j => { n.data = j || {}; n.loading = false; n.at = Date.now(); if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); });
+    .then(j => { n.data = j || {}; n.loading = false; n.at = Date.now(); refreshPoleCards(); });
   return n.data;
 }
+function refreshPoleCards(){ if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); if(me) renderMe(); }
 function setShard(kind, line, data){ SHARDS[kind + '/' + shardOf(line)] = { at: Date.now(), data: data || {}, loading: false }; }
 const phSite = x => PH_SITE[x.r || PH_SITE_DEF] || PH_SITE[PH_SITE_DEF];
 const phFull = x => (PH_LOCAL[x.f] && PH_LOCAL[x.f].full) || phSite(x) + 'p/' + encodeURIComponent(x.f);
@@ -3168,7 +3173,7 @@ async function openPhotoDraft(line, pole, fileList){
       res.entries.forEach((e, i) => { PH_LOCAL[e.f] = { full: URL.createObjectURL(items[i].full.blob), thumb: URL.createObjectURL(items[i].thumb.blob) }; });
       setShard('i', line, res.shard);
       close(); toast('已上傳 ' + res.entries.length + ' 張。網站約 1~2 分鐘後,所有人都看得到', 5000);
-      if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace();
+      refreshPoleCards();
     }catch(e){ busy = false; if(btn){ btn.disabled = false; btn.textContent = items.length > 1 ? '上傳 ' + items.length + ' 張' : '上傳'; } toast(e.message || '上傳失敗', 6000); }
   };
   m.addEventListener('click', async e => {
@@ -3202,7 +3207,7 @@ async function editNotes(line, pole, mutate, msg){
   const path = 'n/' + shardOf(line) + '.json', key = line + pole;
   const out = await ghCommit(msg + ' ' + shortLine(line) + pole.replace(/^#/, ''), [], [{ path, mutate: o => { mutate(o, key); if(o[key] && !o[key].length) delete o[key]; } }]);
   setShard('n', line, out[path]);
-  if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace();
+  refreshPoleCards();
 }
 function openNoteDraft(line, pole){
   const ov = $('overlay'); let busy = false;
