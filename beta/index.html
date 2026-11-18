@@ -310,6 +310,9 @@ dl.kv dd.overdue{color:var(--danger); font-weight:700;}
 .modal.photo{align-items:center;}
 .modal.photo img{max-width:100%; max-height:80vh; border-radius:6px; background:var(--surface);}
 .modal.photo .close{position:absolute; top:calc(12px + env(safe-area-inset-top,0px)); right:12px;}
+.pcmp img{display:block; max-width:100%; max-height:46vh; margin:0 auto 10px; border-radius:6px; background:var(--surface-2);}
+.pcmp .pinfo{font-size:14px; line-height:1.7; margin-bottom:12px;}
+.pcmp .row{flex-wrap:wrap; gap:8px;}
 
 /* ---- phone: 16px inputs (no iOS zoom), 44px touch targets, compact header ---- */
 input[type=text],input[type=search],input[type=date],input[type=time],input[type=month],
@@ -631,7 +634,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261108-000643";
+const SITE_BUILD = "20261119-035359";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2998,9 +3001,60 @@ function photoHtml(p){
     + (list.length ? '<img class="lph-img" src="' + DATA_BASE + 'photos/' + encodeURIComponent(list[0].f) + '" alt="' + esc(q) + ' 最新照片" data-full="' + DATA_BASE + 'photos/' + encodeURIComponent(list[0].f) + '">'
         + '<div class="hint" style="margin:4px 0 0">最新照片 ' + d(list[0].at) + (list.length > 1 ? ',共 ' + list.length + ' 張' : '') + '</div>'
       : (PHOTO_INDEX ? '<div class="hint" style="margin:0">這支桿還沒有照片</div>' : ''))
+    + (p.poleNo ? '<div class="row" style="margin-top:8px"><span class="btn ghost sm file-btn">📷 拍照/選照片(測試)<input class="lph-cam" type="file" accept="image/*" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '" aria-label="拍照或選照片"></span></div>' : '')
     + '</div>';
 }
 document.addEventListener('click', e => { const img = e.target.closest('img.lph-img'); if(img) showPhoto(img.dataset.full); });
+// ---------- 拍照壓縮(階段 B:只壓縮並預覽大小,還不上傳) ----------
+const PH_MODE = { std: { edge: 1280, q: 0.7, max: 300 * 1024 }, hi: { edge: 2048, q: 0.8, max: 700 * 1024 } };
+let PHOTO_DRAFT = null;   // 階段 C 上傳時會用:{ line, pole, blob, w, h, at }
+function fmtKB(n){ return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; }
+// 縮到長邊 edge 以內、存成 JPEG;太大就先降品質、再縮尺寸,直到小於上限(手機照片的方向由瀏覽器自動轉正)
+async function compressPhoto(file, mode){
+  const cfg = PH_MODE[mode] || PH_MODE.std, url = URL.createObjectURL(file);
+  try{
+    const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+    const sw = img.naturalWidth, sh = img.naturalHeight;
+    if(!sw || !sh) throw new Error('empty');
+    let edge = cfg.edge, q = cfg.q, blob = null, w = 0, h = 0;
+    for(let i = 0; i < 8; i++){
+      const k = Math.min(1, edge / Math.max(sw, sh)); w = Math.round(sw * k); h = Math.round(sh * k);
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, w, h);
+      blob = await new Promise(r => c.toBlob(r, 'image/jpeg', q));
+      if(!blob) throw new Error('encode');
+      if(blob.size <= cfg.max) break;
+      if(q > 0.52) q = Math.max(0.5, q - 0.08); else edge = Math.round(edge * 0.85);
+    }
+    return { blob, w, h, sw, sh, q };
+  } finally { URL.revokeObjectURL(url); }
+}
+async function openPhotoDraft(line, pole, file){
+  const ov = $('overlay'); let url = null, mode = 'std';
+  ov.innerHTML = '<div class="modal pcmp"><div class="sheet"><p>壓縮中…</p></div></div>';
+  const m = ov.firstChild, sheet = m.querySelector('.sheet');
+  const close = () => { if(url) URL.revokeObjectURL(url); url = null; if(ov.firstChild === m) ov.innerHTML = ''; };
+  const run = async () => {
+    sheet.innerHTML = '<p>壓縮中…</p>';
+    let r;
+    try{ r = await compressPhoto(file, mode); }catch(e){ close(); toast('這張照片讀不到,請換一張(或改用 JPEG 格式)'); return; }
+    PHOTO_DRAFT = { line, pole, blob: r.blob, w: r.w, h: r.h, at: Date.now() };
+    if(url) URL.revokeObjectURL(url); url = URL.createObjectURL(r.blob);
+    sheet.innerHTML = '<img alt="壓縮後預覽"><div class="pinfo"><b>' + esc(shortLine(line) + pole.replace(/^#/, '')) + '</b> · ' + (mode === 'hi' ? '高畫質' : '標準畫質')
+      + '<br>原圖 ' + fmtKB(file.size) + '(' + r.sw + '×' + r.sh + ')<br>壓縮後 <b>' + fmtKB(r.blob.size) + '</b>(' + r.w + '×' + r.h + ')'
+      + '<br><span class="hint" style="margin:0">測試中:目前只預覽大小與清晰度,還沒有上傳。</span></div>'
+      + '<div class="row"><button class="btn ghost sm" type="button" data-pc="' + (mode === 'hi' ? 'std' : 'hi') + '">' + (mode === 'hi' ? '改標準(長邊 1280)' : '改高畫質(長邊 2048)') + '</button>'
+      + '<button class="btn sm" type="button" data-pc="close">關閉</button></div>';
+    sheet.querySelector('img').src = url;
+  };
+  m.addEventListener('click', e => { if(e.target === m){ close(); return; } const b = e.target.closest('[data-pc]'); if(!b) return; if(b.dataset.pc === 'close') close(); else { mode = b.dataset.pc; run(); } });
+  run();
+}
+document.addEventListener('change', e => {
+  const inp = e.target.closest && e.target.closest('input.lph-cam'); if(!inp) return;
+  const f = inp.files && inp.files[0], line = inp.dataset.line, pole = inp.dataset.pole; inp.value = '';
+  if(f) openPhotoDraft(line, pole, f);
+});
 // 「上傳照片」:跳到紀錄網頁的這支桿(桃園的桿才有)
 function uploadBtn(p){
   const m = LINE_META.get(p.line); if(!p.poleNo || !m || !/^桃園市/.test(m.dist)) return '';
