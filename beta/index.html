@@ -655,7 +655,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-054735";
+const SITE_BUILD = "20261119-055422";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -1428,7 +1428,7 @@ function coordText(o){ return o.lat.toFixed(6) + ', ' + o.lng.toFixed(6); }
 // 導航:兩個 App 合成一顆「導航」,第一次按選 Google 或 Apple,這支手機之後就固定用;旁邊的 ▾ 可以改
 const NAV_KEY = 'lm:nav';
 const navPref = () => { try{ const v = localStorage.getItem(NAV_KEY); return v === 'g' || v === 'a' ? v : ''; }catch(e){ return ''; } };
-const navUrl = (app, ll) => app === 'a' ? 'https://maps.apple.com/?daddr=' + ll + '&dirflg=d' : 'https://www.google.com/maps/dir/?api=1&destination=' + ll + '&travelmode=driving';
+const navUrl = (app, ll) => app === 'a' ? 'https://maps.apple.com/?q=' + ll : 'https://www.google.com/maps/search/?api=1&query=' + ll;
 const llOf = o => o.lat.toFixed(6) + ',' + o.lng.toFixed(6);
 function navGroup(o){
   const ll = llOf(o);
@@ -2820,7 +2820,6 @@ function renderMe(){
   $('nearSub').textContent = '在你的' + bearing(me, p) + '方 ' + fmtM(near.d) + (p.form ? ',' + p.form : '');
   $('nearPlate').innerHTML = codeFor(p) ? '<span class="plate-copy" role="button" data-copy="' + esc(codeFor(p)) + '">' + plateHtml(codeFor(p), p.line + ' ⧉') + '</span>' : plateHtml(codeFor(p), p.line);
   $('nearBtns').innerHTML = navGroup(p)
-    + '<button class="btn ghost sm" type="button" data-act="show-pole" data-id="' + esc(p.id) + '">在地圖上看</button>'
     + (typeof betaNearBtns === 'function' ? betaNearBtns(p) : '');
   // 照片與文字:內容有變才重畫,避免每次 GPS 更新都重載縮圖
   const ph = p.poleNo ? photoHtml(p) : '', box = $('nearPh');
