@@ -639,7 +639,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-051754";
+const SITE_BUILD = "20261119-052601";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2780,7 +2780,6 @@ function renderMe(){
   $('nearPlate').innerHTML = plateHtml(codeFor(p), p.line);
   $('nearBtns').innerHTML = '<a class="btn sm" href="' + gmapsTo(p) + '" target="_blank" rel="noopener">Google 導航到這支桿</a>'
     + '<button class="btn ghost sm" type="button" data-act="show-pole" data-id="' + esc(p.id) + '">在地圖上看</button>'
-    + uploadBtn(p)
     + (codeFor(p) ? '<button class="btn ghost sm" type="button" data-copy="' + esc(codeFor(p)) + '">複製電力座標</button>' : '')
     + (typeof betaNearBtns === 'function' ? betaNearBtns(p) : '');
   // 照片與文字:內容有變才重畫,避免每次 GPS 更新都重載縮圖
@@ -3253,11 +3252,6 @@ document.addEventListener('click', e => {
   if(b.dataset.nt === 'add') openNoteDraft(b.dataset.line, b.dataset.pole);
   else if(b.dataset.nt === 'del') deleteNote(b.dataset.line, b.dataset.pole, b.dataset.id);
 });
-// 「上傳照片」:跳到紀錄網頁的這支桿(桃園的桿才有)
-function uploadBtn(p){
-  const m = LINE_META.get(p.line); if(!p.poleNo || !m || !/^桃園市/.test(m.dist)) return '';
-  return '<a class="btn ghost sm" target="_blank" rel="noopener" href="' + RECORDS_URL + '#pole-' + b64url(shortLine(p.line) + p.poleNo.replace(/^#/, '')) + '">上傳照片</a>';
-}
 // 連結只能帶英數字和 - _ 的錨點,所以把「民一43」這種桿號編成 base64url
 function b64url(t){ return btoa(String.fromCharCode(...new TextEncoder().encode(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 $('placePanel').addEventListener('click', e => { const b = e.target.closest('[data-act="unsel"]'); if(b) LMap.select(null); });
