@@ -573,6 +573,7 @@ html.rec-open{overflow:hidden;}
 .phist{margin-top:8px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); font-size:13px;}
 .phist .ph-t{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
 .phist .ph-i{padding:4px 0; border-top:1px solid var(--line);}
+.phist .ph-k{font-weight:700; color:var(--accent);}
 .phist .ph-m{font-size:12px; color:var(--muted,#6b7580);}
 .phist .ph-b{overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
 .phist .btn{margin-top:6px;}
@@ -678,7 +679,7 @@ html.rec-open{overflow:hidden;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-065000";
+const SITE_BUILD = "20261119-072000";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -3029,17 +3030,26 @@ function poleHitAcc(a, p){
 }
 async function poleHist(p){
   const el = $('poleHist'); if(!el) return;
-  let all = [];
-  try{ all = rList(await rLoad('r/acc.json')); }catch(e){ return; }
+  let acc = [], pat = [], log = [];
+  try{
+    const ms = rMonths(3);
+    [acc, pat, log] = await Promise.all([rLoad('r/acc.json').then(rList), rLoadMonths('pat', ms), rLoadMonths('log', ms)]);
+  }catch(e){ return; }
   if($('poleHist') !== el || !LMap.sel || LMap.sel !== 'pole:' + p.id) return;
-  const since = rMonths(6).pop();
-  const hit = all.filter(a => poleHitAcc(a, p)).sort((a, b) => (b.start || '').localeCompare(a.start || ''));
-  const show = hit.filter(a => !a.end || (a.start || '').slice(0, 7) >= since);
-  if(!show.length){ el.hidden = true; el.innerHTML = ''; return; }
-  el.innerHTML = '<div class="ph-t"><b>⚠ 這支桿近期狀況</b><span class="hint">' + show.length + ' 筆</span></div>'
-    + show.slice(0, 3).map(a => '<div class="ph-i"><div class="ph-m num">' + esc(rFmtDT(a.start)) + ' <span class="tag ' + (a.end ? 'ok' : 'warn') + '">' + (a.end ? '已完成' : '處理中') + '</span></div>'
-      + '<div class="ph-b">' + esc(((a.types || []).join('、') || '事故') + (a.note ? ':' + a.note : '')) + '</div></div>').join('')
-    + '<button class="btn ghost sm" type="button" data-phist="' + esc(pNo(p.poleNo)) + '">看全部紀錄</button>';
+  const since = rMonths(6).pop(), accIds = new Set(acc.map(a => a.id)), items = [];
+  acc.filter(a => poleHitAcc(a, p) && (!a.end || (a.start || '').slice(0, 7) >= since)).forEach(a =>
+    items.push({ k: 'acc', t: a.start || '', when: rFmtDT(a.start), tag: a.end ? '已完成' : '處理中', cls: a.end ? 'ok' : 'warn', label: '事故', text: ((a.types || []).join('、') || '事故') + (a.note ? ':' + a.note : '') }));
+  pat.filter(r => poleHitAcc(r, p) && !(r.result === 'abnormal' && r.accId && accIds.has(r.accId))).forEach(r =>
+    items.push({ k: 'pat', t: (r.date || '') + 'T' + (r.time || '00:00'), when: (r.date || '') + ' ' + (r.time || ''), tag: PAT_RES[r.result] || '', cls: r.result === 'normal' ? 'ok' : 'warn', label: '巡修', text: (r.item || '巡線') + (r.note ? ':' + r.note : '') }));
+  log.filter(r => poleHitAcc(r, p)).forEach(r =>
+    items.push({ k: 'log', t: (r.date || '') + 'T' + (r.start || '00:00'), when: r.date || '', tag: '', cls: '', label: '日誌', text: (r.cat || '') + (r.content ? ':' + r.content : '') }));
+  items.sort((a, b) => b.t.localeCompare(a.t));
+  if(!items.length){ el.hidden = true; el.innerHTML = ''; return; }
+  const first = items[0].k;
+  el.innerHTML = '<div class="ph-t"><b>⚠ 這支桿近期狀況</b><span class="hint">' + items.length + ' 筆</span></div>'
+    + items.slice(0, 4).map(a => '<div class="ph-i"><div class="ph-m num"><span class="ph-k">' + a.label + '</span> ' + esc(a.when) + (a.tag ? ' <span class="tag ' + a.cls + '">' + a.tag + '</span>' : '') + '</div>'
+      + '<div class="ph-b">' + esc(a.text) + '</div></div>').join('')
+    + '<button class="btn ghost sm" type="button" data-phist="' + esc(pNo(p.poleNo)) + '" data-phtab="' + first + '">看全部紀錄</button>';
   el.hidden = false;
 }
 // ---------- 資料檢查:編號跟自己的線接不上,旁邊別條線卻有它的上一支(台電資料線名可能寫錯) ----------
@@ -3483,7 +3493,7 @@ async function recStats(){
     + '<div class="section-title"><h2>各線路本月巡修結果</h2></div>' + (Object.keys(byLine).length ? '<div class="rc-tbl">' + Object.entries(byLine).map(([k, o]) => '<div><b>' + esc(k) + '</b><span>正常 ' + o.normal + ' · 異常 ' + o.abnormal + ' · 待修 ' + o.pending + '</span></div>').join('') + '</div>' : '<div class="empty">本月還沒有巡修。</div>')
     + '<div class="section-title"><h2>事故類型(全部)</h2></div>' + (top(types).length ? '<div class="rc-tbl">' + top(types).map(([k, n]) => '<div><b>' + esc(k) + '</b><span>' + n + ' 次</span></div>').join('') + '</div>' : '<div class="empty">還沒有事故。</div>')
     + '<div class="section-title"><h2>事故最多的電桿</h2></div>' + (top(poles).length ? '<div class="rc-tbl">' + top(poles).map(([k, n]) => '<div><b>' + esc(k) + '</b><span>' + n + ' 次</span></div>').join('') + '</div>' : '<div class="empty">還沒有記錄電桿的事故。</div>')
-    + (typeof heatSvg === 'function' ? '<div class="section-title"><h2>事故熱點</h2></div><button class="btn wide" type="button" data-rk="heat"' + (withLoc ? '' : ' disabled') + '>在地圖上看事故熱點(' + withLoc + ' 筆有位置)</button>' : '');
+    + (typeof heatSvg === 'function' ? '<div class="section-title"><h2>事故熱點</h2></div><button class="btn wide" type="button" data-rk="heat"' + (withLoc ? '' : ' disabled') + '>' + (heatOn ? '關閉地圖上的事故熱點' : '在地圖上看事故熱點(' + withLoc + ' 筆有位置)') + '</button>' : '');
 }
 
 // ---- 表單 ----
@@ -3698,7 +3708,7 @@ async function recClick(e){
     RS.view = 'form'; RS.ctx = { kind: 'log', prevYm: ym, pre: { prev: w.id, cat: w.cat, line: w.line, pole: w.pole, place: w.place, loc: w.loc, acc: w.acc, leader: w.leader, crew: w.crew, content: w.next ? '接續:' + w.next : '' } }; recRender(); }
   if(a === 'acc-log'){ const ac = (await rLoad('r/acc.json'))[b.dataset.id]; if(!ac) return;
     RS.tab = 'log'; RS.view = 'form'; RS.ctx = { kind: 'log', pre: { cat: '事故搶修', line: ac.line, pole: ac.pole, loc: ac.loc, acc: ac.id } }; await recRender(); if($('rAccBox')) $('rAccBox').hidden = false; }
-  if(a === 'heat') recHeat(true);
+  if(a === 'heat'){ if(heatOn){ heatOn = false; LMap.req(); toast('已關閉事故熱點'); recRender(); } else recHeat(true); }
 }
 function recChange(e){
   const t = e.target;
@@ -3727,7 +3737,7 @@ document.addEventListener('click', e => {
 });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-phist]'); if(!b) return;
-  RS = RS || { f: {} }; RS.f = { aq: b.dataset.phist }; recOpen('acc', 'list');
+  RS = RS || { f: {} }; const tb = b.dataset.phtab || 'acc'; RS.f = tb === 'pat' ? { pq: b.dataset.phist } : tb === 'log' ? { lq: b.dataset.phist } : { aq: b.dataset.phist }; recOpen(tb, 'list');
 });
 // 連結只能帶英數字和 - _ 的錨點,所以把「民一43」這種桿號編成 base64url
 function b64url(t){ return btoa(String.fromCharCode(...new TextEncoder().encode(t))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
