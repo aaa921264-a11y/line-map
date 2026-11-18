@@ -313,6 +313,10 @@ dl.kv dd.overdue{color:var(--danger); font-weight:700;}
 .pcmp img{display:block; max-width:100%; max-height:46vh; margin:0 auto 10px; border-radius:6px; background:var(--surface-2);}
 .pcmp .pinfo{font-size:14px; line-height:1.7; margin-bottom:12px;}
 .pcmp .row{flex-wrap:wrap; gap:8px;}
+.pcmp .pgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px;}
+.pcmp .pgrid img{width:100%; height:90px; max-height:none; object-fit:cover; margin:0;}
+.lph-strip{display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+.lph-strip .lph-img{flex:none; width:auto; height:120px; max-height:none; max-width:none;}
 
 /* ---- phone: 16px inputs (no iOS zoom), 44px touch targets, compact header ---- */
 input[type=text],input[type=search],input[type=date],input[type=time],input[type=month],
@@ -634,7 +638,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-043758";
+const SITE_BUILD = "20261119-045140";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2981,75 +2985,124 @@ function suspectSvg(L){
   const [x1, y1] = L.toScreen(...plane(p)), [x2, y2] = L.toScreen(...plane(SUSPECT.other));
   return '<line class="sus-ln" x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '"/>';
 }
-// ---------- 電桿照片:Google 街景 + 全組共用的照片(存在「線路巡視紀錄」,只有同事看得到) ----------
-// 全組照片同步到網站的 photos/(公開),卡片直接顯示最新一張;點照片放大
-let PHOTO_INDEX = null, photoIndexAt = 0;
-function loadPhotoIndex(){
-  if(PHOTO_INDEX && Date.now() - photoIndexAt < 10 * 60 * 1000) return;
-  photoIndexAt = Date.now();
-  fetch(DATA_BASE + 'photos/index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
-    .then(j => { PHOTO_INDEX = j || {}; if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); });
+// ---------- 電桿照片與文字備註:存在照片專用的 repo「Pole-photo」(GitHub Pages 公開,不經過 Claude) ----------
+// 照片 p/<檔名>、縮圖 t/<檔名>、照片索引 i/<分片>.json、文字備註 n/<分片>.json
+// 分片:線路名稱的 FNV-1a 雜湊取 12 bit(共 4096 份),卡片只載自己那一份,幾 KB 就好
+// 照片庫滿了(GitHub Pages 每個網站 1GB)再開第 2 個,索引的 r 欄位記照片在哪個庫,沒寫就是 Pole-photo
+const PH_REPO = 'aaa921264-a11y/Pole-photo', GH_BRANCH = 'main', GH_TOK = 'lmb:gh';   // token 只存在這支手機的瀏覽器,不寫進程式
+const PH_SITE = { 'Pole-photo': 'https://aaa921264-a11y.github.io/Pole-photo/' }, PH_SITE_DEF = 'Pole-photo';
+const PH_MODE = { std: { edge: 1024, q: 0.7, max: 200 * 1024 }, hi: { edge: 2048, q: 0.8, max: 700 * 1024 }, th: { edge: 480, q: 0.6, max: 45 * 1024 } };
+const PH_TAGS = ['變壓器', '開關', '避雷器', '熔絲', '電容器', '電纜終端', '拉線', '其他'];
+const PH_MAX_FILES = 10, PH_STRIP = 12, NOTE_MAX = 500;
+const PH_LOCAL = {};   // 剛上傳、網站還沒發布的照片:{ 檔名: { full, thumb } }(本機 blob 網址)
+function shardOf(line){
+  let h = 0x811c9dc5;
+  for(const b of new TextEncoder().encode(line)){ h ^= b; h = Math.imul(h, 0x01000193) >>> 0; }
+  return (h & 0xfff).toString(16).padStart(3, '0');
 }
+const SHARDS = {};   // 'i/abc' → { at, data, loading }
+function getShard(kind, line){
+  const k = kind + '/' + shardOf(line), s = SHARDS[k];
+  if(s && (s.loading || Date.now() - s.at < 10 * 60 * 1000)) return s.data;
+  const n = SHARDS[k] = { at: Date.now(), data: s ? s.data : null, loading: true };
+  fetch(PH_SITE[PH_SITE_DEF] + k + '.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+    .then(j => { n.data = j || {}; n.loading = false; n.at = Date.now(); if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); });
+  return n.data;
+}
+function setShard(kind, line, data){ SHARDS[kind + '/' + shardOf(line)] = { at: Date.now(), data: data || {}, loading: false }; }
+const phSite = x => PH_SITE[x.r || PH_SITE_DEF] || PH_SITE[PH_SITE_DEF];
+const phFull = x => (PH_LOCAL[x.f] && PH_LOCAL[x.f].full) || phSite(x) + 'p/' + encodeURIComponent(x.f);
+const phThumb = x => (PH_LOCAL[x.f] && PH_LOCAL[x.f].thumb) || (x.nt ? phFull(x) : phSite(x) + 't/' + encodeURIComponent(x.f));
+const phDay = t => { const x = new Date(t); return x.getFullYear() + '/' + (x.getMonth() + 1) + '/' + x.getDate(); };
 function photoHtml(p){
-  loadPhotoIndex();
-  const ll = p.lat.toFixed(6) + ',' + p.lng.toFixed(6);
-  const ty = LINE_META.get(p.line) && /^桃園市/.test(LINE_META.get(p.line).dist);
-  const q = shortLine(p.line) + p.poleNo.replace(/^#/, '');
-  const list0 = (PHOTO_INDEX && PHOTO_INDEX[p.line + p.poleNo]) || [];
-  const list = (PHOTO_PENDING[p.line + p.poleNo] || []).filter(x => !list0.some(y => y.f === x.f)).concat(list0);
-  const src = x => x.local || DATA_BASE + 'photos/' + encodeURIComponent(x.f);
-  const d = t => { const x = new Date(t); return x.getFullYear() + '/' + (x.getMonth() + 1) + '/' + x.getDate(); };
+  const idx = getShard('i', p.line), q = shortLine(p.line) + p.poleNo.replace(/^#/, '');
+  const list = ((idx && idx[p.line + p.poleNo]) || []).slice().sort((a, b) => b.at - a.at);
   return '<div class="lph">'
-    + (list.length ? '<img class="lph-img" src="' + src(list[0]) + '" alt="' + esc(q) + ' 最新照片" data-full="' + src(list[0]) + '">'
-        + '<div class="hint" style="margin:4px 0 0">最新照片 ' + d(list[0].at) + (list.length > 1 ? ',共 ' + list.length + ' 張' : '') + (list[0].t && list[0].t.length ? ' · ' + list[0].t.map(esc).join('、') : '') + '</div>'
-      : (PHOTO_INDEX ? '<div class="hint" style="margin:0">這支桿還沒有照片</div>' : ''))
-    + (p.poleNo ? '<div class="row" style="margin-top:8px"><span class="btn ghost sm file-btn">📷 拍照/選照片(測試)<input class="lph-cam" type="file" accept="image/*" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '" aria-label="拍照或選照片"></span>'
+    + (list.length ? '<div class="lph-strip">' + list.slice(0, PH_STRIP).map((x, i) => '<img class="lph-img" loading="lazy" src="' + esc(phThumb(x)) + '" alt="' + esc(q) + ' 照片 ' + (i + 1) + '" data-full="' + esc(phFull(x)) + '">').join('') + '</div>'
+        + '<div class="hint" style="margin:4px 0 0">最新照片 ' + phDay(list[0].at) + (list.length > 1 ? ',共 ' + list.length + ' 張' + (list.length > PH_STRIP ? '(顯示最新 ' + PH_STRIP + ' 張)' : '') : '') + (list[0].t && list[0].t.length ? ' · ' + list[0].t.map(esc).join('、') : '') + '</div>'
+      : (idx ? '<div class="hint" style="margin:0">這支桿還沒有照片</div>' : ''))
+    + (p.poleNo ? '<div class="row" style="margin-top:8px"><span class="btn ghost sm file-btn">📷 拍照/選照片(測試)<input class="lph-cam" type="file" accept="image/*" multiple data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '" aria-label="拍照或選照片"></span>'
       + '<button class="btn ghost sm" type="button" data-nt="add" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '">📝 新增文字</button></div>' : '')
     + noteHtml(p)
     + '</div>';
 }
 document.addEventListener('click', e => { const img = e.target.closest('img.lph-img'); if(img) showPhoto(img.dataset.full); });
-// ---------- 拍照上傳(階段 C):壓縮 → 直接存進 GitHub 的 photos/(u_ 開頭,每月同步不會刪) ----------
-const PH_MODE = { std: { edge: 1280, q: 0.7, max: 300 * 1024 }, hi: { edge: 2048, q: 0.8, max: 700 * 1024 } };
-const GH_REPO = 'aaa921264-a11y/line-map', GH_BRANCH = 'main', GH_TOK = 'lmb:gh';   // token 只存在這支手機的瀏覽器,不寫進程式
-const PH_TAGS = ['變壓器', '開關', '避雷器', '熔絲', '電容器', '電纜終端', '拉線', '其他'];
-const PHOTO_PENDING = {};   // 剛上傳、網站還沒發布的照片:{ 桿key: [{ f, at, t, local }] }
+// ---------- GitHub API ----------
 const ghTok = () => { try{ return localStorage.getItem(GH_TOK) || ''; }catch(e){ return ''; } };
-function ghFetch(method, path, body, raw){
-  return fetch('https://api.github.com/repos/' + GH_REPO + path, { method, cache: 'no-store', body: body ? JSON.stringify(body) : undefined,
+function ghApi(method, path, body, raw){
+  return fetch('https://api.github.com/repos/' + PH_REPO + path, { method, cache: 'no-store', body: body ? JSON.stringify(body) : undefined,
     headers: Object.assign({ 'Authorization': 'Bearer ' + ghTok(), 'Accept': raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' }, body ? { 'Content-Type': 'application/json' } : {}) });
 }
 const ghB64 = u8 => { let t = ''; for(let i = 0; i < u8.length; i += 0x8000) t += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(t); };
 async function ghErr(r){
   if(r.status === 401) return 'token 無效或已過期,請清除後重新貼上';
-  if(r.status === 403 || r.status === 404) return '沒有寫入權限(token 要給 line-map 的 Contents 讀寫)';
+  if(r.status === 403 || r.status === 404) return '沒有寫入權限(token 要加入 Pole-photo,Contents 讀寫)';
   let m = ''; try{ m = (await r.json()).message || ''; }catch(e){}
   return '上傳失敗(' + r.status + ')' + (m ? ':' + m : '');
 }
-// 先傳照片檔,再把這張加進 photos/index.json(多人同時更新時會重試)
-async function uploadPhoto(d, tags){
-  const name = 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + '.jpg', key = d.line + d.pole, entry = { f: name, at: d.at };
-  if(tags.length) entry.t = tags;
-  let r = await ghFetch('PUT', '/contents/photos/' + name, { message: '上傳電桿照片 ' + shortLine(d.line) + d.pole.replace(/^#/, ''), content: ghB64(new Uint8Array(await d.blob.arrayBuffer())), branch: GH_BRANCH });
-  if(!r.ok) throw new Error(await ghErr(r));
+// 一次 commit:先傳檔案,再讀出最新的索引分片、套用修改,和檔案一起寫成一個 commit。別人同時更新時重讀重試(最多 5 次)
+async function ghCommit(message, files, edits){
+  const base = [];
+  for(const f of files){
+    const r = await ghApi('POST', '/git/blobs', { content: f.b64, encoding: 'base64' });
+    if(!r.ok) throw new Error(await ghErr(r));
+    base.push({ path: f.path, mode: '100644', type: 'blob', sha: (await r.json()).sha });
+  }
   for(let i = 0; i < 5; i++){
-    const g = await ghFetch('GET', '/contents/photos/index.json?ref=' + GH_BRANCH);
-    let idx = {}, sha = null;
-    if(g.ok){
-      const j = await g.json(); sha = j.sha;
-      const txt = j.content && j.encoding === 'base64' ? new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\s/g, '')), c => c.charCodeAt(0)))
-        : await (await ghFetch('GET', '/contents/photos/index.json?ref=' + GH_BRANCH, null, true)).text();
-      idx = JSON.parse(txt) || {};
-    } else if(g.status !== 404) throw new Error(await ghErr(g));
-    (idx[key] = idx[key] || []).unshift(entry); idx[key].sort((a, b) => b.at - a.at);
-    const body = { message: '更新照片索引 ' + shortLine(d.line) + d.pole.replace(/^#/, ''), content: ghB64(new TextEncoder().encode(JSON.stringify(idx))), branch: GH_BRANCH };
-    if(sha) body.sha = sha;
-    const p = await ghFetch('PUT', '/contents/photos/index.json', body);
-    if(p.ok) return entry;
-    if(p.status !== 409 && p.status !== 422) throw new Error(await ghErr(p));
+    const rf = await ghApi('GET', '/git/ref/heads/' + GH_BRANCH);
+    if(!rf.ok) throw new Error(await ghErr(rf));
+    const head = (await rf.json()).object.sha;
+    const cm = await ghApi('GET', '/git/commits/' + head);
+    if(!cm.ok) throw new Error(await ghErr(cm));
+    const tree = base.slice(), out = {};
+    for(const e of edits){
+      const g = await ghApi('GET', '/contents/' + e.path + '?ref=' + head, null, true);
+      let data = {};
+      if(g.ok){ try{ data = JSON.parse(await g.text()) || {}; }catch(x){ throw new Error('索引檔讀取失敗,請稍後再試'); } }
+      else if(g.status !== 404) throw new Error(await ghErr(g));
+      e.mutate(data); out[e.path] = data;
+      tree.push({ path: e.path, mode: '100644', type: 'blob', content: JSON.stringify(data) });
+    }
+    const t = await ghApi('POST', '/git/trees', { base_tree: (await cm.json()).tree.sha, tree });
+    if(!t.ok) throw new Error(await ghErr(t));
+    const c = await ghApi('POST', '/git/commits', { message, tree: (await t.json()).sha, parents: [head] });
+    if(!c.ok) throw new Error(await ghErr(c));
+    const u = await ghApi('PATCH', '/git/refs/heads/' + GH_BRANCH, { sha: (await c.json()).sha, force: false });
+    if(u.ok) return out;
+    if(u.status !== 409 && u.status !== 422) throw new Error(await ghErr(u));
     await new Promise(res => setTimeout(res, 400 + Math.random() * 600));
   }
-  throw new Error('同時有人在更新,請稍後再試(照片已傳,沒有遺失)');
+  throw new Error('同時有人在更新,請稍後再試');
+}
+// 貼上 token:先確認能寫入 Pole-photo 才存
+async function saveTokFrom(inp){
+  const v = (inp && inp.value || '').trim(); if(!v) return false;
+  try{ localStorage.setItem(GH_TOK, v); }catch(e){ toast('這支手機存不了 token'); return false; }
+  try{
+    const r = await ghApi('GET', ''); const j = r.ok ? await r.json() : null;
+    if(!j || !(j.permissions && j.permissions.push)){
+      try{ localStorage.removeItem(GH_TOK); }catch(e){}
+      toast(r.ok ? '這個 token 沒有 Pole-photo 的寫入權限' : r.status === 404 ? '這個 token 還沒加入 Pole-photo' : await ghErr(r), 6000); return false;
+    }
+  }catch(e){ try{ localStorage.removeItem(GH_TOK); }catch(e2){} toast('連不到 GitHub,請確認網路'); return false; }
+  toast('token 已儲存'); return true;
+}
+const tokFormHtml = (act) => '<div class="pinfo" style="margin:6px 0">第一次要貼上 GitHub token(只存在這支手機)。</div>'
+  + '<input type="password" id="ghTokIn" autocomplete="off" placeholder="github_pat_…" style="width:100%;margin-bottom:10px">'
+  + '<div class="row"><button class="btn ghost sm" type="button" data-' + act + '="close">取消</button><button class="btn sm" type="button" data-' + act + '="savetok">儲存 token</button></div>';
+// ---------- 拍照上傳:壓縮(含 480 縮圖)→ 照片、縮圖、索引一次存進 Pole-photo ----------
+async function uploadPhotos(line, pole, items, tags){
+  const key = line + pole, path = 'i/' + shardOf(line) + '.json', entries = [], files = [];
+  items.forEach((it, i) => {
+    const f = 'u_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6) + i + '.jpg', e = { f, at: it.at + i };
+    if(tags.length) e.t = tags.slice();
+    entries.push(e);
+    files.push({ path: 'p/' + f, blob: it.full.blob }, { path: 't/' + f, blob: it.thumb.blob });
+  });
+  for(const x of files) x.b64 = ghB64(new Uint8Array(await x.blob.arrayBuffer()));
+  const label = shortLine(line) + pole.replace(/^#/, '') + (items.length > 1 ? ' ×' + items.length : '');
+  const out = await ghCommit('上傳電桿照片 ' + label, files, [{ path, mutate: o => { o[key] = entries.concat(o[key] || []).sort((a, b) => b.at - a.at); } }]);
+  return { entries, shard: out[path] };
 }
 function fmtKB(n){ return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB'; }
 // 縮到長邊 edge 以內、存成 JPEG;太大就先降品質、再縮尺寸,直到小於上限(手機照片的方向由瀏覽器自動轉正)
@@ -3072,58 +3125,59 @@ async function compressPhoto(file, mode){
     return { blob, w, h, sw, sh, q };
   } finally { URL.revokeObjectURL(url); }
 }
-async function openPhotoDraft(line, pole, file){
-  const ov = $('overlay'); let url = null, mode = 'std', last = null, busy = false; const tags = new Set();
+async function openPhotoDraft(line, pole, fileList){
+  let files = Array.from(fileList || []).filter(f => f && f.size);
+  if(!files.length) return;
+  if(files.length > PH_MAX_FILES){ toast('一次最多 ' + PH_MAX_FILES + ' 張,先處理前 ' + PH_MAX_FILES + ' 張', 4000); files = files.slice(0, PH_MAX_FILES); }
+  const ov = $('overlay'); let urls = [], mode = 'std', items = [], busy = false; const tags = new Set();
   ov.innerHTML = '<div class="modal pcmp"><div class="sheet"><p>壓縮中…</p></div></div>';
   const m = ov.firstChild, sheet = m.querySelector('.sheet');
-  const close = () => { if(url) URL.revokeObjectURL(url); url = null; if(ov.firstChild === m) ov.innerHTML = ''; };
+  const freeUrls = () => { urls.forEach(u => URL.revokeObjectURL(u)); urls = []; };
+  const close = () => { freeUrls(); if(ov.firstChild === m) ov.innerHTML = ''; };
   const paint = () => {
-    const r = last;
-    sheet.innerHTML = '<img alt="壓縮後預覽"><div class="pinfo"><b>' + esc(shortLine(line) + pole.replace(/^#/, '')) + '</b> · ' + (mode === 'hi' ? '高畫質' : '標準畫質')
-      + '<br>原圖 ' + fmtKB(file.size) + '(' + r.sw + '×' + r.sh + ') → 壓縮後 <b>' + fmtKB(r.blob.size) + '</b>(' + r.w + '×' + r.h + ')</div>'
-      + '<div class="pinfo" style="margin-bottom:6px">桿上有什麼?(可複選,自己判斷)</div><div class="row" style="justify-content:flex-start;margin-bottom:12px">'
+    freeUrls();
+    const n = items.length, sumF = items.reduce((s, x) => s + x.full.blob.size, 0), sumT = items.reduce((s, x) => s + x.thumb.blob.size, 0), sumO = items.reduce((s, x) => s + x.file.size, 0);
+    const pics = items.map(x => { const u = URL.createObjectURL(n > 1 ? x.thumb.blob : x.full.blob); urls.push(u); return u; });
+    const r = items[0].full;
+    sheet.innerHTML = (n > 1 ? '<div class="pgrid">' + pics.map((u, i) => '<img alt="照片 ' + (i + 1) + '" src="' + u + '">').join('') + '</div>' : '<img alt="壓縮後預覽" src="' + pics[0] + '">')
+      + '<div class="pinfo"><b>' + esc(shortLine(line) + pole.replace(/^#/, '')) + '</b> · ' + (mode === 'hi' ? '高畫質' : '標準畫質') + (n > 1 ? ' · ' + n + ' 張' : '')
+      + '<br>' + (n > 1 ? '原圖合計 ' + fmtKB(sumO) + ' → 壓縮後 <b>' + fmtKB(sumF) + '</b>' : '原圖 ' + fmtKB(sumO) + '(' + r.sw + '×' + r.sh + ') → 壓縮後 <b>' + fmtKB(sumF) + '</b>(' + r.w + '×' + r.h + ')')
+      + ',縮圖 ' + fmtKB(sumT) + (items.skipped ? '<br>有 ' + items.skipped + ' 張讀不到,已略過' : '') + '</div>'
+      + '<div class="pinfo" style="margin-bottom:6px">桿上有什麼?(可複選,自己判斷' + (n > 1 ? ',套用到這 ' + n + ' 張' : '') + ')</div><div class="row" style="justify-content:flex-start;margin-bottom:12px">'
       + PH_TAGS.map(t => '<button type="button" class="btn sm ' + (tags.has(t) ? '' : 'ghost') + '" data-tg="' + esc(t) + '">' + esc(t) + '</button>').join('') + '</div>'
       + (ghTok()
-        ? '<div class="row"><button class="btn ghost sm" type="button" data-pc="' + (mode === 'hi' ? 'std' : 'hi') + '">' + (mode === 'hi' ? '改標準(1280)' : '改高畫質(2048)') + '</button>'
-          + '<button class="btn ghost sm" type="button" data-pc="close">取消</button><button class="btn sm" type="button" data-pc="up">上傳</button></div>'
+        ? '<div class="row"><button class="btn ghost sm" type="button" data-pc="' + (mode === 'hi' ? 'std' : 'hi') + '">' + (mode === 'hi' ? '改標準(1024)' : '改高畫質(2048)') + '</button>'
+          + '<button class="btn ghost sm" type="button" data-pc="close">取消</button><button class="btn sm" type="button" data-pc="up">' + (n > 1 ? '上傳 ' + n + ' 張' : '上傳') + '</button></div>'
           + '<div class="hint" style="margin:8px 0 0">照片會公開在網站上。<a href="#" data-pc="notok">清除 token</a></div>'
-        : '<div class="pinfo" style="margin-bottom:6px">第一次要貼上 GitHub token(只存在這支手機)。做法見說明。</div>'
-          + '<input type="password" id="ghTokIn" autocomplete="off" placeholder="github_pat_…" style="width:100%;margin-bottom:10px">'
-          + '<div class="row"><button class="btn ghost sm" type="button" data-pc="close">取消</button><button class="btn sm" type="button" data-pc="savetok">儲存 token</button></div>');
-    sheet.querySelector('img').src = url;
+        : tokFormHtml('pc'));
   };
   const run = async () => {
-    sheet.innerHTML = '<p>壓縮中…</p>';
-    try{ last = await compressPhoto(file, mode); }catch(e){ close(); toast('這張照片讀不到,請換一張(或改用 JPEG 格式)'); return; }
-    if(url) URL.revokeObjectURL(url); url = URL.createObjectURL(last.blob);
-    paint();
+    const out = []; let skipped = 0;
+    for(let i = 0; i < files.length; i++){
+      sheet.innerHTML = '<p>壓縮中…' + (files.length > 1 ? '(' + (i + 1) + '/' + files.length + ')' : '') + '</p>';
+      try{ out.push({ file: files[i], full: await compressPhoto(files[i], mode), thumb: await compressPhoto(files[i], 'th'), at: Date.now() }); }catch(e){ skipped++; }
+    }
+    if(!out.length){ close(); toast('照片讀不到,請換一張(或改用 JPEG 格式)'); return; }
+    out.skipped = skipped; items = out; paint();
   };
   const upload = async () => {
     if(busy) return; busy = true;
     const btn = sheet.querySelector('[data-pc="up"]'); if(btn){ btn.disabled = true; btn.textContent = '上傳中…'; }
     try{
-      const d = { line, pole, blob: last.blob, at: Date.now() }, entry = await uploadPhoto(d, PH_TAGS.filter(t => tags.has(t)));
-      (PHOTO_PENDING[line + pole] = PHOTO_PENDING[line + pole] || []).unshift(Object.assign({ local: URL.createObjectURL(last.blob) }, entry));
-      close(); toast('已上傳。網站約 1~2 分鐘後,所有人都看得到', 5000);
+      const res = await uploadPhotos(line, pole, items, PH_TAGS.filter(t => tags.has(t)));
+      res.entries.forEach((e, i) => { PH_LOCAL[e.f] = { full: URL.createObjectURL(items[i].full.blob), thumb: URL.createObjectURL(items[i].thumb.blob) }; });
+      setShard('i', line, res.shard);
+      close(); toast('已上傳 ' + res.entries.length + ' 張。網站約 1~2 分鐘後,所有人都看得到', 5000);
       if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace();
-    }catch(e){ busy = false; if(btn){ btn.disabled = false; btn.textContent = '上傳'; } toast(e.message || '上傳失敗', 6000); }
+    }catch(e){ busy = false; if(btn){ btn.disabled = false; btn.textContent = items.length > 1 ? '上傳 ' + items.length + ' 張' : '上傳'; } toast(e.message || '上傳失敗', 6000); }
   };
-  const saveTok = async () => {
-    const v = ($('ghTokIn').value || '').trim(); if(!v) return;
-    try{ localStorage.setItem(GH_TOK, v); }catch(e){ toast('這支手機存不了 token'); return; }
-    try{
-      const r = await ghFetch('GET', '');
-      const j = r.ok ? await r.json() : null;
-      if(!j || !(j.permissions && j.permissions.push)){ try{ localStorage.removeItem(GH_TOK); }catch(e){} toast(r.ok ? '這個 token 沒有寫入權限' : await ghErr(r), 6000); return; }
-    }catch(e){ try{ localStorage.removeItem(GH_TOK); }catch(e2){} toast('連不到 GitHub,請確認網路'); return; }
-    toast('token 已儲存'); paint();
-  };
-  m.addEventListener('click', e => {
+  m.addEventListener('click', async e => {
     if(e.target === m){ close(); return; }
     const t = e.target.closest('[data-tg]'); if(t){ const k = t.dataset.tg; if(tags.has(k)) tags.delete(k); else tags.add(k); t.classList.toggle('ghost', !tags.has(k)); return; }
     const b = e.target.closest('[data-pc]'); if(!b) return; e.preventDefault();
     const a = b.dataset.pc;
-    if(a === 'close') close(); else if(a === 'up') upload(); else if(a === 'savetok') saveTok();
+    if(a === 'close') close(); else if(a === 'up') upload();
+    else if(a === 'savetok'){ if(await saveTokFrom($('ghTokIn'))) paint(); }
     else if(a === 'notok'){ try{ localStorage.removeItem(GH_TOK); }catch(e2){} toast('已清除 token'); paint(); }
     else { mode = a; run(); }
   });
@@ -3131,89 +3185,54 @@ async function openPhotoDraft(line, pole, file){
 }
 document.addEventListener('change', e => {
   const inp = e.target.closest && e.target.closest('input.lph-cam'); if(!inp) return;
-  const f = inp.files && inp.files[0], line = inp.dataset.line, pole = inp.dataset.pole; inp.value = '';
-  if(f) openPhotoDraft(line, pole, f);
+  const fs = Array.from(inp.files || []), line = inp.dataset.line, pole = inp.dataset.pole; inp.value = '';
+  if(fs.length) openPhotoDraft(line, pole, fs);
 });
-// ---------- 電桿文字備註:存進 GitHub 的 notes/index.json,全組共用,每則有時間、可刪除 ----------
-let NOTE_INDEX = null, noteIndexAt = 0;
-const NOTE_MAX = 500;
-function loadNoteIndex(){
-  if(NOTE_INDEX && Date.now() - noteIndexAt < 10 * 60 * 1000) return;
-  noteIndexAt = Date.now();
-  fetch(DATA_BASE + 'notes/index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
-    .then(j => { NOTE_INDEX = j || {}; if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); });
-}
+// ---------- 電桿文字備註:每則有時間、可刪除,全組共用 ----------
 function noteHtml(p){
   if(!p.poleNo) return '';
-  loadNoteIndex();
-  const list = (NOTE_INDEX && NOTE_INDEX[p.line + p.poleNo]) || [];
+  const idx = getShard('n', p.line), list = ((idx && idx[p.line + p.poleNo]) || []).slice().sort((a, b) => b.at - a.at);
   if(!list.length) return '';
-  const d = t => { const x = new Date(t); return x.getFullYear() + '/' + (x.getMonth() + 1) + '/' + x.getDate() + ' ' + String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
+  const d = t => { const x = new Date(t); return phDay(t) + ' ' + String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
   return '<div class="lnotes" style="margin-top:8px">' + list.map(n => '<div class="lnote" style="border-top:1px solid var(--line);padding:6px 0">'
     + '<div class="hint" style="margin:0">' + d(n.at) + ' · <a href="#" data-nt="del" data-id="' + esc(n.id) + '" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '">刪除</a></div>'
     + '<div style="white-space:pre-wrap;word-break:break-word">' + esc(n.x) + '</div></div>').join('') + '</div>';
 }
-// 讀出最新的 notes/index.json、套用修改、寫回(多人同時更新時會重試)
-async function updateNotes(mutate, msg){
-  for(let i = 0; i < 5; i++){
-    const g = await ghFetch('GET', '/contents/notes/index.json?ref=' + GH_BRANCH);
-    let idx = {}, sha = null;
-    if(g.ok){
-      const j = await g.json(); sha = j.sha;
-      const txt = j.content && j.encoding === 'base64' ? new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\s/g, '')), c => c.charCodeAt(0)))
-        : await (await ghFetch('GET', '/contents/notes/index.json?ref=' + GH_BRANCH, null, true)).text();
-      idx = JSON.parse(txt) || {};
-    } else if(g.status !== 404) throw new Error(await ghErr(g));
-    mutate(idx);
-    const body = { message: msg, content: ghB64(new TextEncoder().encode(JSON.stringify(idx))), branch: GH_BRANCH };
-    if(sha) body.sha = sha;
-    const p = await ghFetch('PUT', '/contents/notes/index.json', body);
-    if(p.ok) return idx;
-    if(p.status !== 409 && p.status !== 422) throw new Error(await ghErr(p));
-    await new Promise(res => setTimeout(res, 400 + Math.random() * 600));
-  }
-  throw new Error('同時有人在更新,請稍後再試');
+async function editNotes(line, pole, mutate, msg){
+  const path = 'n/' + shardOf(line) + '.json', key = line + pole;
+  const out = await ghCommit(msg + ' ' + shortLine(line) + pole.replace(/^#/, ''), [], [{ path, mutate: o => { mutate(o, key); if(o[key] && !o[key].length) delete o[key]; } }]);
+  setShard('n', line, out[path]);
+  if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace();
 }
-function afterNoteChange(idx){ NOTE_INDEX = idx; noteIndexAt = Date.now(); if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); }
 function openNoteDraft(line, pole){
   const ov = $('overlay'); let busy = false;
-  const close = () => { if(ov.firstChild === m) ov.innerHTML = ''; };
   ov.innerHTML = '<div class="modal pcmp"><div class="sheet"></div></div>';
   const m = ov.firstChild, sheet = m.querySelector('.sheet');
+  const close = () => { if(ov.firstChild === m) ov.innerHTML = ''; };
   const paint = () => {
     sheet.innerHTML = '<div class="pinfo"><b>' + esc(shortLine(line) + pole.replace(/^#/, '')) + '</b> · 新增文字</div>'
       + '<textarea id="ntTx" maxlength="' + NOTE_MAX + '" rows="5" placeholder="例如:桿上有第二組開關、拉線鬆動…" style="width:100%;margin-bottom:6px;font:inherit"></textarea>'
       + (ghTok()
         ? '<div class="row"><button class="btn ghost sm" type="button" data-nc="close">取消</button><button class="btn sm" type="button" data-nc="save">儲存</button></div>'
           + '<div class="hint" style="margin:8px 0 0">文字會公開在網站上,全組都看得到。<a href="#" data-nc="notok">清除 token</a></div>'
-        : '<div class="pinfo" style="margin:6px 0">第一次要貼上 GitHub token(只存在這支手機)。</div>'
-          + '<input type="password" id="ghTokIn" autocomplete="off" placeholder="github_pat_…" style="width:100%;margin-bottom:10px">'
-          + '<div class="row"><button class="btn ghost sm" type="button" data-nc="close">取消</button><button class="btn sm" type="button" data-nc="savetok">儲存 token</button></div>');
+        : tokFormHtml('nc'));
     const t = $('ntTx'); if(t && ghTok()) t.focus();
   };
   const save = async () => {
     if(busy) return; const tx = (($('ntTx') || {}).value || '').trim(); if(!tx){ toast('請先輸入文字'); return; }
     busy = true; const btn = sheet.querySelector('[data-nc="save"]'); if(btn){ btn.disabled = true; btn.textContent = '儲存中…'; }
-    const key = line + pole, n = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), at: Date.now(), x: tx.slice(0, NOTE_MAX) };
+    const n = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), at: Date.now(), x: tx.slice(0, NOTE_MAX) };
     try{
-      const idx = await updateNotes(o => { (o[key] = o[key] || []).unshift(n); o[key].sort((a, b) => b.at - a.at); }, '新增電桿備註 ' + shortLine(line) + pole.replace(/^#/, ''));
-      close(); toast('已儲存。網站約 1~2 分鐘後,其他人才看得到', 5000); afterNoteChange(idx);
+      await editNotes(line, pole, (o, key) => { o[key] = [n].concat(o[key] || []).sort((a, b) => b.at - a.at); }, '新增電桿備註');
+      close(); toast('已儲存。網站約 1~2 分鐘後,其他人才看得到', 5000);
     }catch(e){ busy = false; if(btn){ btn.disabled = false; btn.textContent = '儲存'; } toast(e.message || '儲存失敗', 6000); }
   };
-  const saveTok = async () => {
-    const v = ($('ghTokIn').value || '').trim(); if(!v) return;
-    try{ localStorage.setItem(GH_TOK, v); }catch(e){ toast('這支手機存不了 token'); return; }
-    try{
-      const r = await ghFetch('GET', ''); const j = r.ok ? await r.json() : null;
-      if(!j || !(j.permissions && j.permissions.push)){ try{ localStorage.removeItem(GH_TOK); }catch(e){} toast(r.ok ? '這個 token 沒有寫入權限' : await ghErr(r), 6000); return; }
-    }catch(e){ try{ localStorage.removeItem(GH_TOK); }catch(e2){} toast('連不到 GitHub,請確認網路'); return; }
-    toast('token 已儲存'); paint();
-  };
-  m.addEventListener('click', e => {
+  m.addEventListener('click', async e => {
     if(e.target === m){ close(); return; }
     const b = e.target.closest('[data-nc]'); if(!b) return; e.preventDefault();
     const a = b.dataset.nc;
-    if(a === 'close') close(); else if(a === 'save') save(); else if(a === 'savetok') saveTok();
+    if(a === 'close') close(); else if(a === 'save') save();
+    else if(a === 'savetok'){ if(await saveTokFrom($('ghTokIn'))) paint(); }
     else if(a === 'notok'){ try{ localStorage.removeItem(GH_TOK); }catch(e2){} toast('已清除 token'); paint(); }
   });
   paint();
@@ -3221,11 +3240,8 @@ function openNoteDraft(line, pole){
 async function deleteNote(line, pole, id){
   if(!ghTok()){ toast('要先貼 token 才能刪除:請按「新增文字」貼上 token', 5000); return; }
   if(!confirm('刪除這則文字?')) return;
-  const key = line + pole;
-  try{
-    const idx = await updateNotes(o => { if(o[key]){ o[key] = o[key].filter(n => n.id !== id); if(!o[key].length) delete o[key]; } }, '刪除電桿備註 ' + shortLine(line) + pole.replace(/^#/, ''));
-    toast('已刪除'); afterNoteChange(idx);
-  }catch(e){ toast(e.message || '刪除失敗', 6000); }
+  try{ await editNotes(line, pole, (o, key) => { if(o[key]) o[key] = o[key].filter(n => n.id !== id); }, '刪除電桿備註'); toast('已刪除'); }
+  catch(e){ toast(e.message || '刪除失敗', 6000); }
 }
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-nt]'); if(!b) return; e.preventDefault();

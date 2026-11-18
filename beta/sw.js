@@ -1,4 +1,4 @@
-// 封閉測試版的離線快取:網頁先用網路、沒網路用存的;電桿、街道、照片、底圖用存的(先存先用)
+// 封閉測試版的離線快取:網頁先用網路、沒網路用存的;電桿、街道、照片(含 Pole-photo)、底圖用存的(先存先用)
 const CACHE = 'lmb-v1';
 self.addEventListener('install', e => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
@@ -12,10 +12,11 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request, { ignoreSearch: false }).then(r => r || caches.match(e.request, { ignoreSearch: true }))));
     return;
   }
-  const data = /\/(d|roads|photos)\//.test(u.pathname) || u.hostname === 'wmts.nlsc.gov.tw';
+  const ph = /\/pole-photos?\/([ptin])\//i.exec(u.pathname);   // 照片庫:p 照片、t 縮圖、i 照片索引、n 文字備註
+  const data = /\/(d|roads|photos)\//.test(u.pathname) || ph || u.hostname === 'wmts.nlsc.gov.tw';
   if(!data) return;
   const key = u.origin + u.pathname;   // 不管 ?t= 之類的參數
-  const fresh = /index\.json$/.test(u.pathname);   // 索引檔:有網路就更新
+  const fresh = /index\.json$/.test(u.pathname) || (ph && /[in]/.test(ph[1]));   // 索引檔:有網路就更新
   e.respondWith(caches.open(CACHE).then(async k => {
     const hit = await k.match(key);
     const net = fetch(e.request).then(r => { if(r.ok || r.type === 'opaque') k.put(key, r.clone()); return r; });
