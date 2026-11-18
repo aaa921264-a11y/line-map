@@ -634,7 +634,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-040024";
+const SITE_BUILD = "20261119-043758";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -3003,7 +3003,9 @@ function photoHtml(p){
     + (list.length ? '<img class="lph-img" src="' + src(list[0]) + '" alt="' + esc(q) + ' 最新照片" data-full="' + src(list[0]) + '">'
         + '<div class="hint" style="margin:4px 0 0">最新照片 ' + d(list[0].at) + (list.length > 1 ? ',共 ' + list.length + ' 張' : '') + (list[0].t && list[0].t.length ? ' · ' + list[0].t.map(esc).join('、') : '') + '</div>'
       : (PHOTO_INDEX ? '<div class="hint" style="margin:0">這支桿還沒有照片</div>' : ''))
-    + (p.poleNo ? '<div class="row" style="margin-top:8px"><span class="btn ghost sm file-btn">📷 拍照/選照片(測試)<input class="lph-cam" type="file" accept="image/*" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '" aria-label="拍照或選照片"></span></div>' : '')
+    + (p.poleNo ? '<div class="row" style="margin-top:8px"><span class="btn ghost sm file-btn">📷 拍照/選照片(測試)<input class="lph-cam" type="file" accept="image/*" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '" aria-label="拍照或選照片"></span>'
+      + '<button class="btn ghost sm" type="button" data-nt="add" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '">📝 新增文字</button></div>' : '')
+    + noteHtml(p)
     + '</div>';
 }
 document.addEventListener('click', e => { const img = e.target.closest('img.lph-img'); if(img) showPhoto(img.dataset.full); });
@@ -3131,6 +3133,104 @@ document.addEventListener('change', e => {
   const inp = e.target.closest && e.target.closest('input.lph-cam'); if(!inp) return;
   const f = inp.files && inp.files[0], line = inp.dataset.line, pole = inp.dataset.pole; inp.value = '';
   if(f) openPhotoDraft(line, pole, f);
+});
+// ---------- 電桿文字備註:存進 GitHub 的 notes/index.json,全組共用,每則有時間、可刪除 ----------
+let NOTE_INDEX = null, noteIndexAt = 0;
+const NOTE_MAX = 500;
+function loadNoteIndex(){
+  if(NOTE_INDEX && Date.now() - noteIndexAt < 10 * 60 * 1000) return;
+  noteIndexAt = Date.now();
+  fetch(DATA_BASE + 'notes/index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+    .then(j => { NOTE_INDEX = j || {}; if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); });
+}
+function noteHtml(p){
+  if(!p.poleNo) return '';
+  loadNoteIndex();
+  const list = (NOTE_INDEX && NOTE_INDEX[p.line + p.poleNo]) || [];
+  if(!list.length) return '';
+  const d = t => { const x = new Date(t); return x.getFullYear() + '/' + (x.getMonth() + 1) + '/' + x.getDate() + ' ' + String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
+  return '<div class="lnotes" style="margin-top:8px">' + list.map(n => '<div class="lnote" style="border-top:1px solid var(--line);padding:6px 0">'
+    + '<div class="hint" style="margin:0">' + d(n.at) + ' · <a href="#" data-nt="del" data-id="' + esc(n.id) + '" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '">刪除</a></div>'
+    + '<div style="white-space:pre-wrap;word-break:break-word">' + esc(n.x) + '</div></div>').join('') + '</div>';
+}
+// 讀出最新的 notes/index.json、套用修改、寫回(多人同時更新時會重試)
+async function updateNotes(mutate, msg){
+  for(let i = 0; i < 5; i++){
+    const g = await ghFetch('GET', '/contents/notes/index.json?ref=' + GH_BRANCH);
+    let idx = {}, sha = null;
+    if(g.ok){
+      const j = await g.json(); sha = j.sha;
+      const txt = j.content && j.encoding === 'base64' ? new TextDecoder().decode(Uint8Array.from(atob(j.content.replace(/\s/g, '')), c => c.charCodeAt(0)))
+        : await (await ghFetch('GET', '/contents/notes/index.json?ref=' + GH_BRANCH, null, true)).text();
+      idx = JSON.parse(txt) || {};
+    } else if(g.status !== 404) throw new Error(await ghErr(g));
+    mutate(idx);
+    const body = { message: msg, content: ghB64(new TextEncoder().encode(JSON.stringify(idx))), branch: GH_BRANCH };
+    if(sha) body.sha = sha;
+    const p = await ghFetch('PUT', '/contents/notes/index.json', body);
+    if(p.ok) return idx;
+    if(p.status !== 409 && p.status !== 422) throw new Error(await ghErr(p));
+    await new Promise(res => setTimeout(res, 400 + Math.random() * 600));
+  }
+  throw new Error('同時有人在更新,請稍後再試');
+}
+function afterNoteChange(idx){ NOTE_INDEX = idx; noteIndexAt = Date.now(); if(LMap.sel && LMap.sel.startsWith('pole:')) renderPlace(); }
+function openNoteDraft(line, pole){
+  const ov = $('overlay'); let busy = false;
+  const close = () => { if(ov.firstChild === m) ov.innerHTML = ''; };
+  ov.innerHTML = '<div class="modal pcmp"><div class="sheet"></div></div>';
+  const m = ov.firstChild, sheet = m.querySelector('.sheet');
+  const paint = () => {
+    sheet.innerHTML = '<div class="pinfo"><b>' + esc(shortLine(line) + pole.replace(/^#/, '')) + '</b> · 新增文字</div>'
+      + '<textarea id="ntTx" maxlength="' + NOTE_MAX + '" rows="5" placeholder="例如:桿上有第二組開關、拉線鬆動…" style="width:100%;margin-bottom:6px;font:inherit"></textarea>'
+      + (ghTok()
+        ? '<div class="row"><button class="btn ghost sm" type="button" data-nc="close">取消</button><button class="btn sm" type="button" data-nc="save">儲存</button></div>'
+          + '<div class="hint" style="margin:8px 0 0">文字會公開在網站上,全組都看得到。<a href="#" data-nc="notok">清除 token</a></div>'
+        : '<div class="pinfo" style="margin:6px 0">第一次要貼上 GitHub token(只存在這支手機)。</div>'
+          + '<input type="password" id="ghTokIn" autocomplete="off" placeholder="github_pat_…" style="width:100%;margin-bottom:10px">'
+          + '<div class="row"><button class="btn ghost sm" type="button" data-nc="close">取消</button><button class="btn sm" type="button" data-nc="savetok">儲存 token</button></div>');
+    const t = $('ntTx'); if(t && ghTok()) t.focus();
+  };
+  const save = async () => {
+    if(busy) return; const tx = (($('ntTx') || {}).value || '').trim(); if(!tx){ toast('請先輸入文字'); return; }
+    busy = true; const btn = sheet.querySelector('[data-nc="save"]'); if(btn){ btn.disabled = true; btn.textContent = '儲存中…'; }
+    const key = line + pole, n = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), at: Date.now(), x: tx.slice(0, NOTE_MAX) };
+    try{
+      const idx = await updateNotes(o => { (o[key] = o[key] || []).unshift(n); o[key].sort((a, b) => b.at - a.at); }, '新增電桿備註 ' + shortLine(line) + pole.replace(/^#/, ''));
+      close(); toast('已儲存。網站約 1~2 分鐘後,其他人才看得到', 5000); afterNoteChange(idx);
+    }catch(e){ busy = false; if(btn){ btn.disabled = false; btn.textContent = '儲存'; } toast(e.message || '儲存失敗', 6000); }
+  };
+  const saveTok = async () => {
+    const v = ($('ghTokIn').value || '').trim(); if(!v) return;
+    try{ localStorage.setItem(GH_TOK, v); }catch(e){ toast('這支手機存不了 token'); return; }
+    try{
+      const r = await ghFetch('GET', ''); const j = r.ok ? await r.json() : null;
+      if(!j || !(j.permissions && j.permissions.push)){ try{ localStorage.removeItem(GH_TOK); }catch(e){} toast(r.ok ? '這個 token 沒有寫入權限' : await ghErr(r), 6000); return; }
+    }catch(e){ try{ localStorage.removeItem(GH_TOK); }catch(e2){} toast('連不到 GitHub,請確認網路'); return; }
+    toast('token 已儲存'); paint();
+  };
+  m.addEventListener('click', e => {
+    if(e.target === m){ close(); return; }
+    const b = e.target.closest('[data-nc]'); if(!b) return; e.preventDefault();
+    const a = b.dataset.nc;
+    if(a === 'close') close(); else if(a === 'save') save(); else if(a === 'savetok') saveTok();
+    else if(a === 'notok'){ try{ localStorage.removeItem(GH_TOK); }catch(e2){} toast('已清除 token'); paint(); }
+  });
+  paint();
+}
+async function deleteNote(line, pole, id){
+  if(!ghTok()){ toast('要先貼 token 才能刪除:請按「新增文字」貼上 token', 5000); return; }
+  if(!confirm('刪除這則文字?')) return;
+  const key = line + pole;
+  try{
+    const idx = await updateNotes(o => { if(o[key]){ o[key] = o[key].filter(n => n.id !== id); if(!o[key].length) delete o[key]; } }, '刪除電桿備註 ' + shortLine(line) + pole.replace(/^#/, ''));
+    toast('已刪除'); afterNoteChange(idx);
+  }catch(e){ toast(e.message || '刪除失敗', 6000); }
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-nt]'); if(!b) return; e.preventDefault();
+  if(b.dataset.nt === 'add') openNoteDraft(b.dataset.line, b.dataset.pole);
+  else if(b.dataset.nt === 'del') deleteNote(b.dataset.line, b.dataset.pole, b.dataset.id);
 });
 // 「上傳照片」:跳到紀錄網頁的這支桿(桃園的桿才有)
 function uploadBtn(p){
