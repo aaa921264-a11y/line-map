@@ -5,6 +5,7 @@ self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if(e.request.method !== 'GET') return;
+  if(u.hostname === 'api.github.com') return;   // 上傳照片用的 GitHub API 不快取
   if(u.pathname.endsWith('/version.json') || u.hostname.endsWith('jsdelivr.net')) return;           // 版本檢查一律走網路
   if(e.request.mode === 'navigate'){
     e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(e.request, c)); return r; })
