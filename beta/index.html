@@ -202,6 +202,8 @@ textarea{min-height:64px; resize:vertical;}
 .place .coords-row{margin-top:4px;}
 
 /* pole plate — like the enamel tag on a pole */
+.plate-copy{cursor:pointer; -webkit-tap-highlight-color:transparent; flex:none;}
+.plate-copy:active .plate{opacity:.6;}
 .plate{display:inline-flex; flex-direction:column; align-items:center; background:var(--plate-bg); color:var(--plate-ink);
   border:1.5px solid var(--plate-ink); border-radius:3px; padding:3px 8px 2px; line-height:1.15; flex:none;
   box-shadow:inset 0 0 0 2px var(--plate-bg), inset 0 0 0 3px rgba(0,0,0,.18);}
@@ -653,7 +655,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-053910";
+const SITE_BUILD = "20261119-054735";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2816,10 +2818,9 @@ function renderMe(){
   $('nearCard').hidden = false;
   $('nearName').textContent = p.poleNo ? shortLine(p.line) + p.poleNo + '(' + p.line + ')' : p.line + ' 未編號';
   $('nearSub').textContent = '在你的' + bearing(me, p) + '方 ' + fmtM(near.d) + (p.form ? ',' + p.form : '');
-  $('nearPlate').innerHTML = plateHtml(codeFor(p), p.line);
+  $('nearPlate').innerHTML = codeFor(p) ? '<span class="plate-copy" role="button" data-copy="' + esc(codeFor(p)) + '">' + plateHtml(codeFor(p), p.line + ' ⧉') + '</span>' : plateHtml(codeFor(p), p.line);
   $('nearBtns').innerHTML = navGroup(p)
     + '<button class="btn ghost sm" type="button" data-act="show-pole" data-id="' + esc(p.id) + '">在地圖上看</button>'
-    + (codeFor(p) ? '<button class="btn ghost sm" type="button" data-copy="' + esc(codeFor(p)) + '">複製電力座標</button>' : '')
     + (typeof betaNearBtns === 'function' ? betaNearBtns(p) : '');
   // 照片與文字:內容有變才重畫,避免每次 GPS 更新都重載縮圖
   const ph = p.poleNo ? photoHtml(p) : '', box = $('nearPh');
@@ -2990,12 +2991,11 @@ function renderPlace(){
   const pole = key && key.startsWith('pole:') ? ll : null;
   SUSPECT = pole ? checkPole(pole) : null;
   const sub = kind + (far ? ' · ' + far : '');
-  el.innerHTML = '<div class="place"><div class="head"><div><div class="name">' + esc(name) + '</div><div class="kind">' + esc(sub) + '</div></div>' + plateHtml(codeFor(ll), caption) + '</div>'
+  el.innerHTML = '<div class="place"><div class="head"><div><div class="name">' + esc(name) + '</div><div class="kind">' + esc(sub) + '</div></div>' + (codeFor(ll) ? '<span class="plate-copy" role="button" data-copy="' + esc(codeFor(ll)) + '">' + plateHtml(codeFor(ll), (caption ? caption + ' ' : '') + '⧉') + '</span>' : plateHtml(codeFor(ll), caption)) + '</div>'
     + (pole ? '' : '<div class="coords-row"><span class="coords num">' + coordText(ll) + '</span></div>')
     + (SUSPECT ? suspectHtml(pole, SUSPECT) : '')
     + '<div class="row act">' + navGroup(ll)
     + (pole ? '<a class="btn ghost sm" target="_blank" rel="noopener" href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=' + ll.lat.toFixed(6) + ',' + ll.lng.toFixed(6) + '">街景</a>' : '')
-    + '<button class="btn ghost sm" type="button" data-copy="' + llOf(ll) + '">複製座標</button>'
     + '<button class="btn ghost sm x" type="button" data-act="unsel" aria-label="關閉">✕</button></div>'
     + (pole && typeof betaPoleExtras === 'function' ? betaPoleExtras(pole) : '')
     + (pole ? photoHtml(pole) : '') + '</div>';
