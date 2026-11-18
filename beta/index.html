@@ -321,6 +321,7 @@ dl.kv dd.overdue{color:var(--danger); font-weight:700;}
 .modal .sheet .row{justify-content:flex-end;}
 .modal.photo{align-items:center;}
 .modal.photo img{max-width:100%; max-height:80vh; border-radius:6px; background:var(--surface);}
+.modal.photo .pdel{position:absolute; bottom:calc(16px + env(safe-area-inset-bottom,0px)); left:50%; transform:translateX(-50%); color:#c92a2a; border-color:#c92a2a; background:var(--surface);}
 .modal.photo .close{position:absolute; top:calc(12px + env(safe-area-inset-top,0px)); right:12px;}
 .pcmp img{display:block; max-width:100%; max-height:46vh; margin:0 auto 10px; border-radius:6px; background:var(--surface-2);}
 .pcmp .pinfo{font-size:14px; line-height:1.7; margin-bottom:12px;}
@@ -655,7 +656,7 @@ html.big .map text{font-size:14px;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-055422";
+const SITE_BUILD = "20261119-055801";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -1346,15 +1347,15 @@ function askConfirm(msg, opts){
     m.querySelector('[data-a="yes"]').focus();
   });
 }
-function showPhoto(src){
+function showPhoto(src, del){
   const ov = $('overlay');
-  ov.innerHTML = '<div class="modal photo" role="dialog" aria-modal="true"><img alt="照片"><button class="btn ghost close" type="button">關閉</button></div>';
+  ov.innerHTML = '<div class="modal photo" role="dialog" aria-modal="true"><img alt="照片"><button class="btn ghost close" type="button">關閉</button>' + (del ? '<button class="btn ghost pdel" type="button">刪除這張</button>' : '') + '</div>';
   const m = ov.firstChild;
   m.querySelector('img').src = src;
   const close = () => { ov.innerHTML = ''; document.removeEventListener('keydown', key); };
   const key = e => { if(e.key === 'Escape') close(); };
   document.addEventListener('keydown', key);
-  m.addEventListener('click', e => { if(e.target === m || e.target.closest('.close')) close(); });
+  m.addEventListener('click', e => { if(e.target === m || e.target.closest('.close')) close(); else if(e.target.closest('.pdel')){ close(); del(); } });
 }
 
 // ---------- photos ----------
@@ -3063,13 +3064,13 @@ function photoHtml(p){
   const idx = getShard('i', p.line), q = shortLine(p.line) + p.poleNo.replace(/^#/, '');
   const list = ((idx && idx[p.line + p.poleNo]) || []).slice().sort((a, b) => b.at - a.at);
   return '<div class="lph">'
-    + (list.length ? '<div class="lph-strip">' + list.slice(0, PH_STRIP).map((x, i) => '<img class="lph-img" loading="lazy" src="' + esc(phThumb(x)) + '" alt="' + esc(q) + ' 照片 ' + (i + 1) + '" data-full="' + esc(phFull(x)) + '">').join('') + '</div>' : '')
+    + (list.length ? '<div class="lph-strip">' + list.slice(0, PH_STRIP).map((x, i) => '<img class="lph-img" loading="lazy" src="' + esc(phThumb(x)) + '" alt="' + esc(q) + ' 照片 ' + (i + 1) + '" data-full="' + esc(phFull(x)) + '" data-f="' + esc(x.f) + '" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '"' + (x.r ? ' data-r="1"' : '') + (x.nt ? ' data-nt1="1"' : '') + '>').join('') + '</div>' : '')
     + (p.poleNo ? '<div class="row"><span class="btn ghost sm file-btn">📷 拍照/選照片(測試)<input class="lph-cam" type="file" accept="image/*" multiple data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '" aria-label="拍照或選照片"></span>'
       + '<button class="btn ghost sm" type="button" data-nt="add" data-line="' + esc(p.line) + '" data-pole="' + esc(p.poleNo) + '">📝 新增文字</button></div>' : '')
     + noteHtml(p)
     + '</div>';
 }
-document.addEventListener('click', e => { const img = e.target.closest('img.lph-img'); if(img) showPhoto(img.dataset.full); });
+document.addEventListener('click', e => { const img = e.target.closest('img.lph-img'); if(img) showPhoto(img.dataset.full, img.dataset.f ? () => deletePhoto(img.dataset.line, img.dataset.pole, img.dataset.f, !!img.dataset.r, !!img.dataset.nt1) : null); });
 // ---------- GitHub API ----------
 const ghTok = () => { try{ return localStorage.getItem(GH_TOK) || ''; }catch(e){ return ''; } };
 function ghApi(method, path, body, raw){
@@ -3084,8 +3085,8 @@ async function ghErr(r){
   return '上傳失敗(' + r.status + ')' + (m ? ':' + m : '');
 }
 // 一次 commit:先傳檔案,再讀出最新的索引分片、套用修改,和檔案一起寫成一個 commit。別人同時更新時重讀重試(最多 5 次)
-async function ghCommit(message, files, edits){
-  const base = [];
+async function ghCommit(message, files, edits, dels){
+  const base = (dels || []).map(path => ({ path, mode: '100644', type: 'blob', sha: null }));
   for(const f of files){
     const r = await ghApi('POST', '/git/blobs', { content: f.b64, encoding: 'base64' });
     if(!r.ok) throw new Error(await ghErr(r));
@@ -3246,6 +3247,19 @@ async function editNotes(line, pole, mutate, msg){
   const out = await ghCommit(msg + ' ' + shortLine(line) + pole.replace(/^#/, ''), [], [{ path, mutate: o => { mutate(o, key); if(o[key] && !o[key].length) delete o[key]; } }]);
   setShard('n', line, out[path]);
   refreshPoleCards();
+}
+async function deletePhoto(line, pole, f, otherRepo, noThumb){
+  if(otherRepo){ toast('這張照片在別的照片庫,網頁還不能刪', 5000); return; }
+  if(!ghTok()){ toast('要先貼 token 才能刪除:請按「新增文字」貼上 token', 5000); return; }
+  if(!confirm('刪除這張照片?刪掉就救不回來。')) return;
+  const path = 'i/' + shardOf(line) + '.json', key = line + pole;
+  try{
+    const out = await ghCommit('刪除電桿照片 ' + shortLine(line) + pole.replace(/^#/, ''), [],
+      [{ path, mutate: o => { if(o[key]){ o[key] = o[key].filter(x => x.f !== f); if(!o[key].length) delete o[key]; } } }],
+      ['p/' + f].concat(noThumb ? [] : ['t/' + f]));
+    setShard('i', line, out[path]); delete PH_LOCAL[f];
+    refreshPoleCards(); toast('已刪除');
+  }catch(e){ toast(e.message || '刪除失敗', 6000); }
 }
 function openNoteDraft(line, pole){
   const ov = $('overlay'); let busy = false;
