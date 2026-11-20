@@ -578,6 +578,25 @@ html.rec-open{overflow:hidden;}
 .phist .ph-b{overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
 .phist .btn{margin-top:6px;}
 .phist[hidden]{display:none;}
+.map .meas-ln{fill:none; stroke:#1c7ed6; stroke-width:3; stroke-dasharray:8 5;}
+.map .meas-pt{fill:#1c7ed6; stroke:#fff; stroke-width:2;}
+.map .meas-pt.big{stroke-width:2.5;}
+.map .meas-l{font-size:12px; font-weight:700; fill:#fff; pointer-events:none;}
+.map .meas-t{font-size:12.5px; font-weight:700; fill:#1c7ed6; paint-order:stroke; stroke:var(--map-bg, #fff); stroke-width:4px;}
+.map .meas-t.total{font-size:14px;}
+.meas-btn{position:absolute; left:8px; bottom:34px; z-index:5; width:44px; height:44px; padding:0; border-radius:6px; border:1px solid var(--line); background:var(--surface); color:var(--fg); font-size:20px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+.meas-btn[aria-pressed="true"]{background:#1c7ed6; color:#fff; border-color:#1c7ed6;}
+.meas-bar{position:absolute; left:8px; right:60px; top:8px; z-index:5; max-height:72%; overflow:hidden; padding:5px 8px; border-radius:10px; border:1px solid var(--line); background:var(--surface); background:color-mix(in srgb, var(--surface) 86%, transparent); color:var(--fg); box-shadow:0 4px 14px #0003; font-size:13.5px; line-height:1.4; pointer-events:none;}   /* 文字區不擋點擊,只有按鈕能按 */
+.mb-h{display:flex; flex-wrap:wrap; gap:4px 8px; align-items:center; margin-bottom:2px;}
+.mb-p{color:var(--muted); padding:2px 0;}
+.mb-r{display:flex; justify-content:space-between; align-items:baseline; gap:8px; padding:2px 0; border-top:1px solid var(--line); font-size:13px;}
+.mb-n{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.mb-r b{flex:none; white-space:nowrap;}
+.mb-r b small{font-weight:400; color:var(--muted); font-size:11.5px; margin-left:5px;}
+.mb-tot{font-weight:700; color:#1c7ed6;}
+.mb-b{display:flex; flex-wrap:wrap; gap:6px; margin-left:auto;}
+.mb-b button{pointer-events:auto; white-space:nowrap; font:inherit; font-size:12.5px; min-height:34px; padding:3px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface-2); color:var(--fg); cursor:pointer;}
+.mb-b button[data-m="done"]{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:700;}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -632,6 +651,7 @@ html.rec-open{overflow:hidden;}
       <button type="button" id="zoomOut" aria-label="縮小">－</button>
       <button type="button" id="zoomFit" aria-label="顯示全部"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     </div>
+    <button type="button" class="meas-btn" id="measBtn" aria-pressed="false" aria-label="量距離(點 2~3 支電桿)" title="量距離(點 2~3 支電桿)">📏</button>
     <div class="map-scale" id="mapScale"></div>
     <div class="map-empty" id="mapEmpty" hidden></div>
     <div class="map-credit" id="mapCredit" hidden>© OpenStreetMap 貢獻者</div>
@@ -679,7 +699,7 @@ html.rec-open{overflow:hidden;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261119-073000";
+const SITE_BUILD = "20261121-074500";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2021,7 +2041,7 @@ const LMap = {
     return casing + fill;
   },
   placeLabels(list, roadLabels){
-    const W = this.W, placed = [{ x0: W - 58, y0: 0, x1: W, y1: 214 }, { x0: 0, y0: this.H - 36, x1: 120, y1: this.H }];   // keep clear of the buttons and the scale bar
+    const W = this.W, placed = [{ x0: W - 58, y0: 0, x1: W, y1: 214 }, { x0: 0, y0: this.H - 36, x1: 120, y1: this.H }, { x0: 0, y0: this.H - 84, x1: 56, y1: this.H - 36 }];   // keep clear of the buttons and the scale bar
     const hit = b => placed.some(q => b.x0 < q.x1 && b.x1 > q.x0 && b.y0 < q.y1 && b.y1 > q.y0);
     let out = '';
     const width = t => Array.from(t).reduce((w, c) => w + (c.charCodeAt(0) > 0x2E80 ? 11.5 : 6.8), 0);
@@ -2251,36 +2271,6 @@ function showDown(p){
   toast(DOWN.list.length ? '下游共 ' + DOWN.list.length + ' 支桿' : '這支桿後面沒有接其他桿');
 }
 
-// ---------- 6. 量距離 ----------
-let MEAS = null;   // { pts: [{lat,lng,p?}] }
-function startMeasure(){ MEAS = { pts: [] }; banner('點地圖加點(靠近電桿會自動吸附)', '完成', () => { MEAS = null; hideBanner(); LMap.req(); }); LMap.req(); }
-function pathAlong(a, b){
-  // a, b on the same line: walk both up to the common ancestor
-  if(a.line !== b.line) return null;
-  const up = p => { const c = []; let q = p, n = 0; while(q && n++ < 5000){ c.push(q); q = q._prev; } return c; };
-  const ua = up(a), ub = up(b), ib = new Map(ub.map((q, i) => [q.id, i]));
-  const i = ua.findIndex(q => ib.has(q.id)); if(i < 0) return null;
-  const chain = ua.slice(0, i + 1).concat(ub.slice(0, ib.get(ua[i].id)).reverse());
-  let d = 0; for(let k = 1; k < chain.length; k++) d += dist(chain[k - 1], chain[k]);
-  return { d, n: chain.length };
-}
-function measureSvg(L){
-  if(!MEAS || !MEAS.pts.length) return '';
-  let out = '', total = 0;
-  const ps = MEAS.pts.map(o => pt(L, o));
-  if(ps.length > 1) out += '<polyline class="meas-ln" points="' + ps.map(q => q.join(',')).join(' ') + '"/>';
-  MEAS.pts.forEach((o, i) => {
-    const [x, y] = ps[i];
-    out += '<circle class="meas-pt" cx="' + x + '" cy="' + y + '" r="5"/>';
-    if(i){ const a = MEAS.pts[i - 1], d = dist(a, o); total += d;
-      const al = a.p && o.p ? pathAlong(a.p, o.p) : null;
-      const mx = ((+ps[i - 1][0]) + (+x)) / 2, my = ((+ps[i - 1][1]) + (+y)) / 2;
-      out += '<text class="meas-t" x="' + mx.toFixed(1) + '" y="' + (my - 6).toFixed(1) + '" text-anchor="middle">' + fmtM(d) + (al && al.n > 2 ? '(沿線 ' + fmtM(al.d) + ')' : '') + '</text>'; }
-  });
-  if(MEAS.pts.length > 1){ const [x, y] = ps[ps.length - 1]; out += '<text class="meas-t total" x="' + (+x + 8) + '" y="' + (+y + 18) + '">共 ' + fmtM(total) + '</text>'; }
-  return out;
-}
-
 // ---------- 3. 巡線打勾 ----------
 let PAT = LS.get('lmb:patrol', null);   // { line, day, done: [poleNo...] }
 const patDay = () => new Date().toLocaleDateString('sv');
@@ -2351,14 +2341,7 @@ function betaOverlay(L){
     if(L.mpp < 30) DOWN.list.forEach(p => { const [x, y] = pt(L, p); out += '<circle class="down-pt" cx="' + x + '" cy="' + y + '" r="4"/>'; });
     const [x, y] = pt(L, DOWN.root); out += '<circle class="down-root" cx="' + x + '" cy="' + y + '" r="9"/>';
   }
-  return out + measureSvg(L);
-}
-function betaTap(sx, sy){
-  if(!MEAS) return false;
-  const [x, y] = LMap.toPlane(sx, sy), ll = TPC.fromPlane(x, y);
-  const near = nearestPole(ll, 20 * LMap.mpp);
-  MEAS.pts.push(near ? { lat: near.p.lat, lng: near.p.lng, p: near.p } : { lat: ll.lat, lng: ll.lng });
-  LMap.req(); return true;
+  return out;
 }
 let lastPatTick = 0;
 function betaOnFix(fix){
@@ -2430,7 +2413,7 @@ function openTools(){
   ov.innerHTML = '<div class="modal layers" role="dialog" aria-modal="true" aria-label="工具"><div class="sheet">'
     + '<div class="lh"><b>工具(測試版)</b><span></span><button class="btn sm" type="button" data-t="close">完成</button></div><div class="lbody">'
     + '<div class="t-grid">'
-    + '<button type="button" data-t="measure"><b>📏 量距離</b><span>點地圖量直線與沿線距離</span></button>'
+    + '<button type="button" data-t="measure"><b>📏 量距離</b><span>點 2~3 支電桿量距離,也能自由點地圖</span></button>'
     + '<button type="button" data-t="addpole"><b>➕ 新增電桿</b><span>用圖號座標加一支桿</span></button>'
     + '<button type="button" data-t="ocr"><b>📷 拍桿牌找位置</b><span>拍電桿牌,讀出電力座標</span></button>'
     + '<button type="button" data-t="heat"><b>🔥 事故熱點</b><span>' + (heatOn ? '關閉熱點' : '用巡視紀錄的事故') + '</span></button>'
@@ -2696,7 +2679,7 @@ function mapOverlay(L){
     });
     flush();
   };
-  out += recentSvg(L) + suspectSvg(L) + (typeof betaOverlay === 'function' ? betaOverlay(L) : '');
+  out += recentSvg(L) + suspectSvg(L) + (typeof betaOverlay === 'function' ? betaOverlay(L) : '') + measureSvg(L);
   if(shown) pl(shown.points, 'trk');
   if(rec && rec.points.length) pl(rec.points.concat(rec.on && me ? [me] : []), 'trk live');
   if(me){
@@ -3792,13 +3775,120 @@ function recentSvg(L){
 }
 // tapping a recent-search pin searches it again
 function mapTapHook(sx, sy){
-  if(typeof betaTap === 'function' && betaTap(sx, sy)) return true;
+  if(measureTap(sx, sy)) return true;
   let best = null, bd = 22;
   recentHits.forEach(r => { const d = Math.hypot(r.x - sx, r.y - 14 - sy); if(d < bd){ bd = d; best = r; } });
   if(!best) return false;
   $('q').value = best.h.q; runSearch();
   return true;
 }
+// ---------- 量距離:點 2~3 支電桿量桿距(預設),或自由點地圖(靠近電桿會自動吸附) ----------
+// 開關是地圖左下角的 📏 鈕。電桿模式只能點畫面上開著的線路的電桿:最多 3 支,再點一次同一支就取消;自由模式點哪量哪。
+// 距離是兩支電桿的地面直線距離(已修正投影比例尺),顯示到公分;座標資料本身只到 0.1 公尺,公分位僅供參考;兩支桿在同一條線、中間還隔著別的桿時,另外列出沿線距離。
+let MEAS = null;   // { mode: 'pole' | 'free', pts: [{ lat, lng, p? }] }
+const MEAS_MAX = 3, MEAS_MAX_MPP = 8;
+function pathAlong(a, b){
+  // a, b on the same line: walk both up to the common ancestor
+  if(a.line !== b.line) return null;
+  const up = p => { const c = []; let q = p, n = 0; while(q && n++ < 5000){ c.push(q); q = q._prev; } return c; };
+  const ua = up(a), ub = up(b), ib = new Map(ub.map((q, i) => [q.id, i]));
+  const i = ua.findIndex(q => ib.has(q.id)); if(i < 0) return null;
+  const chain = ua.slice(0, i + 1).concat(ub.slice(0, ib.get(ua[i].id)).reverse());
+  let d = 0; for(let k = 1; k < chain.length; k++) d += dist(chain[k - 1], chain[k]);
+  return { d, n: chain.length };
+}
+const measRef = o => o.p || o;
+// 距離精準到公分:電桿座標(TWD97 TM2 平面)的格網距離,再除以該處的比例尺(中央經線 0.9999,離中央經線越遠越大),換回地面實際距離
+const measFmt = m => m.toFixed(2) + ' 公尺';
+function measDist(a, b){
+  const [ax, ay] = plane(measRef(a)), [bx, by] = plane(measRef(b)), mx = (ax + bx) / 2 - 250000;
+  return Math.hypot(bx - ax, by - ay) / (0.9999 * (1 + mx * mx / (2 * 6371000 * 6371000)));
+}
+const measName = o => o.p ? shortLine(o.p.line) + (o.p.poleNo || '') : '地圖點';
+const measTag = (i, pole) => pole ? String.fromCharCode(65 + i) : String(i + 1);
+function measPickPole(ll, maxM){
+  let best = null;
+  polesNear(ll, maxM).forEach(o => { if(!lineShown(o.p.line) || !inRegion(o.p)) return; if(!best || o.d < best.d) best = o; });
+  return best ? best.p : null;
+}
+function measLegs(){
+  const pts = MEAS.pts, legs = [];
+  for(let i = 1; i < pts.length; i++){
+    const a = pts[i - 1], b = pts[i], al = a.p && b.p ? pathAlong(a.p, b.p) : null;
+    legs.push({ a, b, d: measDist(a, b), al: al && al.n > 2 ? al : null });
+  }
+  return legs;
+}
+function startMeasure(mode){
+  if(mode !== 'free' && mode !== 'pole') mode = lsGet('lm:measMode', 'pole') === 'free' ? 'free' : 'pole';
+  MEAS = { mode, pts: [] };
+  renderMeasBar(); LMap.req();
+}
+function stopMeasure(){ MEAS = null; renderMeasBar(); LMap.req(); }
+function renderMeasBar(){
+  const btn = $('measBtn'); if(btn) btn.setAttribute('aria-pressed', String(!!MEAS));
+  let el = $('measBar');
+  if(!MEAS){ if(el) el.hidden = true; return; }
+  if(!el){
+    el = document.createElement('div'); el.id = 'measBar'; el.className = 'meas-bar'; $('mapWrap').appendChild(el);
+    el.addEventListener('click', e => {
+      const b = e.target.closest('[data-m]'); if(!b || !MEAS) return;
+      const a = b.dataset.m;
+      if(a === 'done'){ stopMeasure(); return; }
+      if(a === 'undo') MEAS.pts.pop();
+      else if(a === 'clear') MEAS.pts = [];
+      else if(a === 'mode'){ const m = MEAS.mode === 'pole' ? 'free' : 'pole'; lsSet('lm:measMode', m); MEAS = { mode: m, pts: [] }; }
+      renderMeasBar(); LMap.req();
+    });
+  }
+  el.hidden = false;
+  const pole = MEAS.mode === 'pole', pts = MEAS.pts, legs = measLegs();
+  let h = '<div class="mb-h"><b>📏 ' + (pole ? '桿距' : '自由') + '</b><span class="mb-b"><button type="button" data-m="undo">退一步</button><button type="button" data-m="clear">清除</button>'
+    + '<button type="button" data-m="mode">' + (pole ? '改自由點' : '改點電桿') + '</button><button type="button" data-m="done">完成</button></span></div>';
+  if(pts.length < 2) h += '<div class="mb-p">' + (pts.length ? esc(measTag(0, pole) + ' ' + measName(pts[0]) + ' 已選,再點下一' + (pole ? '支電桿' : '個點'))
+    : pole ? '點地圖上的電桿(2~3 支),那條線路要先開著' : '點地圖加點,靠近電桿會自動吸附') + '</div>';
+  legs.forEach((g, i) => {
+    h += '<div class="mb-r"><span class="mb-n">' + esc(measTag(i, pole) + ' ' + measName(g.a) + ' → ' + measTag(i + 1, pole) + ' ' + measName(g.b))
+      + '</span><b>' + esc(measFmt(g.d)) + (g.al ? '<small>沿線 ' + esc(measFmt(g.al.d)) + '</small>' : '') + '</b></div>';
+  });
+  if(legs.length > 1) h += '<div class="mb-r mb-tot"><span class="mb-n">總長(直線連起來)</span><b>' + esc(measFmt(legs.reduce((s, g) => s + g.d, 0))) + '</b></div>';
+  el.innerHTML = h;
+}
+function measureTap(sx, sy){
+  if(!MEAS) return false;
+  const [x, y] = LMap.toPlane(sx, sy), ll = TPC.fromPlane(x, y);
+  if(MEAS.mode === 'pole'){
+    if(LMap.mpp > MEAS_MAX_MPP){ toast('地圖再放大一點,才點得到電桿'); return true; }
+    const p = measPickPole(ll, 22 * LMap.mpp);
+    if(!p){ toast('這附近沒有電桿(那條線路要先開著)'); return true; }
+    const i = MEAS.pts.findIndex(o => o.p && o.p.id === p.id);
+    if(i >= 0) MEAS.pts.splice(i, 1);
+    else if(MEAS.pts.length >= MEAS_MAX){ toast('最多選 ' + MEAS_MAX + ' 支,請先按「退一步」或「清除」'); return true; }
+    else MEAS.pts.push({ lat: p.lat, lng: p.lng, p });
+  } else {
+    const near = nearestPole(ll, 20 * LMap.mpp);
+    MEAS.pts.push(near ? { lat: near.p.lat, lng: near.p.lng, p: near.p } : { lat: ll.lat, lng: ll.lng });
+  }
+  renderMeasBar(); LMap.req(); return true;
+}
+function measureSvg(L){
+  if(!MEAS || !MEAS.pts.length) return '';
+  const pole = MEAS.mode === 'pole', pts = MEAS.pts, legs = measLegs(), f = n => n.toFixed(1);
+  const ps = pts.map(o => L.toScreen(...plane(measRef(o))));
+  let out = '';
+  if(ps.length > 1) out += '<polyline class="meas-ln" points="' + ps.map(q => f(q[0]) + ',' + f(q[1])).join(' ') + '"/>';
+  ps.forEach(([x, y], i) => {
+    out += pole ? '<circle class="meas-pt big" cx="' + f(x) + '" cy="' + f(y) + '" r="11"/><text class="meas-l" x="' + f(x) + '" y="' + f(y + 4) + '" text-anchor="middle">' + measTag(i, true) + '</text>'
+      : '<circle class="meas-pt" cx="' + f(x) + '" cy="' + f(y) + '" r="5"/>';
+  });
+  legs.forEach((g, i) => {
+    const mx = (ps[i][0] + ps[i + 1][0]) / 2, my = (ps[i][1] + ps[i + 1][1]) / 2;
+    out += '<text class="meas-t" x="' + f(mx) + '" y="' + f(my - (pole ? 14 : 6)) + '" text-anchor="middle">' + esc(measFmt(g.d) + (g.al ? '(沿線 ' + measFmt(g.al.d) + ')' : '')) + '</text>';
+  });
+  if(legs.length > 1){ const [x, y] = ps[ps.length - 1]; out += '<text class="meas-t total" x="' + f(x + 8) + '" y="' + f(y + 22) + '">共 ' + esc(measFmt(legs.reduce((s, g) => s + g.d, 0))) + '</text>'; }
+  return out;
+}
+document.addEventListener('click', e => { if(!e.target.closest('#measBtn')) return; if(MEAS) stopMeasure(); else startMeasure(); });
 // ---------- 打線路名稱的一部分,搜尋欄下面就列出相關的線路 ----------
 // 輸入的文字裡「開頭的中文」當線名關鍵字(後面接的桿號會保留),例如 慷榔59-10-3 → 列出 慷榔幹,點了就變成 慷榔幹59-10-3
 // 全台有 1.5 萬條線,名單只整理一次(線路數或自己新增的線有變才重做),每打一個字只做字串比對
