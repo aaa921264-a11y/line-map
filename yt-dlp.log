@@ -1,0 +1,13 @@
+[Instagram] Setting up session
+[Instagram] Extracting URL: https://www.instagram.com/reel/DgC8GDwIxpW/?hvrq=MTd4MDRkbHJmYjM0aA==
+[Instagram] DgC8GDwIxpW: Checking post accessibility
+[Instagram] DgC8GDwIxpW: Downloading webpage
+[info] DgC8GDwIxpW: Downloading 1 format(s): dash-1684775926330764v+dash-1684723389669351a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.fdash-1684775926330764v.mp4
+[download]   0.0% of    3.39MiB at  Unknown B/s ETA Unknown[download]   0.1% of    3.39MiB at  Unknown B/s ETA Unknown[download]   0.2% of    3.39MiB at    3.41MiB/s ETA 00:00  [download]   0.4% of    3.39MiB at  952.99KiB/s ETA 00:03[download]   0.9% of    3.39MiB at    1.37MiB/s ETA 00:02[download]   1.8% of    3.39MiB at    1.73MiB/s ETA 00:01[download]   3.7% of    3.39MiB at    2.40MiB/s ETA 00:01[download]   7.4% of    3.39MiB at    3.64MiB/s ETA 00:00[download]  14.7% of    3.39MiB at    5.86MiB/s ETA 00:00[download]  29.5% of    3.39MiB at    9.85MiB/s ETA 00:00[download]  59.0% of    3.39MiB at   16.93MiB/s ETA 00:00[download] 100.0% of    3.39MiB at   25.64MiB/s ETA 00:00[download] 100% of    3.39MiB in 00:00:00 at 13.05MiB/s  
+[download] Destination: out/video.fdash-1684723389669351a.m4a
+[download]   1.6% of   64.03KiB at  682.78KiB/s ETA 00:00[download]   4.7% of   64.03KiB at    1.47MiB/s ETA 00:00[download]  10.9% of   64.03KiB at    2.90MiB/s ETA 00:00[download]  23.4% of   64.03KiB at  968.53KiB/s ETA 00:00[download]  48.4% of   64.03KiB at    1.37MiB/s ETA 00:00[download]  98.4% of   64.03KiB at    1.74MiB/s ETA 00:00[download] 100.0% of   64.03KiB at    1.75MiB/s ETA 00:00[download] 100% of   64.03KiB in 00:00:00 at 520.32KiB/s 
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.fdash-1684775926330764v.mp4 (pass -k to keep)
+Deleting original file out/video.fdash-1684723389669351a.m4a (pass -k to keep)
