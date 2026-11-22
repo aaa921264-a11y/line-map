@@ -1,0 +1,55 @@
+name: subtitle
+on:
+  workflow_dispatch:
+    inputs:
+      file:
+        description: 影片或音訊檔在儲存庫內的路徑（例如 subtitle-input/a.mp4）
+        required: true
+      lang:
+        description: 原文語言代碼（ja/en/vi/ko/zh，留空自動偵測）
+        required: false
+        default: ''
+permissions:
+  contents: write
+jobs:
+  subtitle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+          pip install -q faster-whisper
+      - name: Transcribe to SRT
+        env:
+          FILE: ${{ github.event.inputs.file }}
+          LANG_CODE: ${{ github.event.inputs.lang }}
+        run: |
+          mkdir -p out
+          ffmpeg -loglevel error -i "$FILE" -vn -ac 1 -ar 16000 -c:a pcm_s16le out/audio.wav
+          python - <<'PY'
+          import os
+          from faster_whisper import WhisperModel
+          def ts(t):
+              ms=int(round(t*1000)); h=ms//3600000; m=ms//60000%60; s=ms//1000%60; r=ms%1000
+              return f"{h:02d}:{m:02d}:{s:02d},{r:03d}"
+          lang=os.environ.get("LANG_CODE") or None
+          m=WhisperModel("small",device="cpu",compute_type="int8")
+          segs,info=m.transcribe("out/audio.wav",language=lang,vad_filter=True,beam_size=1)
+          with open("out/source.srt","w",encoding="utf-8") as f:
+              for i,s in enumerate(segs,1):
+                  f.write(f"{i}\n{ts(s.start)} --> {ts(s.end)}\n{s.text.strip()}\n\n")
+                  f.flush()
+          open("out/lang.txt","w").write(f"{info.language} {info.language_probability:.2f}\n")
+          PY
+          rm -f out/audio.wav
+      - name: Push SRT to branch
+        if: always()
+        run: |
+          cd out
+          git init -q && git checkout -q -b subtitle-results
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com add -A
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "subtitle ${{ github.run_id }}"
+          R="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          git push -f "$R" subtitle-results:subtitle-results
