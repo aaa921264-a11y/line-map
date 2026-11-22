@@ -652,6 +652,13 @@ button,a,summary,label,[data-rec],[data-ss]{-webkit-tap-highlight-color:transpar
   .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px));}
   .notice{bottom:calc(24px + env(safe-area-inset-bottom,0px));}
 }
+/* v10.38 統計/巡視紀錄視窗:長網址、座標自動換行,不准左右滑 */
+.modal.layers .sheet{min-width:0; overflow-x:hidden;}
+.modal.layers .lbody{min-width:0; overflow-x:hidden; overflow-wrap:anywhere; word-break:break-word;}
+.modal.layers .lbody *{min-width:0; max-width:100%;}
+.modal.layers .lbody .item .t{flex-wrap:wrap;}
+.modal.layers .lbody .item .title,.modal.layers .lbody .meta,.modal.layers .lbody .hint{overflow-wrap:anywhere; word-break:break-word; white-space:normal;}
+.modal.layers .lbody svg{max-width:100%;}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -754,7 +761,7 @@ button,a,summary,label,[data-rec],[data-ss]{-webkit-tap-highlight-color:transpar
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261122-164022";
+const SITE_BUILD = "20261122-183903";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
