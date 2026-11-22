@@ -1,0 +1,1 @@
+lang=en p=0.33 model=small dur=12s
