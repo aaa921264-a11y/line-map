@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>拍照辨識事故單</title>
+<style>
+:root{--bg:#eceff2;--sf:#fff;--sf2:#f4f6f8;--ln:#d3d9e0;--fg:#16202a;--mu:#5b6774;--ac:#e8590c;--acw:#fff1e8;--bad:#c23a2b;--badw:#fbe8e5;--ok:#1f7a4c;--okw:#e2f2e9;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;padding-bottom:40px}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px}
+header{position:sticky;top:0;background:var(--bg);padding:10px 0;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ln);z-index:5}
+header h1{font-size:17px;margin:0;flex:1}
+a.back{color:var(--ac);text-decoration:none;font-size:15px;white-space:nowrap}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:10px;padding:14px;margin-top:12px}
+.hint{font-size:13px;color:var(--mu);margin:6px 0 0}
+.btn{border:0;border-radius:8px;padding:11px 14px;min-height:44px;font:inherit;font-weight:600;background:var(--ac);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.ghost{background:var(--sf2);color:var(--fg);border:1px solid var(--ln);font-weight:500}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.5}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.row>.btn{flex:1}
+canvas#view{width:100%;display:block;border-radius:8px;touch-action:none;background:#222}
+.field{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.field>span{font-size:13px;color:var(--mu)}
+.field input{width:100%;padding:10px;border:1px solid var(--ln);border-radius:8px;font:inherit;background:var(--sf2)}
+.field.warn input{border-color:var(--bad);background:var(--badw)}
+.field.warn>span::after{content:" ⚠ 請核對";color:var(--bad);font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{border-radius:8px;padding:9px 11px;font-size:14px;margin-top:10px;background:var(--acw);color:#7a3200}
+.box.bad{background:var(--badw);color:var(--bad)}
+.box.ok{background:var(--okw);color:var(--ok)}
+.bar{height:8px;background:var(--sf2);border-radius:4px;overflow:hidden;margin-top:8px}
+.bar>i{display:block;height:100%;width:0;background:var(--ac);transition:width .2s}
+details{margin-top:10px;font-size:13px;color:var(--mu)}
+pre{white-space:pre-wrap;word-break:break-all;background:var(--sf2);padding:8px;border-radius:6px;max-height:200px;overflow:auto;font-size:12px}
+.check{display:flex;gap:10px;align-items:center;min-height:44px;margin-top:6px}
+.check input{width:22px;height:22px;accent-color:var(--ac)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><a class="back" id="back" href="../beta/?v=10">‹ 回定位地圖</a><h1>📷 拍照辨識事故單</h1></header>
+
+<section class="card" id="s1">
+  <b>1. 拍照或選照片</b>
+  <p class="hint">拍「事故搶修及維護工作處理派工單」。單子盡量占滿畫面、拍正、光線充足、避免反光。目前只支援這種印刷派工單。</p>
+  <div class="row"><span class="btn file wide">📷 拍照 / 選照片<input type="file" id="file" accept="image/*"></span></div>
+  <div class="row"><button class="btn ghost" type="button" id="manual">略過辨識，直接手動填</button></div>
+</section>
+
+<section class="card" id="s2" hidden>
+  <b>2. 框住整張單子（可略過）</b>
+  <p class="hint">在照片上用手指拖出矩形，框住單子的上半部（受理號碼到圖幅座標）就夠了。框越準越清楚。</p>
+  <canvas id="view"></canvas>
+  <div class="row"><button class="btn ghost" type="button" id="rot">轉 90°</button><button class="btn ghost" type="button" id="reset">取消框選</button></div>
+  <div class="row"><button class="btn wide" type="button" id="go">開始辨識</button></div>
+  <div class="box" id="prog" hidden></div>
+  <div class="bar" id="barw" hidden><i id="bar"></i></div>
+  <p class="hint">第一次辨識要下載中文辨識資料（約 20MB，請用 Wi‑Fi），之後會存在手機裡，不用再下載。照片只在這支手機處理，不會上傳。</p>
+</section>
+
+<section class="card" id="s3" hidden>
+  <b>3. 核對辨識結果</b>
+  <p class="hint">辨識不保證正確，請對照單子逐欄修改，標紅的欄位特別要看。</p>
+  <div class="box bad" id="dup" hidden></div>
+  <div id="fields"></div>
+  <details><summary>看辨識出的原始文字</summary><pre id="raw"></pre></details>
+  <label class="check"><input type="checkbox" id="wl" checked><span>同時建立工作日誌草稿（之後再補充）</span></label>
+  <div class="row"><button class="btn ghost" type="button" id="again">重拍</button><button class="btn" type="button" id="send">帶到定位地圖建立事故</button></div>
+  <p class="hint">下一步會回到定位地圖的「新增事故」表單，已填好這些內容，檢查後按「儲存」才會真正存檔。</p>
+</section>
+</div>
+
+<script>
+// ===== 解析：把 OCR 文字變成欄位（純函式，可在 node 測試）=====
+const FIX_D = { O:'0', I:'1', L:'1', S:'5', B:'8', Z:'2', G:'6' };   // 比對前已轉大寫   // 該是數字的位置
+const FIX_L = { '0':'O', '1':'I', '5':'S', '8':'B', '2':'Z', '6':'G' };      // 該是英文的位置
+function normText(t){
+  t = String(t || '').replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/[Ａ-Ｚａ-ｚ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/＃/g, '#').replace(/：/g, ':');
+  for(let i = 0; i < 3; i++) t = t.replace(/([一-鿿]) +(?=[一-鿿])/g, '$1');   // OCR 常在中文字之間插空白
+  return t;
+}
+function fixMapNo(tok, strict){
+  if(!tok || tok.length !== 9) return '';
+  if(strict && !/[A-Za-z]/.test(tok[0])) return '';   // 備援比對：第一碼本來就要是英文字母
+  const L = [0, 5, 6];
+  let out = '';
+  for(let i = 0; i < 9; i++){
+    let c = tok[i].toUpperCase();
+    if(L.includes(i)){ if(/\d/.test(c)) c = FIX_L[c] || c; } else { if(/[A-Z]/.test(c)) c = FIX_D[c] || c; }
+    out += c;
+  }
+  return /^[A-Z]\d{4}[A-Z]{2}\d{2}$/.test(out) ? out : '';
+}
+function parseSheet(raw){
+  const t = normText(raw), f = { receiptNo: '', start: '', customer: '', address: '', summary: '', mapNo: '', line: '', pole: '', tail: '' };
+  // 受理號碼：民國年 3 碼 + 月 2 碼 + 流水 6 碼，共 11 碼（電話、電號以 0 開頭，不會誤抓）
+  const rre = /(^|[^0-9A-Za-z])([0-9lIOo]{11})(?![0-9A-Za-z])/g; let rm;
+  while((rm = rre.exec(t))){ const c = rm[2].replace(/[lI]/g, '1').replace(/[Oo]/g, '0'); if(/^1\d{2}(0[1-9]|1[0-2])\d{6}$/.test(c)){ f.receiptNo = c; break; } }
+  let m;
+  // 受理時間
+  m = t.match(/(20\d{2})[\/\-.](\d{1,2})[\/\-.](\d{1,2})\s*(\d{1,2}):(\d{2})/);
+  if(m) f.start = m[1] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0') + 'T' + String(m[4]).padStart(2, '0') + ':' + m[5];
+  // 圖幅座標：圖號 幹線#桿號 尾碼
+  let pm = t.match(/([一-鿿]{1,6}[幹線支])\s*#\s*(\d+(?:\s*[-－—]\s*\d+)?)\s*([A-Z0-9]{2,4})?/i) || t.match(/([一-鿿]{1,6})\s*#\s*(\d+(?:\s*[-－—]\s*\d+)?)\s*([A-Z0-9]{2,4})?/i);
+  if(pm){
+    f.line = pm[1]; f.pole = '#' + pm[2].replace(/\s*[-－—]\s*/g, '-'); f.tail = (pm[3] || '').toUpperCase();
+    const before = t.slice(Math.max(0, pm.index - 24), pm.index);
+    const toks = before.match(/[A-Za-z0-9]{9}/g) || [];
+    for(let i = toks.length - 1; i >= 0; i--){ const v = fixMapNo(toks[i]); if(v){ f.mapNo = v; break; } }
+  }
+  if(!f.mapNo){ const toks = t.match(/[A-Za-z0-9]{9}/g) || []; for(const k of toks){ const v = fixMapNo(k, true); if(v){ f.mapNo = v; break; } } }
+  // 事故概要：X07 + 中文
+  m = t.match(/X\s?([0-9Oo]{2})\s*([一-鿿（）()\/]{1,14})?/);
+  if(m) f.summary = ('X' + m[1].replace(/[Oo]/g, '0') + (m[2] ? ' ' + m[2] : '')).trim();
+  // 地址：到第一個「號」為止（後面可能黏著電號數字），有「N樓」就一起帶
+  m = t.match(/(?:桃園市|新北市|[臺台]北市|新竹[縣市]|苗栗縣|[臺台]中市|基隆市|宜蘭縣)[一-鿿0-9\-]*?號(?:之\d+)?(?:\d+樓)?/)
+    || t.match(/(?:桃園市|新北市|[臺台]北市|新竹[縣市]|苗栗縣|[臺台]中市|基隆市|宜蘭縣)[一-鿿0-9\-]{3,30}/);
+  if(m) f.address = m[0];
+  // 用戶名：含「公司」的那一行（排除台灣電力）；找不到就留空讓人填
+  for(const line of t.split(/\n/)){
+    if(/台灣電力|臺灣電力/.test(line)) continue;
+    const c = line.match(/[一-鿿]{2,}(?:股份)?有限公司|[一-鿿]{2,}企業社|[一-鿿]{2,}(?:有限)?[一-鿿*＊]司/);
+    if(c){ f.customer = c[0]; break; }
+  }
+  return f;
+}
+if(typeof module !== 'undefined') module.exports = { parseSheet, normText, fixMapNo };
+</script>
+
+<script>
+(function(){
+if(typeof document === 'undefined') return;
+const $ = id => document.getElementById(id);
+const qs = new URLSearchParams(location.search);
+const FROM = qs.get('from') === 'main' ? 'main' : 'beta';
+const BACK = FROM === 'main' ? '../?v=10' : '../beta/?v=10';
+$('back').href = BACK;
+const ACC_URL = 'https://aaa921264-a11y.github.io/Pole-photo/r/acc.json';
+let src = null, rect = null, drag = null, dispScale = 1, accs = null;
+
+// ---- 照片與框選 ----
+function drawView(){
+  const cv = $('view'), W = cv.clientWidth || 520, s = W / src.width; dispScale = s;
+  cv.width = W; cv.height = Math.round(src.height * s);
+  const g = cv.getContext('2d'); g.drawImage(src, 0, 0, cv.width, cv.height);
+  if(rect){
+    g.fillStyle = 'rgba(0,0,0,.45)';
+    g.fillRect(0, 0, cv.width, rect.y); g.fillRect(0, rect.y + rect.h, cv.width, cv.height - rect.y - rect.h);
+    g.fillRect(0, rect.y, rect.x, rect.h); g.fillRect(rect.x + rect.w, rect.y, cv.width - rect.x - rect.w, rect.h);
+    g.strokeStyle = '#ff8a3d'; g.lineWidth = 3; g.strokeRect(rect.x, rect.y, rect.w, rect.h);
+  }
+}
+function loadFile(f){
+  const url = URL.createObjectURL(f), img = new Image();
+  img.onload = () => {
+    const s = Math.min(1, 2600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url); src = c; rect = null;
+    $('s2').hidden = false; $('s3').hidden = true; drawView(); $('s2').scrollIntoView({ behavior: 'smooth' });
+  };
+  img.onerror = () => alert('這張照片讀不到，請換一張');
+  img.src = url;
+}
+$('file').addEventListener('change', e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if(f) loadFile(f); });
+const pt = e => { const r = $('view').getBoundingClientRect(); return { x: Math.max(0, Math.min(r.width, e.clientX - r.left)), y: Math.max(0, Math.min(r.height, e.clientY - r.top)) }; };
+$('view').addEventListener('pointerdown', e => { drag = pt(e); rect = { x: drag.x, y: drag.y, w: 0, h: 0 }; $('view').setPointerCapture(e.pointerId); });
+$('view').addEventListener('pointermove', e => {
+  if(!drag) return; const p = pt(e);
+  rect = { x: Math.min(drag.x, p.x), y: Math.min(drag.y, p.y), w: Math.abs(p.x - drag.x), h: Math.abs(p.y - drag.y) }; drawView();
+});
+$('view').addEventListener('pointerup', () => { drag = null; if(rect && (rect.w < 40 || rect.h < 40)) rect = null; drawView(); });
+$('reset').addEventListener('click', () => { rect = null; drawView(); });
+$('rot').addEventListener('click', () => {
+  const c = document.createElement('canvas'); c.width = src.height; c.height = src.width;
+  const g = c.getContext('2d'); g.translate(c.width, 0); g.rotate(Math.PI / 2); g.drawImage(src, 0, 0); src = c; rect = null; drawView();
+});
+
+// ---- 影像前處理：裁切、放大、灰階、拉開對比 ----
+function prepare(){
+  let sx = 0, sy = 0, sw = src.width, sh = src.height;
+  if(rect){ sx = rect.x / dispScale; sy = rect.y / dispScale; sw = rect.w / dispScale; sh = rect.h / dispScale; }
+  const k = Math.min(2.5, Math.max(0.5, 2000 / Math.max(sw, sh)));
+  const c = document.createElement('canvas'); c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+  const g = c.getContext('2d'); g.drawImage(src, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  const im = g.getImageData(0, 0, c.width, c.height), d = im.data, hist = new Uint32Array(256);
+  for(let i = 0; i < d.length; i += 4){ const v = Math.round(d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114); d[i] = d[i + 1] = d[i + 2] = v; hist[v]++; }
+  const n = c.width * c.height; let lo = 0, hi = 255, acc = 0;
+  for(let v = 0; v < 256; v++){ acc += hist[v]; if(acc > n * 0.01){ lo = v; break; } }
+  acc = 0; for(let v = 255; v >= 0; v--){ acc += hist[v]; if(acc > n * 0.2){ hi = v; break; } }   // 紙是白底，亮部占多數
+  const span = Math.max(40, hi - lo);
+  for(let i = 0; i < d.length; i += 4){ const v = Math.max(0, Math.min(255, Math.round((d[i] - lo) * 255 / span))); d[i] = d[i + 1] = d[i + 2] = v; }
+  g.putImageData(im, 0, 0); return c;
+}
+
+// ---- OCR（Tesseract.js，從 CDN 載入）----
+function loadScript(u){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = () => rej(new Error('載入失敗')); document.head.appendChild(s); }); }
+function setProg(msg, pct){
+  $('prog').hidden = false; $('prog').textContent = msg;
+  $('barw').hidden = pct == null; if(pct != null) $('bar').style.width = Math.round(pct * 100) + '%';
+}
+const STATUS = { 'loading tesseract core': '載入辨識引擎…', 'initializing tesseract': '初始化…', 'loading language traineddata': '下載中文辨識資料…', 'initializing api': '準備中…', 'recognizing text': '辨識中…' };
+$('go').addEventListener('click', async () => {
+  if(!src) return;
+  $('go').disabled = true; setProg('準備中…', 0);
+  let text = '', worker = null;
+  try{
+    if(!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    worker = await Tesseract.createWorker(['chi_tra', 'eng'], 1, { logger: m => setProg((STATUS[m.status] || m.status) + (m.progress != null ? ' ' + Math.round(m.progress * 100) + '%' : ''), m.progress) });
+    await worker.setParameters({ tessedit_pageseg_mode: '6', preserve_interword_spaces: '1' });
+    const r = await worker.recognize(prepare());
+    text = r.data.text || '';
+  }catch(e){
+    setProg('辨識失敗（可能是網路連不到辨識資料），你可以再試一次，或改用手動填寫。', null);
+  }
+  try{ if(worker) await worker.terminate(); }catch(e){}
+  $('go').disabled = false;
+  if(text){ $('prog').hidden = true; $('barw').hidden = true; showConfirm(text); }
+});
+$('manual').addEventListener('click', () => showConfirm(''));
+$('again').addEventListener('click', () => { $('s3').hidden = true; $('s2').hidden = !src; window.scrollTo(0, 0); });
+
+// ---- 確認畫面 ----
+const FIELDS = [
+  ['receiptNo', '受理號碼', 'text', f => !/^1\d{2}(0[1-9]|1[0-2])\d{6}$/.test(f.receiptNo)],
+  ['start', '受理時間', 'datetime-local', f => !f.start],
+  ['customer', '用戶名', 'text', () => false],
+  ['address', '地址', 'text', f => !f.address],
+  ['summary', '事故概要', 'text', f => !f.summary],
+  ['mapNo', '圖號', 'text', f => !/^[A-Z]\d{4}[A-Z]{2}\d{2}$/.test(f.mapNo)],
+  ['line', '幹線', 'text', f => !f.line],
+  ['pole', '桿號', 'text', f => !/^#\d+(-\d+)?$/.test(f.pole)],
+  ['tail', '尾碼（用途待確認，原樣保存）', 'text', () => false]
+];
+function showConfirm(text){
+  const f = parseSheet(text);
+  $('raw').textContent = text || '（沒有辨識文字，請手動填寫）';
+  $('fields').innerHTML = FIELDS.map(([k, label, type, bad]) => '<label class="field' + (text && bad(f) ? ' warn' : '') + '"><span>' + label + '</span><input type="' + type + '" id="f-' + k + '" value="' + String(f[k] || '').replace(/"/g, '&quot;') + '"></label>').join('');
+  $('s3').hidden = false; $('s3').scrollIntoView({ behavior: 'smooth' });
+  checkDup();
+}
+const val = k => $('f-' + k).value.trim();
+async function checkDup(){
+  const box = $('dup'); box.hidden = true;
+  const no = val('receiptNo'); if(!no) return;
+  try{
+    if(!accs){ const r = await fetch(ACC_URL + '?t=' + Date.now(), { cache: 'no-store' }); accs = r.ok ? await r.json() : {}; }
+    const hit = Object.values(accs).find(a => a.receiptNo === no);
+    if(hit){ box.hidden = false; box.textContent = '已經有受理號碼 ' + no + ' 的事故紀錄（' + (hit.line || '') + ' ' + (hit.pole || '') + '），請確認不是重複建立。'; }
+  }catch(e){}
+}
+$('fields').addEventListener('change', e => { if(e.target.id === 'f-receiptNo') checkDup(); });
+
+// ---- 帶回定位地圖（同一個網站，localStorage 共用）----
+$('send').addEventListener('click', () => {
+  if(!val('start') || !(val('line') || val('mapNo'))){ alert('請至少確認「受理時間」和「幹線」或「圖號」'); return; }
+  const note = ['受理號碼 ' + val('receiptNo'), val('customer') ? '用戶 ' + val('customer') : '', val('address') ? '地址 ' + val('address') : '',
+    '圖幅座標 ' + [val('mapNo'), val('line') + val('pole'), val('tail')].filter(Boolean).join(' '), val('summary') ? '概要 ' + val('summary') : ''].filter(l => !/ $/.test(l)).join('\n');
+  const pre = { line: val('line'), pole: val('pole'), types: val('summary') ? [val('summary')] : [], start: val('start'), note,
+    receiptNo: val('receiptNo'), customer: val('customer'), address: val('address'), mapNo: val('mapNo'), mapTail: val('tail'), source: 'scan' };
+  try{ localStorage.setItem('lm:scan', JSON.stringify({ at: Date.now(), pre, withLog: $('wl').checked })); }
+  catch(e){ alert('這支手機無法暫存資料（可能是無痕模式），請改用一般瀏覽模式。'); return; }
+  location.href = BACK + '#scan';
+});
+})();
+</script>
+</body>
+</html>
