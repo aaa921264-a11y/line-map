@@ -1,0 +1,9 @@
+title: 關系設計機制全剖析，通過五種稟賦效應，讓關系出現不可失去感。
+description: 關系設計機制全剖析，通過五種稟賦效應，讓關系出現不可失去感。
+uploader: 台球裁判罗小千
+upload_date: 20261002
+duration: 919.789
+view_count: 16935
+like_count: None
+comment_count: None
+webpage_url: https://m.facebook.com/watch/?v=2389028118298345&_rdr
