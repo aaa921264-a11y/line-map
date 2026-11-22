@@ -68,7 +68,7 @@ def main():
     s = once(s, "      msg = (edit ? '更新' : '新增') + '事故 ' + r.line + ' ' + r.pole;", "      msg = (edit ? '更新' : '新增') + '事故 ' + r.line + ' ' + r.pole + (scanLogMade ? '(含工作日誌草稿)' : '');", '事故 commit 訊息')
     s = once(s, "    let msg = '';\n    if(kind === 'acc'){", "    let msg = '', scanLogMade = false;\n    if(kind === 'acc'){", 'msg 宣告')
     # 4) 開啟時檢查有沒有辨識結果
-    s = once(s, '  showVersion();\n} else blockPage();', '  showVersion();\n  scanHandoff();\n} else blockPage();', '啟動區塊')
+    s = once(s, '\n  showVersion();\n', '\n  showVersion();\n  try{ scanHandoff(); }catch(e){}\n', '啟動區塊')
     # 5) 版本
     if build:
         s, n = re.subn(r'const SITE_BUILD = "\d{8}-\d{6}";', 'const SITE_BUILD = "%s";' % build, s)
