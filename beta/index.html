@@ -597,6 +597,61 @@ html.rec-open{overflow:hidden;}
 .mb-b{display:flex; flex-wrap:wrap; gap:6px; margin-left:auto;}
 .mb-b button{pointer-events:auto; white-space:nowrap; font:inherit; font-size:12.5px; min-height:34px; padding:3px 8px; border-radius:8px; border:1px solid var(--line); background:var(--surface-2); color:var(--fg); cursor:pointer;}
 .mb-b button[data-m="done"]{background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:700;}
+/* ==== v10.37 全平台適配:iPhone/Android 手機與平板、Windows/Mac 電腦 ==== */
+html{-webkit-text-size-adjust:100%; text-size-adjust:100%;}
+button,a,summary,label,[data-rec],[data-ss]{-webkit-tap-highlight-color:transparent; touch-action:manipulation;}
+.modal,.modal .sheet,.modal.layers .lbody,.lm-panel,.qhist{overscroll-behavior:contain;}
+/* 舊版 iPhone(iOS 15.3 以前)、舊版 Android Chrome 不認得 dvh:用 vh 頂替 */
+@supports not (height:1dvh){
+  .modal.layers .sheet{max-height:100vh;}
+  .modal.sc .sheet{max-height:86vh;}
+}
+/* 手機橫拿:瀏海不擋左右兩側 */
+.app{padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));}
+.top{margin-left:calc(-1 * max(16px, env(safe-area-inset-left,0px))); margin-right:calc(-1 * max(16px, env(safe-area-inset-right,0px)));
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));}
+/* 地圖按鈕太多、地圖又矮時往左排成第二欄,不會被切掉 */
+.map-ctl{flex-flow:column wrap-reverse; align-content:flex-start; max-height:calc(100% - 16px);}
+/* 電腦滑鼠:按鈕有滑過效果,捲軸細一點 */
+@media (hover:hover) and (pointer:fine){
+  .btn:not(:disabled):hover,.chip:hover,.map-ctl button:hover,.meas-btn:hover,.lm-tabs button:hover,.sc-grid button:hover,.qh-go:hover{filter:brightness(.94);}
+  .item[data-id]:hover,.lrow:hover{background:var(--surface-2);}
+  .lm-panel,.modal.layers .lbody,.qhist{scrollbar-width:thin;}
+}
+/* 平板直拿:欄寬放寬一點 */
+@media (min-width:700px){ .app{max-width:760px;} .notice{max-width:736px;} }
+/* 手機橫拿(畫面矮):地圖幾乎占滿一個畫面高 */
+@media (orientation:landscape) and (max-height:540px) and (max-width:1099.98px){
+  .lm .map{height:max(220px, calc(100vh - 70px)); height:max(220px, calc(100dvh - 70px));}
+  .top{position:relative; top:0;}
+}
+/* 電腦與橫拿平板:左邊地圖、右邊側邊欄 */
+@media (min-width:900px) and (min-height:541px){
+  html,body{height:100%;}
+  :root{padding-top:0; padding-bottom:0;}
+  .app.lm{max-width:none; margin:0; height:100vh; height:100dvh; overflow:hidden;
+    padding:0 max(16px, env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px, env(safe-area-inset-left,0px));
+    display:grid; grid-template-columns:minmax(0,1fr) clamp(360px, 30vw, 460px);
+    grid-template-rows:auto auto auto auto minmax(0,1fr) auto; column-gap:16px;}
+  .app.lm > .top{grid-column:1 / -1; grid-row:1; position:relative; top:0; padding-top:calc(8px + env(safe-area-inset-top,0px));}
+  .app.lm > .lm-tabs{grid-column:2; grid-row:2;}
+  .app.lm > .lm-admin{grid-column:1 / -1; grid-row:3; max-width:640px;}
+  .app.lm > .searchbar{grid-column:2; grid-row:4;}
+  .app.lm > .map-wrap{grid-column:1; grid-row:2 / 6; margin:12px 0 0; display:flex; flex-direction:column; min-height:0;}
+  .app.lm > .map-wrap > .map{flex:1 1 auto; height:auto; min-height:0;}
+  .app.lm > .legend{grid-column:1; grid-row:6; margin:6px 0 8px;}
+  .app.lm > #mapOutside{grid-column:2; grid-row:6;}
+  .app.lm > .lm-panel{grid-column:2; grid-row:5; min-height:0; overflow-y:auto; margin:10px -8px 0 0; padding:0 8px 24px 0;}
+  .qhist{max-height:min(60vh, 520px);}
+  /* 巡視紀錄、搜尋統計、圖層:從右邊滑出的側邊面板,左邊地圖仍看得到 */
+  .modal.layers{justify-content:flex-end; background:rgba(10,14,18,.35);}
+  .modal.layers .sheet{margin:0; max-width:min(560px, 50vw); box-shadow:-8px 0 28px rgba(0,0,0,.25);}
+  .modal.sc{align-items:center;}
+  .modal.sc .sheet{border-radius:18px;}
+  .modal:not(.layers):not(.photo){align-items:center;}
+  .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px));}
+  .notice{bottom:calc(24px + env(safe-area-inset-bottom,0px));}
+}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -663,7 +718,7 @@ html.rec-open{overflow:hidden;}
   <section class="lm-panel">
     <div class="card" id="gpsStart">
       <h2>開始定位</h2>
-      <p class="hint" style="margin:0 0 10px">按下後 iPhone 會問「是否允許取用位置」,請選「允許」。地圖會顯示你的藍點,並告訴你最近的是哪一支桿。</p>
+      <p class="hint" style="margin:0 0 10px">按下後手機或電腦會問「是否允許取用位置」,請選「允許」。地圖會顯示你的藍點,並告訴你最近的是哪一支桿。</p>
       <button class="btn wide" type="button" id="gpsGo">開始定位</button>
     </div>
     <div class="warnbox" id="gpsErr" hidden></div>
@@ -699,7 +754,7 @@ html.rec-open{overflow:hidden;}
 (function(){
 'use strict';
 const HAS_ROADS = false;
-const SITE_BUILD = "20261121-074500";
+const SITE_BUILD = "20261122-164022";
 const DATA_BASE_OVERRIDE = '../';
 const MAP_REGION = { name: '台灣', s: 21.85, n: 26.45, w: 118.15, e: 122.05 };
 const MAP_COUNTIES = [["基隆市", 25.11, 121.72], ["臺北市", 25.06, 121.56], ["新北市", 24.98, 121.62], ["桃園市", 24.93, 121.22], ["新竹市", 24.8, 120.97], ["新竹縣", 24.7, 121.15], ["苗栗縣", 24.5, 120.9], ["臺中市", 24.2, 120.85], ["彰化縣", 23.99, 120.48], ["南投縣", 23.85, 120.95], ["雲林縣", 23.7, 120.38], ["嘉義市", 23.48, 120.45], ["嘉義縣", 23.42, 120.6], ["臺南市", 23.15, 120.3], ["高雄市", 22.9, 120.5], ["屏東縣", 22.55, 120.62], ["宜蘭縣", 24.62, 121.62], ["花蓮縣", 23.75, 121.42], ["臺東縣", 22.95, 121.1], ["澎湖縣", 23.57, 119.6], ["金門縣", 24.44, 118.35], ["連江縣", 26.16, 119.95]];
@@ -2721,7 +2776,8 @@ function onGpsErr(err){
     stopGps();
     try{ localStorage.removeItem('lm:gpsOk'); }catch(e){}
     showGpsErr('<b>沒有定位權限。</b>iPhone 請到「設定 → 隱私權與安全性 → 定位服務」確認已開啟,並在下方「Safari 網站」選「使用 App 期間」;'
-      + '再回到這頁,按網址列左邊的「大小」圖示 →「網站設定」→ 位置選「允許」。Android 請在 Chrome 網址列左邊的鎖頭 → 權限 → 位置 → 允許。設定好後按「開始定位」。');
+      + '再回到這頁,按網址列左邊的「大小」圖示 →「網站設定」→ 位置選「允許」。Android 請在 Chrome 網址列左邊的鎖頭 → 權限 → 位置 → 允許。'
+      + '電腦請按網址列左邊的鎖頭或設定圖示 → 位置 → 允許;Windows 另需在「設定 → 隱私權與安全性 → 位置」開啟,Mac 另需在「系統設定 → 隱私權與安全性 → 定位服務」開啟這個瀏覽器。設定好後按「開始定位」。');
   } else if(err.code === 3){
     setChip('等待 GPS 訊號…', true);   // keep watching; it often comes back
   } else {
