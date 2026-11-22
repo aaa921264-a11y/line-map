@@ -1,0 +1,52 @@
+name: 套用拍照辨識補丁
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: '要修改哪一個檔案（先測試版、確認後再正式版）'
+        type: choice
+        default: index.html
+        options:
+          - index.html
+          - beta/index.html
+      ver:
+        description: '版本號（顯示在網頁底部）'
+        type: string
+        default: v10.33
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 檢查需要的檔案都在
+        run: |
+          test -f scan/index.html || { echo "缺少 scan/index.html，請先上傳"; exit 1; }
+          test -f tools/apply_scan_patch.py || { echo "缺少 tools/apply_scan_patch.py，請先上傳"; exit 1; }
+          test -f "$TARGET" || { echo "找不到 $TARGET"; exit 1; }
+        env:
+          TARGET: ${{ inputs.target }}
+
+      - name: 套用補丁
+        run: |
+          BUILD=$(TZ=Asia/Taipei date +%Y%m%d-%H%M%S)
+          python3 -I tools/apply_scan_patch.py "$TARGET" "$BUILD" "$VER"
+        env:
+          TARGET: ${{ inputs.target }}
+          VER: ${{ inputs.ver }}
+
+      - name: 提交
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then echo "沒有任何變更"; exit 0; fi
+          git commit -m "加入拍照辨識事故單入口（$TARGET）"
+          git push
+        env:
+          TARGET: ${{ inputs.target }}
