@@ -1,0 +1,15 @@
+[generic] Extracting URL: https://www.facebook.com/share/v/1CZcfAfvZB/?mibextid=wwXIfr
+[generic] ?mibextid=wwXIfr: Downloading webpage
+[redirect] Following redirect to https://www.facebook.com/reel/1958160811533662/?fs=e&mibextid=wwXIfr&rdid=qQDT269GIIilONMp&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2Fv%2F1CZcfAfvZB%2F%3Fmibextid%3DwwXIfr
+[facebook:reel] Extracting URL: https://www.facebook.com/reel/1958160811533662/?fs=e&mibextid=wwXIfr&rdid=qQDT269GIIilONMp&share_...%3Fmibextid%3DwwXIfr
+[facebook] Extracting URL: https://m.facebook.com/watch/?v=1958160811533662&_rdr
+[facebook] 1958160811533662: Downloading webpage
+[info] 1958160811533662: Downloading 1 format(s): 1067464872860806v+1067463636194263a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.f1067464872860806v.mp4
+[download]   0.0% of   17.70MiB at  Unknown B/s ETA Unknown[download]   0.0% of   17.70MiB at  130.54KiB/s ETA 02:18  [download]   0.0% of   17.70MiB at  299.69KiB/s ETA 01:00[download]   0.1% of   17.70MiB at  637.85KiB/s ETA 00:28[download]   0.2% of   17.70MiB at  951.05KiB/s ETA 00:19[download]   0.3% of   17.70MiB at    1.16MiB/s ETA 00:15[download]   0.7% of   17.70MiB at    1.65MiB/s ETA 00:10[download]   1.4% of   17.70MiB at    2.51MiB/s ETA 00:06[download]   2.8% of   17.70MiB at    4.08MiB/s ETA 00:04[download]   5.6% of   17.70MiB at    2.75MiB/s ETA 00:06[download]  11.3% of   17.70MiB at    5.04MiB/s ETA 00:03[download]  22.6% of   17.70MiB at    9.42MiB/s ETA 00:01[download]  45.2% of   17.70MiB at   17.82MiB/s ETA 00:00[download]  67.8% of   17.70MiB at   22.93MiB/s ETA 00:00[download]  90.4% of   17.70MiB at   27.53MiB/s ETA 00:00[download] 100.0% of   17.70MiB at   27.25MiB/s ETA 00:00[download] 100% of   17.70MiB in 00:00:00 at 21.16MiB/s  
+[download] Destination: out/video.f1067463636194263a.m4a
+[download]   0.0% of    4.31MiB at  Unknown B/s ETA Unknown[download]   0.1% of    4.31MiB at  Unknown B/s ETA Unknown[download]   0.2% of    4.31MiB at  Unknown B/s ETA Unknown[download]   0.3% of    4.31MiB at  Unknown B/s ETA Unknown[download]   0.7% of    4.31MiB at   27.20MiB/s ETA 00:00  [download]   1.4% of    4.31MiB at   47.80MiB/s ETA 00:00[download]   2.9% of    4.31MiB at   82.18MiB/s ETA 00:00[download]   5.8% of    4.31MiB at  130.32MiB/s ETA 00:00[download]  11.6% of    4.31MiB at  205.08MiB/s ETA 00:00[download]  23.2% of    4.31MiB at  251.75MiB/s ETA 00:00[download]  46.4% of    4.31MiB at   67.38MiB/s ETA 00:00[download]  92.7% of    4.31MiB at   66.16MiB/s ETA 00:00[download] 100.0% of    4.31MiB at   69.95MiB/s ETA 00:00[download] 100% of    4.31MiB in 00:00:00 at 12.14MiB/s  
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.f1067464872860806v.mp4 (pass -k to keep)
+Deleting original file out/video.f1067463636194263a.m4a (pass -k to keep)
