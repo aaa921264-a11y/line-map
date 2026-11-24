@@ -1,0 +1,11 @@
+lang=pt p=0.95 model=small dur=30s
+[12s] mas costou R$100,00
+[14s] você pagou R$400,00
+[16s] então quem comeu o resto?
+[16s] eu levo o gelo
+[18s] R$12,00 de gelo
+[18s] R$80,00 de picanha
+[20s] faço o pixi depois
+[22s] até hoje, nada
+[22s] pagou, levou, comeu
+[24s] pixi, sem pixi, sem picanha
