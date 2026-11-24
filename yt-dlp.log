@@ -1,0 +1,13 @@
+[Instagram] Setting up session
+[Instagram] Extracting URL: https://www.instagram.com/reel/DfoyE7Qya2S/?cnvx=MWZiOXJmYXk3YTlkOQ==
+[Instagram] DfoyE7Qya2S: Checking post accessibility
+[Instagram] DfoyE7Qya2S: Downloading webpage
+[info] DfoyE7Qya2S: Downloading 1 format(s): dash-985073120881512v+dash-985072494214908a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.fdash-985073120881512v.mp4
+[download]   0.0% of    9.10MiB at  Unknown B/s ETA Unknown[download]   0.0% of    9.10MiB at  Unknown B/s ETA Unknown[download]   0.1% of    9.10MiB at    5.71MiB/s ETA 00:01  [download]   0.2% of    9.10MiB at    8.86MiB/s ETA 00:01[download]   0.3% of    9.10MiB at   14.61MiB/s ETA 00:00[download]   0.7% of    9.10MiB at   20.50MiB/s ETA 00:00[download]   1.4% of    9.10MiB at   28.70MiB/s ETA 00:00[download]   2.7% of    9.10MiB at   39.53MiB/s ETA 00:00[download]   5.5% of    9.10MiB at   59.64MiB/s ETA 00:00[download]  11.0% of    9.10MiB at   78.24MiB/s ETA 00:00[download]  22.0% of    9.10MiB at   97.16MiB/s ETA 00:00[download]  43.9% of    9.10MiB at  115.75MiB/s ETA 00:00[download]  87.9% of    9.10MiB at  132.71MiB/s ETA 00:00[download] 100.0% of    9.10MiB at  136.20MiB/s ETA 00:00[download] 100% of    9.10MiB in 00:00:00 at 14.04MiB/s  
+[download] Destination: out/video.fdash-985072494214908a.m4a
+[download]   0.2% of  535.46KiB at  199.66KiB/s ETA 00:02[download]   0.6% of  535.46KiB at  548.68KiB/s ETA 00:00[download]   1.3% of  535.46KiB at    1.18MiB/s ETA 00:00[download]   2.8% of  535.46KiB at    2.40MiB/s ETA 00:00[download]   5.8% of  535.46KiB at    4.59MiB/s ETA 00:00[download]  11.8% of  535.46KiB at    7.77MiB/s ETA 00:00[download]  23.7% of  535.46KiB at   13.80MiB/s ETA 00:00[download]  47.6% of  535.46KiB at   20.70MiB/s ETA 00:00[download]  95.4% of  535.46KiB at    1.23MiB/s ETA 00:00[download] 100.0% of  535.46KiB at    1.28MiB/s ETA 00:00[download] 100% of  535.46KiB in 00:00:00 at 1.08MiB/s   
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.fdash-985073120881512v.mp4 (pass -k to keep)
+Deleting original file out/video.fdash-985072494214908a.m4a (pass -k to keep)
