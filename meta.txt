@@ -1,0 +1,23 @@
+title: Video by kwons_en
+description: 裝了這四個，我的 Claude Code 才算真的能用。
+
+前兩個是止血：
+① OmniRoute —— 撞到上限自動換一個模型，工作不斷線。GitHub 63,153 顆星，MIT，免費。
+② claude-mem —— 不用每開一個新對話就重講一次你做到哪裡。93,548 顆星。
+
+後兩個是加分：
+③ playwright —— Claude 看不到你的螢幕，這個讓它自己開網頁、自己看。
+④ frontend-design —— Anthropic 官方的，做出來的頁面不會一看就知道是 AI 做的。
+
+不用四個都裝。裝對前兩個，差別就出來了。
+
+四個的安裝指令我整理成一頁了，留言「外掛」我私訊給你。
+
+#claudecode #ai工具 #vibecoding #程式 #開發者
+uploader: Kwon 永誠｜AI Agent 企業導入顧問
+upload_date: 20260910
+duration: None
+view_count: None
+like_count: 1226
+comment_count: 3014
+webpage_url: https://www.instagram.com/reel/DdG8gbitxGp/?knvt=MWZkOGU3c3c1emwxNw==

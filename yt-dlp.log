@@ -1,0 +1,13 @@
+[Instagram] Setting up session
+[Instagram] Extracting URL: https://www.instagram.com/reel/DdG8gbitxGp/?knvt=MWZkOGU3c3c1emwxNw==
+[Instagram] DdG8gbitxGp: Checking post accessibility
+[Instagram] DdG8gbitxGp: Downloading webpage
+[info] DdG8gbitxGp: Downloading 1 format(s): dash-1084272553969712v+dash-1084272017303099a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.fdash-1084272553969712v.mp4
+[download]   0.0% of    5.20MiB at  811.91KiB/s ETA 00:06[download]   0.1% of    5.20MiB at    1.80MiB/s ETA 00:02[download]   0.1% of    5.20MiB at    1.38MiB/s ETA 00:03[download]   0.3% of    5.20MiB at  273.85KiB/s ETA 00:19[download]   0.6% of    5.20MiB at  429.44KiB/s ETA 00:12[download]   1.2% of    5.20MiB at  520.11KiB/s ETA 00:10[download]   2.4% of    5.20MiB at  724.22KiB/s ETA 00:07[download]   4.8% of    5.20MiB at    1.09MiB/s ETA 00:04[download]   9.6% of    5.20MiB at    1.75MiB/s ETA 00:02[download]  19.2% of    5.20MiB at    2.95MiB/s ETA 00:01[download]  38.5% of    5.20MiB at    5.06MiB/s ETA 00:00[download]  77.0% of    5.20MiB at    8.87MiB/s ETA 00:00[download] 100.0% of    5.20MiB at   11.03MiB/s ETA 00:00[download] 100% of    5.20MiB in 00:00:00 at 6.43MiB/s   
+[download] Destination: out/video.fdash-1084272017303099a.m4a
+[download]   0.2% of  479.43KiB at  Unknown B/s ETA Unknown[download]   0.6% of  479.43KiB at  Unknown B/s ETA Unknown[download]   1.5% of  479.43KiB at    1.98MiB/s ETA 00:00  [download]   3.1% of  479.43KiB at  988.93KiB/s ETA 00:00[download]   6.5% of  479.43KiB at  427.75KiB/s ETA 00:01[download]  13.1% of  479.43KiB at  539.71KiB/s ETA 00:00[download]  26.5% of  479.43KiB at  734.41KiB/s ETA 00:00[download]  53.2% of  479.43KiB at    1.10MiB/s ETA 00:00[download] 100.0% of  479.43KiB at    1.69MiB/s ETA 00:00[download] 100% of  479.43KiB in 00:00:00 at 687.47KiB/s 
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.fdash-1084272553969712v.mp4 (pass -k to keep)
+Deleting original file out/video.fdash-1084272017303099a.m4a (pass -k to keep)
