@@ -1,0 +1,57 @@
+[ {
+   "description": "",
+   "devtoolsFrontendUrl": "https://chrome-devtools-frontend.appspot.com/serve_rev/@4b3d0dabb8250b6f152d2d85d79e7706e309d087/inspector.html?ws=127.0.0.1:9222/devtools/page/6676F001B3A603158159EB4DF83C0CD0",
+   "id": "6676F001B3A603158159EB4DF83C0CD0",
+   "title": "Chrome 線上應用程式商店付款系統",
+   "type": "background_page",
+   "url": "chrome-extension://nmmhkkegccagdldgiimedpiccmgmieda/_generated_background_page.html",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/page/6676F001B3A603158159EB4DF83C0CD0"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://chrome-devtools-frontend.appspot.com/serve_rev/@4b3d0dabb8250b6f152d2d85d79e7706e309d087/inspector.html?ws=127.0.0.1:9222/devtools/page/5D4EE82089CB1D092D6E76777F9D40CD",
+   "id": "5D4EE82089CB1D092D6E76777F9D40CD",
+   "title": "無法開啟",
+   "type": "page",
+   "url": "https://aaa921264-a11y.github.io/line-map/",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/page/5D4EE82089CB1D092D6E76777F9D40CD"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://chrome-devtools-frontend.appspot.com/serve_rev/@4b3d0dabb8250b6f152d2d85d79e7706e309d087/inspector.html?ws=127.0.0.1:9222/devtools/page/AC6F1CC2001117E32AACDD6ED8A57D01",
+   "id": "AC6F1CC2001117E32AACDD6ED8A57D01",
+   "title": "Omnibox Popup",
+   "type": "browser_ui",
+   "url": "chrome://omnibox-popup.top-chrome/",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/page/AC6F1CC2001117E32AACDD6ED8A57D01"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://chrome-devtools-frontend.appspot.com/serve_rev/@4b3d0dabb8250b6f152d2d85d79e7706e309d087/worker_app.html?ws=127.0.0.1:9222/devtools/page/7ED31A04E3980B070FD7FDDD22C527B1",
+   "id": "7ED31A04E3980B070FD7FDDD22C527B1",
+   "title": "Service Worker chrome-extension://nkeimhogjdpnpccoofpliimaahmaaome/thunk.js",
+   "type": "service_worker",
+   "url": "chrome-extension://nkeimhogjdpnpccoofpliimaahmaaome/thunk.js",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/page/7ED31A04E3980B070FD7FDDD22C527B1"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://chrome-devtools-frontend.appspot.com/serve_rev/@4b3d0dabb8250b6f152d2d85d79e7706e309d087/worker_app.html?ws=127.0.0.1:9222/devtools/page/B16AC1519D5599DD0EE557B726C4F612",
+   "id": "B16AC1519D5599DD0EE557B726C4F612",
+   "title": "Service Worker chrome-extension://admccjkmockfdflocgggjfgdacdodkdf/background.js",
+   "type": "service_worker",
+   "url": "chrome-extension://admccjkmockfdflocgggjfgdacdodkdf/background.js",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/page/B16AC1519D5599DD0EE557B726C4F612"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://chrome-devtools-frontend.appspot.com/serve_rev/@4b3d0dabb8250b6f152d2d85d79e7706e309d087/worker_app.html?ws=127.0.0.1:9222/devtools/page/A83097059B5578C31691912EF7F59357",
+   "id": "A83097059B5578C31691912EF7F59357",
+   "title": "Service Worker chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/service_worker.js",
+   "type": "service_worker",
+   "url": "chrome-extension://fignfifoniblkonapihmkfakmlgkbkcf/service_worker.js",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/page/A83097059B5578C31691912EF7F59357"
+}, {
+   "description": "",
+   "devtoolsFrontendUrl": "https://chrome-devtools-frontend.appspot.com/serve_rev/@4b3d0dabb8250b6f152d2d85d79e7706e309d087/worker_app.html?ws=127.0.0.1:9222/devtools/page/A138055B01F48369FBAC68517151C50F",
+   "id": "A138055B01F48369FBAC68517151C50F",
+   "title": "Service Worker chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
+   "type": "service_worker",
+   "url": "chrome-extension://ghbmnnjooekpmoecnnnilnnbdlolhkhi/service_worker_bin_prod.js",
+   "webSocketDebuggerUrl": "ws://127.0.0.1:9222/devtools/page/A138055B01F48369FBAC68517151C50F"
+} ]
