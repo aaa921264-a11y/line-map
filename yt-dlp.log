@@ -1,0 +1,12 @@
+[facebook:reel] Extracting URL: https://www.facebook.com/reel/1534956928684995
+[facebook] Extracting URL: https://m.facebook.com/watch/?v=1534956928684995&_rdr
+[facebook] 1534956928684995: Downloading webpage
+[info] 1534956928684995: Downloading 1 format(s): 1374405177979368v+1374334834653069a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.f1374405177979368v.mp4
+[download]   0.0% of    3.07MiB at  Unknown B/s ETA Unknown[download]   0.1% of    3.07MiB at  Unknown B/s ETA Unknown[download]   0.2% of    3.07MiB at  217.55KiB/s ETA 00:14  [download]   0.5% of    3.07MiB at  461.02KiB/s ETA 00:06[download]   1.0% of    3.07MiB at  666.90KiB/s ETA 00:04[download]   2.0% of    3.07MiB at  862.45KiB/s ETA 00:03[download]   4.0% of    3.07MiB at    1.19MiB/s ETA 00:02[download]   8.1% of    3.07MiB at    1.83MiB/s ETA 00:01[download]  16.3% of    3.07MiB at    2.98MiB/s ETA 00:00[download]  32.5% of    3.07MiB at    5.01MiB/s ETA 00:00[download]  65.1% of    3.07MiB at    8.65MiB/s ETA 00:00[download] 100.0% of    3.07MiB at   12.21MiB/s ETA 00:00[download] 100% of    3.07MiB in 00:00:00 at 7.41MiB/s   
+[download] Destination: out/video.f1374334834653069a.m4a
+[download]   0.5% of  187.79KiB at  Unknown B/s ETA Unknown[download]   1.6% of  187.79KiB at  Unknown B/s ETA Unknown[download]   3.7% of  187.79KiB at    6.27MiB/s ETA 00:00  [download]   8.0% of  187.79KiB at   10.63MiB/s ETA 00:00[download]  16.5% of  187.79KiB at   17.64MiB/s ETA 00:00[download]  33.5% of  187.79KiB at   29.28MiB/s ETA 00:00[download]  67.6% of  187.79KiB at   48.25MiB/s ETA 00:00[download] 100.0% of  187.79KiB at   57.27MiB/s ETA 00:00[download] 100% of  187.79KiB in 00:00:00 at 4.61MiB/s   
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.f1374405177979368v.mp4 (pass -k to keep)
+Deleting original file out/video.f1374334834653069a.m4a (pass -k to keep)
