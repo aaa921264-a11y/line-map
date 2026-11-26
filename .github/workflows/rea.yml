@@ -58,14 +58,7 @@ jobs:
         timeout-minutes: 25
         run: |
           cd work
-          # 先開始觀察，再重新整理分頁，才錄得到載入時的網路請求
-          timeout 180 rea inspect-web-page $EP "$TID" --allowed-origins "$(python3 -c "import sys,urllib.parse as u;p=u.urlparse(sys.argv[1]);print(p.scheme+'://'+p.netloc)" "$T")" --observation-ms 20000 --include-script-sources --include-json-body-shapes --include-storage-keys --include-console-text --format json > ../out/page.json 2> ../out/page.err &
-          P=$!
-          sleep 4
-          WS=$(python3 -c "import json;t=[x for x in json.load(open('../out/targets.json')) if x['id']=='$TID'];print(t[0]['webSocketDebuggerUrl'])")
-          node -e 'const w=new WebSocket(process.argv[1]);w.onopen=()=>{w.send(JSON.stringify({id:1,method:"Page.reload",params:{ignoreCache:true}}));setTimeout(()=>process.exit(0),1500)};w.onerror=e=>{console.error(e.message);process.exit(1)}' "$WS" "$T" || true
-          wait $P || true
-          sleep 3
+          timeout 180 rea inspect-web-page $EP "$TID" --observation-ms 8000 --include-script-sources --include-json-body-shapes --include-storage-keys --include-console-text --format json > ../out/page.json 2> ../out/page.err || true
           timeout 120 rea capture-web-screenshot $EP "$TID" --format json > ../out/screenshot.json 2> ../out/screenshot.err || true
           timeout 900 rea analyze-web-bundle $EP "$TID" --observation-ms 3000 --fetch-source-maps \
             --format json > ../out/bundle.json 2> ../out/bundle.err || true
