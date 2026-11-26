@@ -3,11 +3,15 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 要分析的網址（或可下載的檔案網址）
+        description: 要分析的網址（網站）或可下載的檔案網址
         required: false
         default: ""
+      mode:
+        description: web（分析網站）／file（下載檔案後 rea analyze）／custom（自訂指令）／help
+        required: false
+        default: web
       args:
-        description: rea 子指令與參數（用 {T} 代表目標；留空只輸出說明）
+        description: custom 模式的 rea 參數；{T}=目標、{EP}=瀏覽器端點、{TID}=分頁 ID
         required: false
         default: ""
 permissions:
@@ -16,56 +20,82 @@ jobs:
   rea:
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    env:
+      T: ${{ github.event.inputs.target }}
+      MODE: ${{ github.event.inputs.mode }}
+      A: ${{ github.event.inputs.args }}
+      EP: http://127.0.0.1:9222
     steps:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install REA
         run: |
-          mkdir -p out
-          npm install --global rea-agents 2>&1 | tail -5 | tee out/install.log
-          rea --version 2>&1 | tee out/version.txt || true
+          mkdir -p out work
+          npm install --global rea-agents 2>&1 | tail -3 > out/install.log
+          { echo "target: $T"; echo "mode: $MODE"; echo "rea: $(rea --version 2>&1)"; } > out/source.txt
       - name: Help
-        continue-on-error: true
+        if: env.MODE == 'help'
         run: |
           rea --help > out/help.txt 2>&1 || true
-          for c in $(rea --help 2>/dev/null | grep -oE '^\s{2,}[a-z][a-z0-9-]+' | awk '{print $1}' | sort -u); do
-            echo "===== $c =====" >> out/help-all.txt
-            timeout 20 rea "$c" --help >> out/help-all.txt 2>&1 || true
-          done
           timeout 60 rea doctor > out/doctor.txt 2>&1 || true
-      - name: Prepare target
-        env:
-          T: ${{ github.event.inputs.target }}
+      - name: Start browser
+        if: env.MODE == 'web' || env.MODE == 'custom'
         run: |
-          echo "target: $T" > out/source.txt
-          mkdir -p work
-          case "$T" in
-            *.exe|*.dll|*.apk|*.zip|*.asar|*.js|*.har|*.bin|*.elf)
-              curl -sSL --max-filesize 300000000 -o "work/$(basename "${T%%\?*}")" "$T" && echo "downloaded: work/$(basename "${T%%\?*}")" >> out/source.txt ;;
-          esac
-          ls -la work >> out/source.txt
-      - name: Run
-        if: ${{ github.event.inputs.args != '' }}
+          CH=$(command -v google-chrome || command -v chromium)
+          nohup "$CH" --headless=new --no-sandbox --disable-gpu --remote-debugging-port=9222 \
+            --user-data-dir=/tmp/chrome --window-size=1280,900 "${T:-about:blank}" > /tmp/chrome.log 2>&1 &
+          for i in $(seq 1 30); do curl -s $EP/json/version >/dev/null && break; sleep 1; done
+          sleep 8
+          curl -s $EP/json/list > out/targets.json
+          TID=$(python3 -c "import json;t=[x for x in json.load(open('out/targets.json')) if x.get('type')=='page'];print(t[0]['id'] if t else '')")
+          echo "TID=$TID" >> $GITHUB_ENV
+          echo "targetId: $TID" >> out/source.txt
+      - name: Web analysis
+        if: env.MODE == 'web'
         continue-on-error: true
-        timeout-minutes: 30
-        env:
-          T: ${{ github.event.inputs.target }}
-          A: ${{ github.event.inputs.args }}
+        timeout-minutes: 25
         run: |
-          F=$(ls work/* 2>/dev/null | head -1)
-          TGT="${F:-$T}"
-          CMD="${A//\{T\}/$TGT}"
+          cd work
+          timeout 180 rea inspect-web-page $EP "$TID" --observation-ms 5000 --include-script-sources --include-json-body-shapes --include-storage-keys --include-console-text --format json > ../out/page.json 2> ../out/page.err || true
+          timeout 120 rea capture-web-screenshot $EP "$TID" --format json > ../out/screenshot.json 2> ../out/screenshot.err || true
+          timeout 900 rea analyze-web-bundle $EP "$TID" --observation-ms 3000 --fetch-source-maps \
+            --detail summary --evidence_output ../out/bundle-evidence.json --format json > ../out/bundle.json 2> ../out/bundle.err || true
+          [ -f ../out/bundle-evidence.json ] && timeout 120 rea inspect-analysis-view ../out/bundle-evidence.json --format json > ../out/bundle-view.json 2>&1 || true
+          timeout 300 rea export-web-scripts ../out/page.json ../out/scripts --format json > ../out/scripts.json 2> ../out/scripts.err || true
+          python3 - <<'PY'
+          import json, base64, re, os
+          try:
+              s = open('../out/screenshot.json').read()
+              m = re.search(r'"(iVBORw0KGgo[A-Za-z0-9+/=]+)"', s)
+              if m: open('../out/screenshot.png','wb').write(base64.b64decode(m.group(1)))
+          except Exception as e: print(e)
+          PY
+      - name: File analysis
+        if: env.MODE == 'file'
+        continue-on-error: true
+        timeout-minutes: 25
+        run: |
+          N=$(basename "${T%%\?*}"); [ -z "$N" ] && N=target.bin
+          curl -sSL --max-filesize 300000000 -o "work/$N" "$T"
+          ls -la work >> out/source.txt
+          cd work
+          timeout 1200 rea analyze "$N" --detail summary --evidence_output ../out/analyze-evidence.json --format json > ../out/analyze.json 2> ../out/analyze.err || true
+          timeout 600 rea audit-release-exposure "$N" --format json > ../out/exposure.json 2> ../out/exposure.err || true
+      - name: Custom
+        if: env.MODE == 'custom' && env.A != ''
+        continue-on-error: true
+        timeout-minutes: 25
+        run: |
+          CMD="${A//\{T\}/$T}"; CMD="${CMD//\{EP\}/$EP}"; CMD="${CMD//\{TID\}/$TID}"
           echo "cmd: rea $CMD" >> out/source.txt
           cd work
-          eval "rea $CMD" > ../out/result.txt 2> ../out/stderr.txt || echo "exit=$?" >> ../out/source.txt
-          cd ..
-          find work -newer out/source.txt -type f -size -20M ! -name '*.exe' ! -name '*.apk' -exec cp --parents {} out/ \; 2>/dev/null || true
+          eval "timeout 1200 rea $CMD" > ../out/result.txt 2> ../out/stderr.txt || echo "exit=$?" >> ../out/source.txt
       - name: Push results
         if: always()
         run: |
           cd out
-          find . -type f -size +50M -delete
+          find . -type f -size +45M -delete
           git init -q && git checkout -q -b rea-results
           git -c user.name=bot -c user.email=bot@users.noreply.github.com add -A
           git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "rea ${{ github.run_id }}"
