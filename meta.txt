@@ -1,0 +1,20 @@
+title: Video by life.coach.mtcity
+description: 用 Claude 做設計都有滿滿 AI 味？
+GitHub 上有一個十一萬星的爆款 Skill 叫 Impeccable，它記錄了 62 個用 AI 做設計常有的問題，你只要輸入一句指令，它就幫你把問題都抓出來。
+
+最常見的像是，米白底配細襯線字、標題上面一行英文小標籤、漸層色的字，還有一整排大數字。
+
+輸入 /impeccable critique，後面加上你要檢查的頁面，它就會把這些問題抓出來，另外還會幫你的設計打分數，排好先改哪幾項。改完再跑一次，看問題有沒有變少、分數有沒有變高。
+
+用文字改設計很困難，所以更好的做法是，平常就養成搜集範本的習慣。把喜歡的網址、截圖貼給 Claude，請它建檔、加上標籤，以後直接搜尋範本，讓 Claude 照著改就好。
+
+Skill 的介紹跟指令我整理好了，留言「AI味」，我傳給你。
+
+#Claude #Impeccable #AI設計 #網頁設計
+uploader: Rand 林鴻仁 ｜ 好日子 AI
+upload_date: 20261125
+duration: None
+view_count: None
+like_count: 223
+comment_count: 326
+webpage_url: https://www.instagram.com/reel/DgKUTQehASv/?jplx=OTdhaTMxMXlrZG1p
