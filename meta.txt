@@ -1,0 +1,17 @@
+title: Video by ethanhuang03
+description: 這個免費工具剛剛解決了 Claude Code 的 token 問題，
+你 20 美元訂閱現在能做到 100 美元做的事。
+
+安裝也簡單，兩行指令就裝好，
+然後在 Claude Code 裡輸入 /graphify 就可以了。
+
+記得收藏，留言 repo，我就把 GitHub 連結發給你。
+
+#Claude#Claude剪輯#AI剪輯
+uploader: 
+upload_date: 20261123
+duration: None
+view_count: None
+like_count: 150
+comment_count: 111
+webpage_url: https://www.instagram.com/reel/DgEqVLsTrlk/?avpt=NXh2ZjhmNDR1a3Zt
