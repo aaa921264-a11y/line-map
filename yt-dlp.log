@@ -1,0 +1,13 @@
+[Instagram] Setting up session
+[Instagram] Extracting URL: https://www.instagram.com/reel/DgJ3CDluEco/?bqrl=MW0zd3B3enliMm96Zg==
+[Instagram] DgJ3CDluEco: Checking post accessibility
+[Instagram] DgJ3CDluEco: Downloading webpage
+[info] DgJ3CDluEco: Downloading 1 format(s): dash-1141179885181479v+dash-1141179661848168a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.fdash-1141179885181479v.mp4
+[download]   0.0% of    2.00MiB at  Unknown B/s ETA Unknown[download]   0.1% of    2.00MiB at  930.34KiB/s ETA 00:02  [download]   0.3% of    2.00MiB at    1.05MiB/s ETA 00:01[download]   0.7% of    2.00MiB at  321.29KiB/s ETA 00:06[download]   1.5% of    2.00MiB at  477.98KiB/s ETA 00:04[download]   3.1% of    2.00MiB at  603.92KiB/s ETA 00:03[download]   6.2% of    2.00MiB at  837.19KiB/s ETA 00:02[download]  12.4% of    2.00MiB at    1.25MiB/s ETA 00:01[download]  24.9% of    2.00MiB at    2.03MiB/s ETA 00:00[download]  49.9% of    2.00MiB at    3.41MiB/s ETA 00:00[download]  99.8% of    2.00MiB at    5.88MiB/s ETA 00:00[download] 100.0% of    2.00MiB at    5.88MiB/s ETA 00:00[download] 100% of    2.00MiB in 00:00:00 at 4.06MiB/s   
+[download] Destination: out/video.fdash-1141179661848168a.m4a
+[download]   0.3% of  388.82KiB at  Unknown B/s ETA Unknown[download]   0.8% of  388.82KiB at  Unknown B/s ETA Unknown[download]   1.8% of  388.82KiB at    6.49MiB/s ETA 00:00  [download]   3.9% of  388.82KiB at   10.40MiB/s ETA 00:00[download]   8.0% of  388.82KiB at   16.87MiB/s ETA 00:00[download]  16.2% of  388.82KiB at   27.98MiB/s ETA 00:00[download]  32.7% of  388.82KiB at   46.31MiB/s ETA 00:00[download]  65.6% of  388.82KiB at    6.16MiB/s ETA 00:00[download] 100.0% of  388.82KiB at    8.73MiB/s ETA 00:00[download] 100% of  388.82KiB in 00:00:00 at 4.02MiB/s   
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.fdash-1141179885181479v.mp4 (pass -k to keep)
+Deleting original file out/video.fdash-1141179661848168a.m4a (pass -k to keep)

@@ -1,0 +1,25 @@
+title: Video by ai.lanrenbao
+description: Claude Code 有個預設關著的開關，有人實測打開後輸入 token 少了 35% 🔌
+
+它叫 Code Mode：Claude 不再一次叫一個工具，而是先寫幾段小程式一次跑完，只把要看的結果交回來。程式碼你不用寫也不用看，照樣用講的。
+
+✅ 40 天訂單檔找前三大客戶：答案一樣全對
+✅ 30 份文件找壞連結：輸入 token −53%
+✅ 25 頁網站改電話和價格：輸入 token −18%
+💡 每則訊息要帶的工具清單一整排換成一個：60,900 → 38,300 token（實測者自己的環境）
+💡 官方說：同一個改動要套到很多檔、搜尋結果要先篩過的工作最適合
+
+怎麼開：在終端機用 CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1 啟動 claude，第一次選 Yes 就好（需要 v2.1.323 以上的終端機版）
+
+畫面來源：Nate Herk | AI Automation（YouTube〈Claude Code Just Silently Released a Cheaper Mode〉）、Claude Code 官方文件（code.claude.com/docs/en/code-mode）
+
+追蹤 @ai.lanrenbao 看更多
+
+#ClaudeCode #CodeMode #Claude #AI工具 #AI懶人報
+uploader: AI懶人報
+upload_date: 20261125
+duration: None
+view_count: None
+like_count: 88
+comment_count: 0
+webpage_url: https://www.instagram.com/reel/DgJ3CDluEco/?bqrl=MW0zd3B3enliMm96Zg==
