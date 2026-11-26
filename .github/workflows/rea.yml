@@ -58,6 +58,27 @@ jobs:
         timeout-minutes: 25
         run: |
           cd work
+          # 1) 用 Playwright 情境完整錄下「從開啟到載入完成」的網路請求、主控台、儲存空間
+          python3 - <<'PY'
+          import json, os, shutil
+          ch = shutil.which('google-chrome') or shutil.which('chromium')
+          sc = {
+            "browser": {"mode": "launch", "executable_path": ch},
+            "start_url": {"url": os.environ["T"]},
+            "environment": {"viewport": {"width": 430, "height": 932, "device_scale_factor": 1},
+                            "locale": "zh-TW", "timezone": "Asia/Taipei", "service_workers": "allow"},
+            "actions": [
+              {"step_id": "open", "action": "goto", "destination": {"url": os.environ["T"]}, "wait_until": "load", "timeout_ms": 60000},
+              {"step_id": "settle", "action": "wait_for", "locator": {"kind": "css", "selector": "body"}, "state": "visible", "timeout_ms": 15000}
+            ],
+            "capture": {"at_end": ["screenshot", "url", "storage", "dom"],
+                        "events": ["console", "page-errors", "network", "websockets", "workers", "popups"],
+                        "network": {"request_body": True, "response_body": False, "header_values": False}}
+          }
+          json.dump(sc, open("scenario.json", "w"), ensure_ascii=False)
+          PY
+          timeout 300 rea capture-browser-scenario scenario.json --format json > ../out/scenario.json 2> ../out/scenario.err || true
+          # 2) 被動檢視已載入的頁面（腳本原始碼、DOM、儲存空間鍵名）
           timeout 180 rea inspect-web-page $EP "$TID" --observation-ms 8000 --include-script-sources --include-json-body-shapes --include-storage-keys --include-console-text --format json > ../out/page.json 2> ../out/page.err || true
           timeout 120 rea capture-web-screenshot $EP "$TID" --format json > ../out/screenshot.json 2> ../out/screenshot.err || true
           timeout 900 rea analyze-web-bundle $EP "$TID" --observation-ms 3000 --fetch-source-maps \
