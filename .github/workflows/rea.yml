@@ -1,0 +1,73 @@
+name: rea
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 要分析的網址（或可下載的檔案網址）
+        required: false
+        default: ""
+      args:
+        description: rea 子指令與參數（用 {T} 代表目標；留空只輸出說明）
+        required: false
+        default: ""
+permissions:
+  contents: write
+jobs:
+  rea:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install REA
+        run: |
+          mkdir -p out
+          npm install --global rea-agents 2>&1 | tail -5 | tee out/install.log
+          rea --version 2>&1 | tee out/version.txt || true
+      - name: Help
+        continue-on-error: true
+        run: |
+          rea --help > out/help.txt 2>&1 || true
+          for c in $(rea --help 2>/dev/null | grep -oE '^\s{2,}[a-z][a-z0-9-]+' | awk '{print $1}' | sort -u); do
+            echo "===== $c =====" >> out/help-all.txt
+            timeout 20 rea "$c" --help >> out/help-all.txt 2>&1 || true
+          done
+          timeout 60 rea doctor > out/doctor.txt 2>&1 || true
+      - name: Prepare target
+        env:
+          T: ${{ github.event.inputs.target }}
+        run: |
+          echo "target: $T" > out/source.txt
+          mkdir -p work
+          case "$T" in
+            *.exe|*.dll|*.apk|*.zip|*.asar|*.js|*.har|*.bin|*.elf)
+              curl -sSL --max-filesize 300000000 -o "work/$(basename "${T%%\?*}")" "$T" && echo "downloaded: work/$(basename "${T%%\?*}")" >> out/source.txt ;;
+          esac
+          ls -la work >> out/source.txt
+      - name: Run
+        if: ${{ github.event.inputs.args != '' }}
+        continue-on-error: true
+        timeout-minutes: 30
+        env:
+          T: ${{ github.event.inputs.target }}
+          A: ${{ github.event.inputs.args }}
+        run: |
+          F=$(ls work/* 2>/dev/null | head -1)
+          TGT="${F:-$T}"
+          CMD="${A//\{T\}/$TGT}"
+          echo "cmd: rea $CMD" >> out/source.txt
+          cd work
+          eval "rea $CMD" > ../out/result.txt 2> ../out/stderr.txt || echo "exit=$?" >> ../out/source.txt
+          cd ..
+          find work -newer out/source.txt -type f -size -20M ! -name '*.exe' ! -name '*.apk' -exec cp --parents {} out/ \; 2>/dev/null || true
+      - name: Push results
+        if: always()
+        run: |
+          cd out
+          find . -type f -size +50M -delete
+          git init -q && git checkout -q -b rea-results
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com add -A
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "rea ${{ github.run_id }}"
+          R="https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}"
+          git push -f "$R" rea-results:rea-results
