@@ -45,9 +45,9 @@ jobs:
           sudo apt-get install -y -qq fonts-noto-cjk > /dev/null 2>&1 || true
           CH=$(command -v google-chrome || command -v chromium)
           nohup "$CH" --headless=new --no-sandbox --disable-gpu --remote-debugging-port=9222 \
-            --user-data-dir=/tmp/chrome --window-size=430,932 --lang=zh-TW about:blank > /tmp/chrome.log 2>&1 &
+            --user-data-dir=/tmp/chrome --window-size=430,932 --lang=zh-TW "${T:-about:blank}" > /tmp/chrome.log 2>&1 &
           for i in $(seq 1 30); do curl -s $EP/json/version >/dev/null && break; sleep 1; done
-          sleep 2
+          sleep 8
           curl -s $EP/json/list > out/targets.json
           TID=$(python3 -c "import json;t=[x for x in json.load(open('out/targets.json')) if x.get('type')=='page'];print(t[0]['id'] if t else '')")
           echo "TID=$TID" >> $GITHUB_ENV
@@ -58,12 +58,12 @@ jobs:
         timeout-minutes: 25
         run: |
           cd work
-          # 先開始觀察，再讓分頁前往目標網址，才錄得到載入時的網路請求
+          # 先開始觀察，再重新整理分頁，才錄得到載入時的網路請求
           timeout 180 rea inspect-web-page $EP "$TID" --allowed-origins "$(python3 -c "import sys,urllib.parse as u;p=u.urlparse(sys.argv[1]);print(p.scheme+'://'+p.netloc)" "$T")" --observation-ms 20000 --include-script-sources --include-json-body-shapes --include-storage-keys --include-console-text --format json > ../out/page.json 2> ../out/page.err &
           P=$!
           sleep 4
           WS=$(python3 -c "import json;t=[x for x in json.load(open('../out/targets.json')) if x['id']=='$TID'];print(t[0]['webSocketDebuggerUrl'])")
-          node -e 'const w=new WebSocket(process.argv[1]);w.onopen=()=>{w.send(JSON.stringify({id:1,method:"Page.navigate",params:{url:process.argv[2]}}));setTimeout(()=>process.exit(0),1500)};w.onerror=e=>{console.error(e.message);process.exit(1)}' "$WS" "$T" || true
+          node -e 'const w=new WebSocket(process.argv[1]);w.onopen=()=>{w.send(JSON.stringify({id:1,method:"Page.reload",params:{ignoreCache:true}}));setTimeout(()=>process.exit(0),1500)};w.onerror=e=>{console.error(e.message);process.exit(1)}' "$WS" "$T" || true
           wait $P || true
           sleep 3
           timeout 120 rea capture-web-screenshot $EP "$TID" --format json > ../out/screenshot.json 2> ../out/screenshot.err || true
