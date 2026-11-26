@@ -1,0 +1,13 @@
+[Instagram] Setting up session
+[Instagram] Extracting URL: https://instagram.com/p/DfyponxMxgq/
+[Instagram] DfyponxMxgq: Checking post accessibility
+[Instagram] DfyponxMxgq: Downloading webpage
+[info] DfyponxMxgq: Downloading 1 format(s): dash-1169977695710835v+dash-1169977412377530a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.fdash-1169977695710835v.mp4
+[download]   0.0% of    7.96MiB at  Unknown B/s ETA Unknown[download]   0.0% of    7.96MiB at  Unknown B/s ETA Unknown[download]   0.1% of    7.96MiB at  Unknown B/s ETA Unknown[download]   0.2% of    7.96MiB at    2.61MiB/s ETA 00:03  [download]   0.4% of    7.96MiB at    4.04MiB/s ETA 00:01[download]   0.8% of    7.96MiB at    5.18MiB/s ETA 00:01[download]   1.6% of    7.96MiB at    7.20MiB/s ETA 00:01[download]   3.1% of    7.96MiB at    8.95MiB/s ETA 00:00[download]   6.3% of    7.96MiB at   13.31MiB/s ETA 00:00[download]  12.6% of    7.96MiB at    3.54MiB/s ETA 00:01[download]  25.1% of    7.96MiB at    6.88MiB/s ETA 00:00[download]  50.2% of    7.96MiB at   11.36MiB/s ETA 00:00[download] 100.0% of    7.96MiB at   20.97MiB/s ETA 00:00[download] 100% of    7.96MiB in 00:00:00 at 19.53MiB/s  
+[download] Destination: out/video.fdash-1169977412377530a.m4a
+[download]   0.3% of  325.54KiB at  Unknown B/s ETA Unknown[download]   0.9% of  325.54KiB at  Unknown B/s ETA Unknown[download]   2.2% of  325.54KiB at  Unknown B/s ETA Unknown[download]   4.6% of  325.54KiB at   14.61MiB/s ETA 00:00  [download]   9.5% of  325.54KiB at    4.29MiB/s ETA 00:00[download]  19.4% of  325.54KiB at    5.47MiB/s ETA 00:00[download]  39.0% of  325.54KiB at    7.32MiB/s ETA 00:00[download]  78.3% of  325.54KiB at   10.21MiB/s ETA 00:00[download] 100.0% of  325.54KiB at   11.11MiB/s ETA 00:00[download] 100% of  325.54KiB in 00:00:00 at 1.25MiB/s   
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.fdash-1169977412377530a.m4a (pass -k to keep)
+Deleting original file out/video.fdash-1169977695710835v.mp4 (pass -k to keep)
