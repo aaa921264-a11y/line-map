@@ -1,0 +1,13 @@
+[generic] Extracting URL: https://www.facebook.com/share/r/1AHjh7fs2U/?mibextid=wwXIfr
+[generic] ?mibextid=wwXIfr: Downloading webpage
+[redirect] Following redirect to https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fstory.php%3Fstory_fbid%3D122116650441524391%26id%3D61595731742516%26mibextid%3DwwXIfr%26rdid%3DErzFctRI687kYDbm%26share_url%3Dhttps%253A%252F%252Fwww.facebook.com%252Fshare%252Fr%252F1AHjh7fs2U%252F%253Fmibextid%253DwwXIfr&rdid=ErzFctRI687kYDbm
+[generic] Extracting URL: https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fstory.php%3Fstory_fbid%3D12...did=ErzFctRI687kYDbm
+[generic] ?next=https://www.facebook.com/story.php?story_fbid=122116650441524391&id=61595731742516&mibextid=wwXIfr&rdid=ErzFctRI687kYDbm&share_url=https%3A%2F%2Fwww.facebook: Downloading webpage
+WARNING: [generic] Falling back on generic information extractor
+[generic] ?next=https://www.facebook.com/story.php?story_fbid=122116650441524391&id=61595731742516&mibextid=wwXIfr&rdid=ErzFctRI687kYDbm&share_url=https%3A%2F%2Fwww.facebook: Extracting information
+[redirect] Following redirect to https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fstory.php%3Fstory_fbid%3D122116650441524391%26id%3D61595731742516%26mibextid%3DwwXIfr%26rdid%3DErzFctRI687kYDbm%26share_url%3Dhttps%253A%252F%252Fwww.facebook.com%252Fshare%252Fr%252F1AHjh7fs2U%252F%253Fmibextid%253DwwXIfr&rdid=ErzFctRI687kYDbm&_fb_noscript=1
+[generic] Extracting URL: https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fstory.php%3Fstory_fbid%3D12...kYDbm&_fb_noscript=1
+[generic] ?next=https://www.facebook.com/story.php?story_fbid=122116650441524391&id=61595731742516&mibextid=wwXIfr&rdid=ErzFctRI687kYDbm&share_url=https%3A%2F%2Fwww.facebook: Downloading webpage
+WARNING: [generic] Falling back on generic information extractor
+[generic] ?next=https://www.facebook.com/story.php?story_fbid=122116650441524391&id=61595731742516&mibextid=wwXIfr&rdid=ErzFctRI687kYDbm&share_url=https%3A%2F%2Fwww.facebook: Extracting information
+ERROR: Unsupported URL: https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fstory.php%3Fstory_fbid%3D122116650441524391%26id%3D61595731742516%26mibextid%3DwwXIfr%26rdid%3DErzFctRI687kYDbm%26share_url%3Dhttps%253A%252F%252Fwww.facebook.com%252Fshare%252Fr%252F1AHjh7fs2U%252F%253Fmibextid%253DwwXIfr&rdid=ErzFctRI687kYDbm&_fb_noscript=1
