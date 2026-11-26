@@ -59,7 +59,7 @@ jobs:
         run: |
           cd work
           # 先開始觀察，再讓分頁前往目標網址，才錄得到載入時的網路請求
-          timeout 180 rea inspect-web-page $EP "$TID" --allowed-origins "[\"$(python3 -c "import sys,urllib.parse as u;p=u.urlparse(sys.argv[1]);print(p.scheme+'://'+p.netloc)" "$T")\"]" --observation-ms 20000 --include-script-sources --include-json-body-shapes --include-storage-keys --include-console-text --format json > ../out/page.json 2> ../out/page.err &
+          timeout 180 rea inspect-web-page $EP "$TID" --allowed-origins "$(python3 -c "import sys,urllib.parse as u;p=u.urlparse(sys.argv[1]);print(p.scheme+'://'+p.netloc)" "$T")" --observation-ms 20000 --include-script-sources --include-json-body-shapes --include-storage-keys --include-console-text --format json > ../out/page.json 2> ../out/page.err &
           P=$!
           sleep 4
           WS=$(python3 -c "import json;t=[x for x in json.load(open('../out/targets.json')) if x['id']=='$TID'];print(t[0]['webSocketDebuggerUrl'])")
