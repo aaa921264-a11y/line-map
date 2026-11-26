@@ -1,0 +1,14 @@
+title: Video by ethanhuang03
+description: Claude 現在能看 YouTube 影片，學任何技能。
+這是目前為止，讓你的 AI 變聰明最簡單的方法，
+30 秒就能設定好。
+留言 YouTube，
+我把skill和提示詞發給你，今天就開始用起來!
+#Claude#Claude剪輯#AI剪輯
+uploader: 
+upload_date: 20261122
+duration: None
+view_count: None
+like_count: 837
+comment_count: 1887
+webpage_url: https://www.instagram.com/reel/DgDGZNszQxH/?avpt=Y2lqdWxybjBxa2ln
