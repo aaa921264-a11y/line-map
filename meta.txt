@@ -1,0 +1,19 @@
+title: Video by gxco_vic
+description: 讓 AI 幫你操作電腦，最怕的可能是：
+它是不是又要一直截圖？
+點錯了，還得自己收拾？
+
+想讓 AI 不用截圖，也能精準點對按鈕 🖱️
+這個在 GitHub 爆紅的開源工具，可以試試看。
+
+誰適合裝、怎麼接上 Codex 和 Claude Code，我整理好了。
+留言「Agent」，我私訊傳給你 👇
+
+#極行文化 #AI工作流 #AI自動化 #開源工具 #ClaudeCode
+uploader: 王子維 AI商業賦能
+upload_date: 20261127
+duration: None
+view_count: None
+like_count: 27
+comment_count: 4
+webpage_url: https://www.instagram.com/reel/DgPatKsKzBd/
