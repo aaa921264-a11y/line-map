@@ -1,0 +1,13 @@
+[Instagram] Setting up session
+[Instagram] Extracting URL: https://www.instagram.com/reel/DgOxz8dhBVM/
+[Instagram] DgOxz8dhBVM: Checking post accessibility
+[Instagram] DgOxz8dhBVM: Downloading webpage
+[info] DgOxz8dhBVM: Downloading 1 format(s): dash-1133254129703627v+dash-1133253159703724a
+[info] Writing video metadata as JSON to: out/video.info.json
+[download] Destination: out/video.fdash-1133254129703627v.mp4
+[download]   0.0% of   29.66MiB at  Unknown B/s ETA Unknown[download]   0.0% of   29.66MiB at  Unknown B/s ETA Unknown[download]   0.0% of   29.66MiB at    3.33MiB/s ETA 00:08  [download]   0.0% of   29.66MiB at  965.82KiB/s ETA 00:31[download]   0.1% of   29.66MiB at    1.40MiB/s ETA 00:21[download]   0.2% of   29.66MiB at    1.77MiB/s ETA 00:16[download]   0.4% of   29.66MiB at    2.46MiB/s ETA 00:12[download]   0.8% of   29.66MiB at    3.75MiB/s ETA 00:07[download]   1.7% of   29.66MiB at    6.07MiB/s ETA 00:04[download]   3.4% of   29.66MiB at   10.08MiB/s ETA 00:02[download]   6.7% of   29.66MiB at   17.40MiB/s ETA 00:01[download]  13.5% of   29.66MiB at   30.47MiB/s ETA 00:00[download]  27.0% of   29.66MiB at   54.17MiB/s ETA 00:00[download]  40.5% of   29.66MiB at   76.30MiB/s ETA 00:00[download]  53.9% of   29.66MiB at   96.10MiB/s ETA 00:00[download]  67.4% of   29.66MiB at  113.36MiB/s ETA 00:00[download]  80.9% of   29.66MiB at  130.08MiB/s ETA 00:00[download]  94.4% of   29.66MiB at  145.70MiB/s ETA 00:00[download] 100.0% of   29.66MiB at  151.63MiB/s ETA 00:00[download] 100% of   29.66MiB in 00:00:00 at 107.94MiB/s 
+[download] Destination: out/video.fdash-1133253159703724a.m4a
+[download]   0.1% of  840.50KiB at  Unknown B/s ETA Unknown[download]   0.4% of  840.50KiB at    2.53MiB/s ETA 00:00  [download]   0.8% of  840.50KiB at    3.38MiB/s ETA 00:00[download]   1.8% of  840.50KiB at    1.01MiB/s ETA 00:00[download]   3.7% of  840.50KiB at    1.49MiB/s ETA 00:00[download]   7.5% of  840.50KiB at    1.88MiB/s ETA 00:00[download]  15.1% of  840.50KiB at    2.58MiB/s ETA 00:00[download]  30.3% of  840.50KiB at    3.98MiB/s ETA 00:00[download]  60.8% of  840.50KiB at    6.39MiB/s ETA 00:00[download] 100.0% of  840.50KiB at    9.19MiB/s ETA 00:00[download] 100% of  840.50KiB in 00:00:00 at 4.98MiB/s   
+[Merger] Merging formats into "out/video.mp4"
+Deleting original file out/video.fdash-1133253159703724a.m4a (pass -k to keep)
+Deleting original file out/video.fdash-1133254129703627v.mp4 (pass -k to keep)
