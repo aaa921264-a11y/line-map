@@ -1,0 +1,21 @@
+title: Video by pb_design_lab
+description: 快拿起你的紙筆，跟我一起出航吧！
+
+這次用 Claude 的 Fable 5.2 ，
+加上免費試用的Higgsfield MCP，
+把手稿一步步做成能玩的遊戲。
+
+我把流程跟可複製的提示詞整理好了，
+也附上這次的遊戲體驗連結，
+想試試看的話回覆【FABLE】💬
+我把所有資料分享給你！
+
+@higgsfield.ai
+#HiggsfieldCreator #Claude #Higgsfield #AI遊戲 #AI
+uploader: 設計實驗室｜AI × 設計 × 資訊 PB Design Lab
+upload_date: 20261111
+duration: None
+view_count: None
+like_count: 5493
+comment_count: 2186
+webpage_url: https://www.instagram.com/reel/Dfma8QhsY1R/
