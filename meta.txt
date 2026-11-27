@@ -1,0 +1,22 @@
+title: Video by kwons_en
+description: Claude Code 額度用完，不用再等它重置了 👇🏽
+
+GitHub 上有個免費工具叫 OmniRoute：
+✅ 把三百多個 AI 服務商接到你的 Claude Code
+✅ 其中一百五十幾個是免費的
+✅ 額度一用完，自動換下一個，中間不會斷
+✅ Cursor、Codex 也可以用
+✅ 送出前先壓縮指令，省 token
+
+要注意：換過去之後就不是 Claude 在回答，品質會不一樣。額度快用完再用就好。
+
+留言「token」，我把安裝步驟和指令私訊給你 👇🏽
+
+#claude #claudecode #claudeai #ai工具 #免費ai
+uploader: Kwon 永誠｜AI Agent 企業導入顧問
+upload_date: 20261009
+duration: None
+view_count: None
+like_count: 5039
+comment_count: 11567
+webpage_url: https://www.instagram.com/reel/DeRkOIKhUC3/
