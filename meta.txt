@@ -1,0 +1,14 @@
+title: 2.7K views · 185 reactions | Claude 现在可以帮你看 YouTube，学会里面教的东西 🎥 留言「LEARN」，我把那个 skill 和指令发给你 📩 skill：github.com/Newuxtreme/watch-video-skill（MIT）· 参考 Aditya Pratap Singh #Claude #AI工具 #YouTube | David Ooi
+description: Claude 现在可以帮你看 YouTube，学会里面教的东西 🎥
+
+留言「LEARN」，我把那个 skill 和指令发给你 📩
+
+skill：github.com/Newuxtreme/watch-video-skill（MIT）· 参考 Aditya Pratap Singh
+#Claude #AI工具 #YouTube
+uploader: David Ooi
+upload_date: 20261125
+duration: 32.111
+view_count: 8365
+like_count: None
+comment_count: None
+webpage_url: https://m.facebook.com/watch/?v=1745202470510708&_rdr
